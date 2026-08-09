@@ -1,0 +1,180 @@
+{
+  "result": "PASS",
+  "python": "3.12.13",
+  "platform": "win32",
+  "steps": [
+    {
+      "label": "Backend import",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "-c",
+        "import memoryos; print(memoryos.__version__)"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 0.036
+    },
+    {
+      "label": "Ruff",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "-m",
+        "ruff",
+        "check",
+        "memoryos",
+        "tests",
+        "scripts"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 0.084
+    },
+    {
+      "label": "Ruff format",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "memoryos",
+        "tests",
+        "scripts"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 0.083
+    },
+    {
+      "label": "Mypy",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "-m",
+        "mypy",
+        "memoryos"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 0.514
+    },
+    {
+      "label": "Pytest",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 4.975
+    },
+    {
+      "label": "Frontend typecheck",
+      "command": [
+        "C:\\Users\\Admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\fallback\\pnpm.cmd",
+        "typecheck"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
+      "exit_code": 0,
+      "elapsed_seconds": 2.524
+    },
+    {
+      "label": "Frontend lint",
+      "command": [
+        "C:\\Users\\Admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\fallback\\pnpm.cmd",
+        "lint"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
+      "exit_code": 0,
+      "elapsed_seconds": 4.157
+    },
+    {
+      "label": "Frontend unit tests",
+      "command": [
+        "C:\\Users\\Admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\fallback\\pnpm.cmd",
+        "test"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
+      "exit_code": 0,
+      "elapsed_seconds": 2.888
+    },
+    {
+      "label": "Frontend production build",
+      "command": [
+        "C:\\Users\\Admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\fallback\\pnpm.cmd",
+        "build"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
+      "exit_code": 0,
+      "elapsed_seconds": 4.912
+    },
+    {
+      "label": "Playwright E2E",
+      "command": [
+        "C:\\Users\\Admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\fallback\\pnpm.cmd",
+        "test:e2e"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
+      "exit_code": 0,
+      "elapsed_seconds": 15.082
+    },
+    {
+      "label": "10,000-record FTS performance",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "scripts/benchmark_search.py",
+        "--records",
+        "10000",
+        "--rounds",
+        "7",
+        "--output",
+        "docs/verification/performance.json"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 2.358
+    },
+    {
+      "label": "Backend wheel",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pip",
+        "wheel",
+        ".",
+        "--no-deps",
+        "--no-build-isolation",
+        "--wheel-dir",
+        "build/wheel"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 0.786
+    },
+    {
+      "label": "Windows PyInstaller",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "scripts/build_windows.py"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 32.657
+    },
+    {
+      "label": "Packaged production smoke",
+      "command": [
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\.venv\\Scripts\\python.exe",
+        "scripts/production_smoke.py",
+        "--distribution",
+        "release/MemoryOS",
+        "--output",
+        "docs/verification/package-smoke.json"
+      ],
+      "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
+      "exit_code": 0,
+      "elapsed_seconds": 7.284
+    }
+  ]
+}

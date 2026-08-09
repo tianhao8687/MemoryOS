@@ -1,0 +1,22 @@
+{
+  "result": "PASS",
+  "distribution": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\release\\MemoryOS",
+  "clean_path_copy": true,
+  "first_health": {
+    "ok": true,
+    "version": "1.0.0",
+    "database": "ok"
+  },
+  "second_health": {
+    "ok": true,
+    "version": "1.0.0",
+    "database": "ok"
+  },
+  "mcp_tools": 7,
+  "memory_id": "ea289563-0b70-4895-8fe5-417a398262d6",
+  "restart_persistence": true,
+  "ui_health": true,
+  "cli_status": true,
+  "elapsed_seconds": 6.619,
+  "server_output_lines": 21
+}
