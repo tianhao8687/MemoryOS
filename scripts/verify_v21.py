@@ -131,13 +131,18 @@ def main() -> None:
     scratch = args.scratch_dir.resolve()
     scratch.mkdir(parents=True, exist_ok=True)
     output = args.output.resolve()
+    progress_output = scratch / "verify-progress.json"
     pnpm, frontend_environment = _pnpm()
     python = sys.executable
     steps: list[dict[str, Any]] = []
     started_commit = _git("rev-parse", "HEAD")
     dirty_before_run = bool(_git("status", "--porcelain"))
     common = {
-        "output": output,
+        # Keep progress outside the tracked release-evidence directory. The
+        # merged-main gate intentionally requires a clean worktree; publishing
+        # the final report before that gate would make the verifier invalidate
+        # its own run.
+        "output": progress_output,
         "started_commit": started_commit,
         "dirty_before_run": dirty_before_run,
     }
