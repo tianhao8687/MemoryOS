@@ -1,17 +1,17 @@
 {
   "schema": "memoryos-v2.1-full-pipeline-performance@1",
-  "generated_at": "2026-08-09T18:37:41.926538+00:00",
+  "generated_at": "2026-08-09T18:49:03.959609+00:00",
   "records": 100000,
   "rounds": 25,
-  "insert_seconds": 7.044,
+  "insert_seconds": 7.072,
   "search": {
-    "p50_ms": 89.794,
-    "p95_ms": 104.113,
+    "p50_ms": 87.853,
+    "p95_ms": 100.822,
     "target_p95_ms": 150.0
   },
   "context": {
-    "p50_ms": 130.14,
-    "p95_ms": 143.847,
+    "p50_ms": 127.422,
+    "p95_ms": 138.808,
     "target_p95_ms": 300.0
   },
   "environment": {

@@ -1,0 +1,215 @@
+{
+  "schema": "memoryos-v2.1-acceptance@1",
+  "generated_at": "2026-08-09T18:49:05.250606+00:00",
+  "result": "PASS",
+  "checks": [
+    {
+      "id": "A33",
+      "name": "Clean V2 baseline",
+      "status": "PASS",
+      "detail": "V2 full verification was captured at an immutable clean commit before V2.1 edits.",
+      "evidence": [
+        "docs/verification/v2.1/v2-clean-baseline.json"
+      ]
+    },
+    {
+      "id": "A34",
+      "name": "Immutable migration replay",
+      "status": "PASS",
+      "detail": "Alembic upgrades real 0001 data through explicit 0002/0003 operations and replay tests.",
+      "evidence": [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py",
+        "memoryos/db/migrations/versions/0003_reality_intelligence_hardening.py"
+      ]
+    },
+    {
+      "id": "A35",
+      "name": "Claim transaction history",
+      "status": "PASS",
+      "detail": "ClaimVersion rows append candidate/accepted/forgotten transaction states.",
+      "evidence": [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py"
+      ]
+    },
+    {
+      "id": "A36",
+      "name": "Temporal blind accuracy",
+      "status": "PASS",
+      "detail": "V2 temporal accuracy=1.000 (target >=0.98).",
+      "evidence": [
+        "docs/verification/v2.1/coding-memory-bench.json"
+      ]
+    },
+    {
+      "id": "A37",
+      "name": "Uncertain-only model routing",
+      "status": "PASS",
+      "detail": "Deterministic rules handle clear pairs; only uncertain pairs are model-eligible.",
+      "evidence": [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py"
+      ]
+    },
+    {
+      "id": "A38",
+      "name": "Blind conflict F1",
+      "status": "PASS",
+      "detail": "V2 conflict F1=1.000 (target >=0.88).",
+      "evidence": [
+        "docs/verification/v2.1/coding-memory-bench.json"
+      ]
+    },
+    {
+      "id": "A39",
+      "name": "Abstention safety",
+      "status": "PASS",
+      "detail": "Abstention/provider failure leaves accepted truth unchanged and remains auditable.",
+      "evidence": [
+        "docs/verification/v2.1/coding-memory-bench.json",
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py"
+      ]
+    },
+    {
+      "id": "A40",
+      "name": "Persistent ANN live path",
+      "status": "PASS",
+      "detail": "sqlite-vec is bundled and the provider/model/dimension namespace is persisted.",
+      "evidence": [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py",
+        "docs/verification/package-smoke.json"
+      ]
+    },
+    {
+      "id": "A41",
+      "name": "Exact fallback",
+      "status": "PASS",
+      "detail": "Unavailable/disabled ANN explicitly reports exact-fallback and preserves results.",
+      "evidence": [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py"
+      ]
+    },
+    {
+      "id": "A42",
+      "name": "100K full-pipeline search P95",
+      "status": "PASS",
+      "detail": "Search P95=100.822 ms (target <150 ms).",
+      "evidence": [
+        "docs/verification/v2.1/full-pipeline-performance.json"
+      ]
+    },
+    {
+      "id": "A43",
+      "name": "100K context P95",
+      "status": "PASS",
+      "detail": "Context P95=138.808 ms (target <300 ms).",
+      "evidence": [
+        "docs/verification/v2.1/full-pipeline-performance.json"
+      ]
+    },
+    {
+      "id": "A44",
+      "name": "Blind hard-negative Recall@5",
+      "status": "PASS",
+      "detail": "V2 Recall@5=1.000 (target >=0.90).",
+      "evidence": [
+        "docs/verification/v2.1/coding-memory-bench.json"
+      ]
+    },
+    {
+      "id": "A45",
+      "name": "Runtime gold isolation",
+      "status": "PASS",
+      "detail": "Runtime inputs are hashed separately and contain no gold labels.",
+      "evidence": [
+        "docs/verification/v2.1/coding-memory-bench.json"
+      ]
+    },
+    {
+      "id": "A46",
+      "name": "Paired coding-agent harness",
+      "status": "PASS",
+      "detail": "A paired >=50-task harness records success, misuse, compliance, cost, and latency.",
+      "evidence": [
+        "docs/verification/v2.1/agent-ab.json",
+        "scripts/agent_ab_v21.py"
+      ]
+    },
+    {
+      "id": "A47",
+      "name": "Real-agent sample or explicit blocker",
+      "status": "PASS",
+      "detail": "No endpoint was supplied; the report records an explicit external blocker and no effect claim.",
+      "evidence": [
+        "docs/verification/v2.1/agent-ab.json"
+      ]
+    },
+    {
+      "id": "A48",
+      "name": "Fixture truthfulness",
+      "status": "PASS",
+      "detail": "Synthetic values are labeled harness-only and never presented as real-model evidence.",
+      "evidence": [
+        "docs/verification/v2.1/agent-ab.json"
+      ]
+    },
+    {
+      "id": "A49",
+      "name": "Grounded consolidation",
+      "status": "PASS",
+      "detail": "Model abstraction must cite allowed support/counter memory IDs and independent sources.",
+      "evidence": [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py"
+      ]
+    },
+    {
+      "id": "A50",
+      "name": "Candidate-first consolidation",
+      "status": "PASS",
+      "detail": "Consolidation and distillation outputs remain candidates; no automatic activation occurs.",
+      "evidence": [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py"
+      ]
+    },
+    {
+      "id": "A51",
+      "name": "Memory health safety",
+      "status": "PASS",
+      "detail": "Hot/Warm/Cold/Archived state is explainable/reversible and sole accepted truth is protected.",
+      "evidence": [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py"
+      ]
+    },
+    {
+      "id": "A52",
+      "name": "Merged-main release smoke",
+      "status": "PASS",
+      "detail": "A clean main checkout built and passed packaged migration/UI/MCP/API/CLI/restart smoke.",
+      "evidence": [
+        "docs/verification/v2.1/main-release-smoke.json"
+      ]
+    }
+  ],
+  "measured": {
+    "temporal_accuracy": 1.0,
+    "conflict_f1": 1.0,
+    "retrieval_recall_at_5": 1.0,
+    "search_p95_ms": 100.822,
+    "context_p95_ms": 138.808
+  },
+  "external_blockers": [
+    {
+      "area": "real coding-agent paired experiment",
+      "status": "external_blocker",
+      "reason": "MEMORYOS_AGENT_BASE_URL and MEMORYOS_AGENT_MODEL are not configured; no external model endpoint or credentials were supplied in this environment.",
+      "effect_claim": "none"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schema": "coding-memory-bench-v2.1@1",
-  "generated_at": "2026-08-09T18:40:51.833153+00:00",
+  "generated_at": "2026-08-09T18:48:49.976271+00:00",
   "blind_protocol": {
     "runtime_payload_contains_gold": false,
     "gold_loaded_only_by_scorer": true,
