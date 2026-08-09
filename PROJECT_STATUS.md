@@ -6,7 +6,8 @@
 - 状态：**V2.1 已合并 `main`，A33–A52 全部通过，发布验收完成**
 - 日期：2026-08-10（Asia/Shanghai）
 - 干净 V2 基线：commit `b0cae26dfab0141876ceffa1fde97cc5e2b92591`，dirty=false，16/16 PASS
-- V2.1 合并与 clean-main 发布基线：commit `eaf10ba700455513f4eb4a392f4c042a6b4ea125`，dirty=false，19/19 release gates PASS
+- V2.1 合并提交：`eaf10ba700455513f4eb4a392f4c042a6b4ea125`
+- 最终全链验证基线：commit `b630496a91fb4188fbbd154aa33d1a4ccfd91da5`，dirty=false，19/19 release gates PASS
 - 最终验收入口：`.\.venv\Scripts\python.exe scripts\verify_v21.py`
 - 验收范围：V1 A01–A14、V2 A15–A32 回归，V2.1 A33–A52
 
@@ -63,7 +64,7 @@ Playwright 的 7 个 skip 是明确的设备矩阵不适用项：移动布局断
 - wheel：`build/wheel/memoryos-2.1.0-py3-none-any.whl`
   - SHA-256 `C0280EC2A2AC5B79EA54C1CD6E2AE361E2255B3C97113C706A963867E1323033`
 - Windows：`release/MemoryOS/MemoryOS.exe`
-  - SHA-256 `A4E17EC4ADAD3B57D760346C1BC1D25297A458349C4A7964DE7FF4743C935C6C`
+  - SHA-256 `B9330BDF6956F3A0BD9F41A80229DBD7FA561E9B430764A788C58C31B205F5FD`
 
 ## 已知边界
 
