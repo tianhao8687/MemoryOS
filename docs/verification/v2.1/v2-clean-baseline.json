@@ -1,0 +1,19 @@
+{
+  "schema": "memoryos-v2.1-clean-baseline@1",
+  "result": "PASS",
+  "tested_commit": "b0cae26dfab0141876ceffa1fde97cc5e2b92591",
+  "git_dirty_before_run": false,
+  "version": "2.0.0",
+  "verification": {
+    "entrypoint": "scripts/verify.py",
+    "result": "PASS",
+    "step_count": 16,
+    "report": "docs/verification/v2/verify-summary.json"
+  },
+  "memorybench": {
+    "result": "PASS",
+    "measured_all_passed": true,
+    "report": "docs/verification/v2/memorybench-report.json"
+  },
+  "note": "Captured before any V2.1 source edit; the source MemoryBench report records the same commit and dirty=false."
+}

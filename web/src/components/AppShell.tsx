@@ -5,6 +5,7 @@ import {
   Boxes,
   Bug,
   ChartNoAxesCombined,
+  CircleHelp,
   Clock3,
   Database,
   FileClock,
@@ -12,6 +13,7 @@ import {
   FolderGit2,
   GitBranch,
   LayoutDashboard,
+  HeartPulse,
   Menu,
   Plus,
   Search,
@@ -42,6 +44,7 @@ const navigationGroups = [
       { to: '/claim-graph', label: 'Claim Graph', icon: Waypoints },
       { to: '/freshness', label: 'Git Freshness', icon: FileSearch },
       { to: '/consolidation', label: 'Consolidation', icon: Boxes },
+      { to: '/memory-health', label: 'Memory Health', icon: HeartPulse },
       { to: '/retrieval-debugger', label: 'Retrieval Debugger', icon: Bug },
       { to: '/benchmarks', label: 'Benchmarks', icon: ChartNoAxesCombined },
     ],
@@ -51,6 +54,7 @@ const navigationGroups = [
     items: [
       { to: '/timeline', label: 'Timeline', icon: Clock3 },
       { to: '/conflicts', label: 'Conflicts', icon: AlertTriangle },
+      { to: '/possible-conflicts', label: 'Possible Conflicts', icon: CircleHelp },
       { to: '/settings', label: 'Settings', icon: Settings },
       { to: '/audit', label: 'Audit', icon: FileClock },
     ],
@@ -215,7 +219,7 @@ export function AppShell() {
         <div className="sidebar-status">
           <span><Boxes aria-hidden="true" />Local store</span>
           <strong>{status.data ? 'OK' : '—'}</strong>
-          <small>v{status.data?.version ?? '2.0.0'}</small>
+          <small>v{status.data?.version ?? '2.1.0'}</small>
         </div>
       </aside>
       {mobileOpen ? <button className="scrim" onClick={() => setMobileOpen(false)} aria-label="Close navigation" /> : null}

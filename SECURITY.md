@@ -2,7 +2,7 @@
 
 ## 信任边界
 
-MemoryOS V2 是单用户、单机、loopback-only 工具。它信任当前操作系统用户和用该用户身份启动的 MCP 客户端，不把本机其他用户、未信任网页、LAN 设备或外部 provider 视为可信边界。
+MemoryOS V2.1 是单用户、单机、loopback-only 工具。它信任当前操作系统用户和用该用户身份启动的 MCP 客户端，不把本机其他用户、未信任网页、LAN 设备或外部 provider 视为可信边界。
 
 安全目标：
 
@@ -42,13 +42,18 @@ MemoryOS V2 是单用户、单机、loopback-only 工具。它信任当前操作
 - 备份 ZIP 只允许 `manifest.json` + `memoryos.db`；恢复前校验格式版本、SHA-256、SQLite `integrity_check` 和必需表。
 - 恢复默认先对当前数据库创建 safety backup。
 - JSONL 交换 ZIP 只允许 `manifest.json` + `data.jsonl`，并校验格式版本、payload hash、record type 和基本 schema。
-- 逻辑忘却只更改状态，不删除 provenance 或 audit；历史仍可解释。
+- 逻辑忘却和 archive 只追加状态版本，不删除 provenance 或 audit；archive 可恢复，历史仍可解释。
+- 归档保护会拒绝移除某一语义维度唯一的 accepted current truth；distillation 只能读取 Cold/Archived 输入且输出 candidate。
 
 ### 供应商和出站数据
 
 FTS5 和 heuristic extractor 是默认离线路径。只有设置 `MEMORYOS_EMBEDDING_*` 或 `MEMORYOS_EXTRACTOR_*` 时才会调用外部 OpenAI-compatible endpoint。配置这些选项等于明确授权向该 provider 发送相关查询或提取文本；应自行评估 provider 的数据政策。
 
-Provider 返回非法 JSON 时请求失败且不写入数据库；embedding 不可用时检索会回退到 FTS5。
+Provider 返回非法 JSON 时请求失败且不写入数据库；embedding/ANN 不可用时检索会显式回退到 exact NumPy/FTS5。
+
+Relationship judge 不能自由扫描数据库。确定性规则先分类，只有不确定 pair 会发送 bounded claim 和 evidence；完整 prompt 不进入日志。Possible Conflict 只保存最小判断结果、provider fingerprint、prompt version、evidence hash 和 resolution audit。模型失败或 abstain 不得修改 accepted truth。
+
+CodingMemoryBench 的 runtime payload 与 gold labels 分开构造并分别哈希，gold 只由 scorer 加载。报告中的确定性 fixture 明确为 harness-only；没有 endpoint/credentials 时输出 `external_blocker` 与 `effect_claim=none`，不伪造真实模型效果。
 
 ## 源码最小化
 
@@ -68,4 +73,4 @@ Provider 返回非法 JSON 时请求失败且不写入数据库；embedding 不�
 .\.venv\Scripts\python.exe -m memoryos --data-dir .\data doctor --json
 ```
 
-`doctor` 检查数据库完整性、FTS5、token、loopback bind、数据目录、UI 产物和 embedding provider 状态。不配置 embedding 时的 `WARN` 表示 FTS5 fallback 正常启用，不是完整性失败。
+`doctor` 检查数据库完整性、FTS5、token、loopback bind、数据目录、UI、embedding provider、sqlite-vec runtime 与 namespace 状态。不配置 embedding 时的 `WARN` 表示 FTS5 fallback 正常启用，不是完整性失败。

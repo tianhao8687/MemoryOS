@@ -1,11 +1,11 @@
 {
   "schema": "memorybench-v2-report@1",
-  "generated_at": "2026-08-09T17:05:08.902189+00:00",
+  "generated_at": "2026-08-09T17:49:59.980452+00:00",
   "seed": 20260810,
   "config_hash": "73dd051e904e7ab6ffee36436da5f3f8f3fdfe109624d156bf6423f6bb6ca0b4",
   "git": {
-    "commit": "83df3903954751188c731ac097b93e2a2c71d26c",
-    "dirty": true
+    "commit": "b0cae26dfab0141876ceffa1fde97cc5e2b92591",
+    "dirty": false
   },
   "environment": {
     "python": "3.12.13",
@@ -682,13 +682,13 @@
         "recall_at_5": 1.0,
         "mrr": 1.0,
         "ndcg_at_10": 1.0,
-        "elapsed_seconds": 0.21084320000227308
+        "elapsed_seconds": 0.2260085000016261
       },
       "v2": {
         "recall_at_5": 1.0,
         "mrr": 1.0,
         "ndcg_at_10": 1.0,
-        "elapsed_seconds": 0.41673269999591867
+        "elapsed_seconds": 0.44190399999934016
       },
       "relative_recall_gain": 0.0,
       "gate": {
@@ -1662,17 +1662,17 @@
       "queries_per_variant": 80,
       "evidence_type": "measured-local-machine",
       "reranker": "disabled",
-      "build_seconds": 0.48913899999752175,
+      "build_seconds": 0.5147584000005736,
       "database_bytes": 20623360,
       "baseline": {
-        "p50_ms": 0.028799993742723018,
-        "p95_ms": 0.03860000288113952,
-        "max_ms": 0.05709999823011458
+        "p50_ms": 0.047400004405062646,
+        "p95_ms": 0.059100006183143705,
+        "max_ms": 0.0684000042383559
       },
       "v2": {
-        "p50_ms": 0.027599999157246202,
-        "p95_ms": 0.03390000347280875,
-        "max_ms": 0.04150000313529745
+        "p50_ms": 0.04650000482797623,
+        "p95_ms": 0.054299998737405986,
+        "max_ms": 0.057600002037361264
       },
       "gate": {
         "passed": true,

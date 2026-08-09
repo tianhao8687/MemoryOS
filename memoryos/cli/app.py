@@ -213,6 +213,16 @@ def search(
         database.close()
 
 
+@app.command("vector-rebuild")
+def vector_rebuild(context: typer.Context) -> None:
+    """Rebuild the persistent sqlite-vec namespace for the configured embedding model."""
+    database, service, _ = _runtime(context).components()
+    try:
+        console.print_json(data=service.rebuild_vector_index())
+    finally:
+        database.close()
+
+
 @app.command("list")
 def list_memories(
     context: typer.Context,

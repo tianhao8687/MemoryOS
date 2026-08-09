@@ -13,6 +13,7 @@ from memoryos.db.models import (
     ClaimRow,
     EntityRow,
     MemoryFeedbackRow,
+    MemoryHealthRow,
     MemoryRow,
     RetrievalRunRow,
 )
@@ -21,10 +22,12 @@ from memoryos.domain.schemas import (
     ClaimStaleState,
     ClaimStatus,
     FeedbackValue,
+    MemoryTemperature,
     QueryIntent,
     SearchRequest,
 )
 from memoryos.errors import ProviderError
+from memoryos.health import MemoryHealthService
 from memoryos.retrieval.search import RetrievalEngine
 from memoryos.retrieval_v2.diversity import mmr_select
 from memoryos.retrieval_v2.fusion import reciprocal_rank_fusion
@@ -86,7 +89,7 @@ class RetrievalPipeline:
             as_known_at=request.as_known_at,
         )
         baseline_request = request.model_copy(
-            update={"limit": min(500, max(200, request.limit * 10)), "offset": 0}
+            update={"limit": min(300, max(80, request.limit * 2)), "offset": 0}
         )
         baseline = self.baseline.search(baseline_request, allowed_scopes=allowed_scopes)
         by_id = {str(item["memory"]["id"]): item for item in baseline["items"]}
@@ -141,8 +144,18 @@ class RetrievalPipeline:
                 ).all()
             }
             feedback = self._feedback_factors(session, list(by_id))
+            archived_ids = set(
+                session.scalars(
+                    select(MemoryHealthRow.memory_id).where(
+                        MemoryHealthRow.memory_id.in_(list(by_id)),
+                        MemoryHealthRow.temperature == MemoryTemperature.ARCHIVED,
+                    )
+                )
+            )
             candidates = []
             for memory_id, item in by_id.items():
+                if memory_id in archived_ids and not request.include_history:
+                    continue
                 claims = claims_by_memory.get(memory_id, [])
                 freshness = self._freshness(claims)
                 truth_state = self._truth_state(claims)
@@ -208,6 +221,10 @@ class RetrievalPipeline:
             total = len(candidates)
             diverse = mmr_select(candidates, limit=min(total, request.offset + request.limit))
             selected = diverse[request.offset : request.offset + request.limit]
+            MemoryHealthService.record_retrieval(
+                session,
+                [str(item["memory"]["id"]) for item in selected],
+            )
             run = RetrievalRunRow(
                 query=request.query,
                 task=task,

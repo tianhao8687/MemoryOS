@@ -11,16 +11,20 @@ interface Props {
     | 'FAIL'
     | 'needs_review'
     | 'contested'
+    | 'possible'
+    | 'confirmed'
+    | 'dismissed'
+    | 'abstained'
 }
 
 export function StatusBadge({ status }: Props) {
   const label = status.replaceAll('_', ' ')
   const Icon =
-    status === 'active' || status === 'PASS' || status === 'resolved' || status === 'fresh'
+    status === 'active' || status === 'PASS' || status === 'resolved' || status === 'fresh' || status === 'confirmed'
       ? CheckCircle2
-      : status === 'candidate' || status === 'WARN' || status === 'moved' || status === 'suspect'
+      : status === 'candidate' || status === 'WARN' || status === 'moved' || status === 'suspect' || status === 'possible' || status === 'abstained'
         ? Clock3
-        : status === 'FAIL' || status === 'rejected' || status === 'forgotten' || status === 'stale'
+        : status === 'FAIL' || status === 'rejected' || status === 'forgotten' || status === 'stale' || status === 'dismissed'
           ? XCircle
           : status === 'needs_review' || status === 'contested'
             ? AlertTriangle

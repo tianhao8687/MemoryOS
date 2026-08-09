@@ -1,0 +1,23 @@
+{
+  "schema": "memoryos-v2.1-full-pipeline-performance@1",
+  "generated_at": "2026-08-09T18:37:41.926538+00:00",
+  "records": 100000,
+  "rounds": 25,
+  "insert_seconds": 7.044,
+  "search": {
+    "p50_ms": 89.794,
+    "p95_ms": 104.113,
+    "target_p95_ms": 150.0
+  },
+  "context": {
+    "p50_ms": 130.14,
+    "p95_ms": 143.847,
+    "target_p95_ms": 300.0
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.13",
+    "pipeline": "RetrievalPipeline + TaskAwareContextCompiler"
+  },
+  "passed": true
+}

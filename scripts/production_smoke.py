@@ -293,6 +293,19 @@ def _assert_http_state(
             or benchmark.json().get("schema") != "memorybench-v2-report@1"
         ):
             raise RuntimeError("bundled MemoryBench report is unavailable")
+        coding_benchmark = client.get("/api/benchmarks/coding-memory-bench-v2.1")
+        if (
+            coding_benchmark.status_code != 200
+            or coding_benchmark.json().get("schema") != "coding-memory-bench-v2.1@1"
+        ):
+            raise RuntimeError("bundled CodingMemoryBench V2.1 report is unavailable")
+        doctor = client.get("/api/doctor")
+        doctor_checks = {item.get("name"): item for item in doctor.json().get("checks", [])}
+        if (
+            doctor.status_code != 200
+            or doctor_checks.get("sqlite_vec_runtime", {}).get("status") != "PASS"
+        ):
+            raise RuntimeError("packaged sqlite-vec runtime is unavailable")
         if legacy_id is not None:
             legacy = client.get("/api/memories", params={"q": "V1 upgrade persistence"})
             legacy_ids = {item["memory"]["id"] for item in legacy.json().get("items", [])}
@@ -336,8 +349,8 @@ def main() -> None:
             _assert_http_state(base_url, legacy_id=legacy_id)
             with httpx.Client(base_url=base_url, timeout=5, trust_env=False) as client:
                 first_status = client.get("/api/status").json()
-            if first_status.get("schema_version") != "0002_memory_intelligence":
-                raise RuntimeError("packaged app did not migrate the V1 database to V2")
+            if first_status.get("schema_version") != "0003_reality_intelligence_hardening":
+                raise RuntimeError("packaged app did not migrate the V1 database to V2.1")
             memory_id, mcp_tool_count = asyncio.run(_mcp_write(executable, data_dir))
             anchor_repository = _prepare_anchor_repository(clean_root)
             anchor = _run_packaged_json(
@@ -391,8 +404,11 @@ def main() -> None:
         "memory_id": memory_id,
         "legacy_memory_id": legacy_id,
         "v1_to_v2_migration": True,
+        "v1_to_v21_migration": True,
         "schema_version": first_status["schema_version"],
         "memorybench_bundled": True,
+        "coding_memory_bench_bundled": True,
+        "sqlite_vec_bundled": True,
         "tree_sitter_bundled": anchor["parser_backend"] == "tree-sitter",
         "restart_persistence": True,
         "ui_health": True,

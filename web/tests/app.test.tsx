@@ -10,7 +10,7 @@ const activeMemory = {
 }
 
 function response(path: string) {
-  if (path.startsWith('/api/status')) return { version: '2.0.0', database: 'memoryos.db', schema_version: '0002_memory_intelligence', counts: { candidate: 1, active: 1, superseded: 0, expired: 0, forgotten: 0, rejected: 0 }, sources: 2, provenance_rate: 1, conflicts: 0, embedding_provider: 'disabled', mode: 'offline' }
+  if (path.startsWith('/api/status')) return { version: '2.1.0', database: 'memoryos.db', schema_version: '0003_reality_intelligence_hardening', counts: { candidate: 1, active: 1, superseded: 0, expired: 0, forgotten: 0, rejected: 0 }, sources: 2, provenance_rate: 1, conflicts: 0, embedding_provider: 'disabled', mode: 'offline' }
   if (path.startsWith('/api/repositories')) return [{ id: 'repo', stable_key: 'memoryos', name: 'memoryos', path: 'C:/memoryos', remote_url: null, default_branch: 'main' }]
   if (path.startsWith('/api/conflicts')) return []
   if (path.startsWith('/api/timeline')) return []

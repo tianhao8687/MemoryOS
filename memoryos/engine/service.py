@@ -18,8 +18,11 @@ from memoryos.db.models import (
     ClaimEvidenceRow,
     ClaimRelationRow,
     ClaimRow,
+    ClaimVersionRow,
     ConsolidationCandidateRow,
+    MemoryHealthRow,
     MemoryRow,
+    PossibleConflictRow,
     RelationRow,
     RetrievalRunRow,
     SourceAnchorRow,
@@ -35,8 +38,11 @@ from memoryos.domain.schemas import (
     FeedbackCreate,
     MemoryCreate,
     MemoryStatus,
+    MemoryTemperature,
+    MemoryType,
     MemoryUpdate,
     MemoryView,
+    PossibleConflictStatus,
     RefreshRequest,
     SearchRequest,
     SourceCreate,
@@ -50,8 +56,11 @@ from memoryos.errors import (
 )
 from memoryos.feedback import FeedbackService
 from memoryos.freshness import SourceAnchorService
+from memoryos.health import MemoryHealthService
 from memoryos.providers.openai_compatible import (
+    OpenAICompatibleConsolidationJudge,
     OpenAICompatibleEmbeddingProvider,
+    OpenAICompatibleRelationshipJudge,
     OpenAICompatibleReranker,
 )
 from memoryos.retrieval.search import RetrievalEngine
@@ -92,13 +101,32 @@ class MemoryService:
                 timeout=settings.provider_timeout_seconds,
                 max_input_chars=settings.provider_max_input_chars,
             )
+        relationship_judge = None
+        if settings.extractor_base_url and settings.relationship_model:
+            relationship_judge = OpenAICompatibleRelationshipJudge(
+                base_url=settings.extractor_base_url,
+                model=settings.relationship_model,
+                api_key=settings.extractor_api_key,
+                timeout=settings.provider_timeout_seconds,
+                max_input_chars=settings.provider_max_input_chars,
+            )
+        consolidation_judge = None
+        if settings.extractor_base_url and settings.consolidation_model:
+            consolidation_judge = OpenAICompatibleConsolidationJudge(
+                base_url=settings.extractor_base_url,
+                model=settings.consolidation_model,
+                api_key=settings.extractor_api_key,
+                timeout=settings.provider_timeout_seconds,
+                max_input_chars=settings.provider_max_input_chars,
+            )
         self.retrieval = RetrievalEngine(database, embedding_provider)
         self.retrieval_v2 = RetrievalPipeline(database, self.retrieval, reranker)
         self.context_builder = TaskAwareContextCompiler(self.retrieval_v2)
-        self.truth = TruthMaintenanceService()
+        self.truth = TruthMaintenanceService(relationship_judge)
         self.anchors = SourceAnchorService(database)
-        self.consolidation = ConsolidationService(database)
+        self.consolidation = ConsolidationService(database, consolidation_judge)
         self.feedback_service = FeedbackService(database)
+        self.health_service = MemoryHealthService(database)
 
     def _index_memory_safely(self, memory_id: str) -> None:
         try:
@@ -150,12 +178,19 @@ class MemoryService:
             if valid_to_expired or ttl_expired:
                 previous = memory.status.value
                 memory.status = MemoryStatus.EXPIRED
+                expiry_reason = "valid_to" if valid_to_expired else "ttl"
+                self.truth.expire_claims(
+                    session,
+                    memory.id,
+                    reason=f"Memory expired by {expiry_reason}",
+                    at=now,
+                )
                 self._audit(
                     session,
                     "expire",
                     memory.id,
                     actor="system",
-                    details={"from": previous, "reason": "valid_to" if valid_to_expired else "ttl"},
+                    details={"from": previous, "reason": expiry_reason},
                 )
                 expired += 1
         return expired
@@ -323,7 +358,12 @@ class MemoryService:
                 )
             if strategy is ConflictStrategy.REJECT:
                 memory.status = MemoryStatus.REJECTED
-                self.truth.reject_claims(session, memory.id)
+                self.truth.reject_claims(
+                    session,
+                    memory.id,
+                    actor=actor,
+                    reason=rationale or "Rejected during conflict resolution",
+                )
                 self._audit(
                     session,
                     "reject",
@@ -371,6 +411,7 @@ class MemoryService:
                     strategy=strategy,
                     conflicts=conflicts,
                     rationale=rationale,
+                    actor=actor,
                 )
                 self._audit(
                     session,
@@ -395,7 +436,7 @@ class MemoryService:
             if memory.status is not MemoryStatus.CANDIDATE:
                 raise InvalidTransitionError("only candidate memories can be rejected")
             memory.status = MemoryStatus.REJECTED
-            self.truth.reject_claims(session, memory.id)
+            self.truth.reject_claims(session, memory.id, actor=actor)
             self._audit(session, "reject", memory.id, actor=actor)
             session.flush()
             return self._serialize_memory(memory)
@@ -410,7 +451,7 @@ class MemoryService:
                 )
             previous = memory.status
             memory.status = MemoryStatus.FORGOTTEN
-            self.truth.forget_claims(session, memory.id)
+            self.truth.forget_claims(session, memory.id, actor=actor)
             self._audit(
                 session,
                 "forget",
@@ -430,6 +471,85 @@ class MemoryService:
         with self.database.session() as session:
             self._expire_due(session)
         return self.retrieval_v2.search(request)
+
+    def vector_status(self) -> list[dict[str, Any]]:
+        return self.retrieval.vector_status()
+
+    def rebuild_vector_index(self) -> dict[str, Any]:
+        return self.retrieval.rebuild_ann_index()
+
+    def memory_health(
+        self, *, temperature: MemoryTemperature | None = None
+    ) -> list[dict[str, Any]]:
+        return self.health_service.items(temperature=temperature)
+
+    def evaluate_memory_health(self) -> dict[str, Any]:
+        return self.health_service.evaluate()
+
+    def archive_memory(self, memory_id: str, *, actor: str = "manual") -> dict[str, Any]:
+        return self.health_service.archive(memory_id, actor=actor)
+
+    def restore_archived_memory(self, memory_id: str, *, actor: str = "manual") -> dict[str, Any]:
+        return self.health_service.restore(memory_id, actor=actor)
+
+    def distill_memories(
+        self,
+        memory_ids: list[str],
+        *,
+        title: str | None = None,
+        actor: str = "manual",
+    ) -> dict[str, Any]:
+        unique_ids = list(dict.fromkeys(memory_ids))
+        if len(unique_ids) < 2:
+            raise ValueError("distillation requires at least two cold or archived memories")
+        with self.database.session() as session:
+            memories = list(session.scalars(select(MemoryRow).where(MemoryRow.id.in_(unique_ids))))
+            if len(memories) != len(unique_ids):
+                raise NotFoundError("one or more distillation memories were not found")
+            health_by_id = {item["memory_id"]: item for item in self.health_service.items()}
+            disallowed = [
+                memory.id
+                for memory in memories
+                if health_by_id.get(memory.id, {}).get("temperature")
+                not in {MemoryTemperature.COLD.value, MemoryTemperature.ARCHIVED.value}
+            ]
+            if disallowed:
+                raise InvalidTransitionError(
+                    "distillation is limited to cold or archived memories",
+                    details={"memory_ids": disallowed},
+                )
+            scopes = {(memory.scope_type, memory.scope_key) for memory in memories}
+            if len(scopes) != 1:
+                raise ValueError("distillation memories must share a scope")
+            first = memories[0]
+            content = "\n\n".join(
+                f"[{memory.id}] {memory.title}: {memory.content}" for memory in memories
+            )
+        digest = hashlib.sha256("|".join(sorted(unique_ids)).encode("utf-8")).hexdigest()[:16]
+        proposal = self.propose(
+            MemoryCreate(
+                scope_type=first.scope_type,
+                scope_key=first.scope_key,
+                memory_type=MemoryType.SEMANTIC,
+                category="distillation",
+                title=title or f"Distillation candidate {digest}",
+                content=content[:20000],
+                created_by=CreatedBy.AGENT,
+                metadata={
+                    "distilled_from": unique_ids,
+                    "activation": "human_confirmation_required",
+                    "mode": "grounded-extractive",
+                },
+                source=SourceCreate(
+                    source_type=SourceType.AGENT,
+                    source_ref=f"memory-health:distillation:{digest}",
+                    excerpt=content[:10000],
+                    metadata={"supporting_memory_ids": unique_ids},
+                ),
+            ),
+            actor=actor,
+        )
+        return {"candidate": proposal, "supporting_memory_ids": unique_ids}
 
     def context(self, request: ContextRequest) -> dict[str, Any]:
         with self.database.session() as session:
@@ -647,6 +767,71 @@ class MemoryService:
                     )
             return results
 
+    def possible_conflicts(self, *, limit: int = 100) -> list[dict[str, Any]]:
+        with self.database.session() as session:
+            rows = list(
+                session.scalars(
+                    select(PossibleConflictRow)
+                    .order_by(PossibleConflictRow.created_at.desc())
+                    .limit(limit)
+                )
+            )
+            return [self._serialize_possible_conflict(row) for row in rows]
+
+    def resolve_possible_conflict(
+        self,
+        conflict_id: str,
+        *,
+        confirmed: bool,
+        actor: str,
+        rationale: str | None = None,
+    ) -> dict[str, Any]:
+        with self.database.session() as session:
+            row = session.get(PossibleConflictRow, conflict_id)
+            if row is None:
+                raise NotFoundError("possible conflict was not found")
+            row.status = (
+                PossibleConflictStatus.CONFIRMED if confirmed else PossibleConflictStatus.DISMISSED
+            )
+            row.resolved_at = datetime.now(UTC)
+            row.resolved_by = actor
+            result = dict(row.model_result_json)
+            result["manual_resolution"] = {
+                "confirmed": confirmed,
+                "rationale": rationale,
+            }
+            row.model_result_json = result
+            session.add(
+                AuditEventRow(
+                    action="possible_conflict_resolved",
+                    entity_type="possible_conflict",
+                    entity_id=row.id,
+                    actor=actor,
+                    details={"confirmed": confirmed, "rationale": rationale},
+                )
+            )
+            session.flush()
+            return self._serialize_possible_conflict(row)
+
+    @staticmethod
+    def _serialize_possible_conflict(row: PossibleConflictRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "left_claim_id": row.left_claim_id,
+            "right_claim_id": row.right_claim_id,
+            "status": row.status.value,
+            "deterministic_relationship": row.deterministic_relationship,
+            "deterministic_confidence": row.deterministic_confidence,
+            "reason": row.reason,
+            "model_result": row.model_result_json,
+            "provider_fingerprint": row.provider_fingerprint,
+            "prompt_version": row.prompt_version,
+            "evidence_hash": row.evidence_hash,
+            "created_at": row.created_at.isoformat(),
+            "resolved_at": row.resolved_at.isoformat() if row.resolved_at else None,
+            "resolved_by": row.resolved_by,
+        }
+
     def history(
         self, *, memory_id: str | None = None, key: str | None = None
     ) -> list[dict[str, Any]]:
@@ -753,6 +938,23 @@ class MemoryService:
             }
             source_count = int(session.scalar(select(func.count()).select_from(SourceRow)) or 0)
             claim_count = int(session.scalar(select(func.count()).select_from(ClaimRow)) or 0)
+            claim_version_count = int(
+                session.scalar(select(func.count()).select_from(ClaimVersionRow)) or 0
+            )
+            possible_conflict_count = int(
+                session.scalar(select(func.count()).select_from(PossibleConflictRow)) or 0
+            )
+            health_counts = {
+                temperature.value: int(
+                    session.scalar(
+                        select(func.count())
+                        .select_from(MemoryHealthRow)
+                        .where(MemoryHealthRow.temperature == temperature)
+                    )
+                    or 0
+                )
+                for temperature in MemoryTemperature
+            }
             active_count = counts[MemoryStatus.ACTIVE.value]
             active_with_source = int(
                 session.scalar(
@@ -765,14 +967,18 @@ class MemoryService:
             )
             provenance_rate = active_with_source / active_count if active_count else 1.0
             return {
-                "version": "2.0.0",
+                "version": "2.1.0",
                 "database": str(self.settings.database_path),
                 "schema_version": self.database.schema_version(),
                 "counts": counts,
                 "sources": source_count,
                 "claims": claim_count,
+                "claim_versions": claim_version_count,
                 "provenance_rate": provenance_rate,
                 "conflicts": len(self.conflicts()),
+                "possible_conflicts": possible_conflict_count,
+                "memory_health": health_counts,
+                "vector_index": self.retrieval.vector_status(),
                 "embedding_provider": "configured"
                 if self.settings.embedding_base_url and self.settings.embedding_model
                 else "disabled",

@@ -19,11 +19,16 @@ def main() -> None:
     web_dist = ROOT / "web" / "dist"
     migrations = ROOT / "memoryos" / "db" / "migrations"
     benchmark_report = ROOT / "docs" / "verification" / "v2" / "memorybench-report.json"
+    coding_benchmark_report = ROOT / "docs" / "verification" / "v2.1" / "coding-memory-bench.json"
     entrypoint = ROOT / "memoryos" / "__main__.py"
     if not (web_dist / "index.html").is_file():
         raise SystemExit("web/dist is missing; run the frontend production build first")
     if not benchmark_report.is_file():
         raise SystemExit("MemoryBench report is missing; run scripts/memorybench_v2.py first")
+    if not coding_benchmark_report.is_file():
+        raise SystemExit(
+            "CodingMemoryBench report is missing; run scripts/coding_memory_bench.py first"
+        )
     command = [
         sys.executable,
         "-m",
@@ -48,8 +53,12 @@ def main() -> None:
         f"{migrations}{os.pathsep}memoryos/db/migrations",
         "--add-data",
         f"{benchmark_report}{os.pathsep}verification",
+        "--add-data",
+        f"{coding_benchmark_report}{os.pathsep}verification",
         "--collect-all",
         "mcp",
+        "--collect-all",
+        "sqlite_vec",
         "--collect-all",
         "tree_sitter_language_pack",
         "--collect-submodules",

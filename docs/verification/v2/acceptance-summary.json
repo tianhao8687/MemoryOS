@@ -1,6 +1,6 @@
 {
   "schema": "memoryos-v2-acceptance@1",
-  "generated_at": "2026-08-09T17:06:31.402697+00:00",
+  "generated_at": "2026-08-09T18:41:02.956361+00:00",
   "result": "PASS",
   "checks": [
     {
@@ -171,7 +171,7 @@
       "exact-numpy",
       "sqlite-vec-optional"
     ],
-    "package_schema": "0002_memory_intelligence",
+    "package_schema": "0003_reality_intelligence_hardening",
     "package_mcp_tools": 12,
     "package_tree_sitter": true
   },

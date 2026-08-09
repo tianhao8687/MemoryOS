@@ -103,7 +103,23 @@ export function CurrentTruthPage() {
                     <li key={claim.id}>
                       <strong>{objectLabel(claim)}</strong>
                       <span>{claim.modality} · {Math.round(claim.confidence * 100)}% confidence</span>
-                      <small>{claim.status} · freshness {claim.stale_state}</small>
+                      <small>
+                        {claim.status} · freshness {claim.stale_state}
+                        {claim.version_number ? ` · version ${claim.version_number}` : ''}
+                      </small>
+                      {claim.transaction_from ? (
+                        <details className="claim-version-detail">
+                          <summary>Transaction and validity</summary>
+                          <dl>
+                            <div><dt>Known from</dt><dd>{new Date(claim.transaction_from).toLocaleString()}</dd></div>
+                            <div><dt>Known until</dt><dd>{claim.transaction_to ? new Date(claim.transaction_to).toLocaleString() : 'current'}</dd></div>
+                            <div><dt>Valid from</dt><dd>{claim.valid_from ? new Date(claim.valid_from).toLocaleString() : 'unbounded'}</dd></div>
+                            <div><dt>Valid until</dt><dd>{claim.valid_to ? new Date(claim.valid_to).toLocaleString() : 'unbounded'}</dd></div>
+                            <div><dt>Reason</dt><dd>{claim.reason ?? 'not recorded'}</dd></div>
+                            <div><dt>Actor</dt><dd><code>{claim.actor ?? 'unknown'}</code></dd></div>
+                          </dl>
+                        </details>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

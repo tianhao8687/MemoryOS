@@ -4,24 +4,27 @@
   "clean_path_copy": true,
   "first_health": {
     "ok": true,
-    "version": "2.0.0",
+    "version": "2.1.0",
     "database": "ok"
   },
   "second_health": {
     "ok": true,
-    "version": "2.0.0",
+    "version": "2.1.0",
     "database": "ok"
   },
   "mcp_tools": 12,
-  "memory_id": "168d6d24-3e51-4b8d-ac58-3f5885773ac5",
+  "memory_id": "9b1b2914-69b5-4ec4-941d-01780f3c2298",
   "legacy_memory_id": "00000000-0000-0000-0000-000000000001",
   "v1_to_v2_migration": true,
-  "schema_version": "0002_memory_intelligence",
+  "v1_to_v21_migration": true,
+  "schema_version": "0003_reality_intelligence_hardening",
   "memorybench_bundled": true,
+  "coding_memory_bench_bundled": true,
+  "sqlite_vec_bundled": true,
   "tree_sitter_bundled": true,
   "restart_persistence": true,
   "ui_health": true,
   "cli_status": true,
-  "elapsed_seconds": 9.469,
-  "server_output_lines": 28
+  "elapsed_seconds": 9.294,
+  "server_output_lines": 34
 }

@@ -113,6 +113,25 @@ test('intelligence workbench exposes truth, retrieval traces, and benchmark prov
   expect(results.violations).toEqual([])
 })
 
+test('reality hardening workbench exposes conflict audit and health governance', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop V2.1 workflow')
+  await navigate(page, 'Possible Conflicts')
+  await expect(page.getByRole('heading', { name: 'Possible Conflicts' })).toBeVisible()
+  await expect(page.getByText('Abstention is safe')).toBeVisible()
+
+  await navigate(page, 'Memory Health')
+  await expect(page.getByRole('heading', { name: 'Memory Health' })).toBeVisible()
+  await page.getByRole('button', { name: 'Evaluate health' }).click()
+  await expect(page.getByRole('table')).toBeVisible()
+  await expect(page.getByText('Only Cold or Archived memories can be distilled.')).toBeVisible()
+
+  await navigate(page, 'Settings')
+  await expect(page.getByRole('heading', { name: 'Vector index' })).toBeVisible()
+  await expect(page.getByText('sqlite vec runtime')).toBeVisible()
+  const results = await new AxeBuilder({ page }).analyze()
+  expect(results.violations).toEqual([])
+})
+
 test('mobile intelligence navigation stays within the viewport', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile intelligence layout assertion')
   await navigate(page, 'Benchmarks')
@@ -124,4 +143,14 @@ test('mobile intelligence navigation stays within the viewport', async ({ page }
   }))
   expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.innerWidth)
   expect(metrics.bodyWidth).toBeLessThanOrEqual(metrics.innerWidth)
+
+  await navigate(page, 'Memory Health')
+  await expect(page.getByRole('heading', { name: 'Memory Health' })).toBeVisible()
+  const healthMetrics = await page.evaluate(() => ({
+    innerWidth: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    bodyWidth: document.body.scrollWidth,
+  }))
+  expect(healthMetrics.documentWidth).toBeLessThanOrEqual(healthMetrics.innerWidth)
+  expect(healthMetrics.bodyWidth).toBeLessThanOrEqual(healthMetrics.innerWidth)
 })

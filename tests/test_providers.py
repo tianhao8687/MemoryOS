@@ -102,7 +102,7 @@ def test_active_memory_is_indexed_and_hybrid_search_is_available(
     with database.session() as session:
         assert session.scalar(select(func.count()).select_from(EmbeddingRow)) == 1
     result = service.search(SearchRequest(query="FastAPI"))
-    assert result["mode"] == "hybrid"
+    assert result["mode"] == "hybrid-ann"
     assert result["total"] == 1
 
 

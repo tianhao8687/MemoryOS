@@ -35,7 +35,7 @@ def test_v2_http_truth_debug_feedback_and_consolidation_contracts(tmp_path: Path
         },
     }
     with TestClient(create_app(settings)) as client:
-        assert client.get("/api/health").json()["version"] == "2.0.0"
+        assert client.get("/api/health").json()["version"] == "2.1.0"
         memory = client.post("/api/memories", json=memory_payload, headers=headers).json()["memory"]
         truth = client.post(
             "/api/current-truth",
@@ -92,4 +92,7 @@ def test_v2_http_truth_debug_feedback_and_consolidation_contracts(tmp_path: Path
         benchmark = client.get("/api/benchmarks/memorybench-v2")
         assert benchmark.status_code == 200
         assert benchmark.json()["schema"] == "memorybench-v2-report@1"
+        coding_benchmark = client.get("/api/benchmarks/coding-memory-bench-v2.1")
+        assert coding_benchmark.status_code == 200
+        assert coding_benchmark.json()["schema"] == "coding-memory-bench-v2.1@1"
         assert benchmark.json()["suites"]["agent_ab"]["real_model"]["status"] == "external_blocker"

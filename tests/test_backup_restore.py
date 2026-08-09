@@ -123,7 +123,7 @@ def test_v1_sqlite_backup_restores_and_migrates_to_v2(
             archive_path, create_safety_backup=False
         )
         upgraded = MemoryService(upgraded_database, upgraded_settings)
-        assert upgraded_database.schema_version() == "0002_memory_intelligence"
+        assert upgraded_database.schema_version() == "0003_reality_intelligence_hardening"
         assert upgraded.get(memory["id"])["status"] == "active"
         assert upgraded.search(SearchRequest(query="FastAPI"))["total"] == 1
         assert upgraded.get(memory["id"])

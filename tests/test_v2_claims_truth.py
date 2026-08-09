@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from memoryos.claims.canonicalize import extract_claim_candidates
 from memoryos.claims.predicates import compare_claim_values
-from memoryos.db.models import ClaimRow, EntityRow
+from memoryos.db.models import ClaimRow, ClaimVersionRow, EntityRow
 from memoryos.db.session import Database
 from memoryos.domain.schemas import (
     ClaimPolarity,
@@ -214,6 +214,17 @@ def test_a19_bitemporal_valid_time_and_known_at_are_distinct(
         assert old_claim is not None and new_claim is not None
         old_claim.recorded_at = august_2
         new_claim.recorded_at = august_7
+        old_version = session.scalar(
+            select(ClaimVersionRow).where(ClaimVersionRow.claim_id == old_claim.id)
+        )
+        new_version = session.scalar(
+            select(ClaimVersionRow).where(ClaimVersionRow.claim_id == new_claim.id)
+        )
+        assert old_version is not None and new_version is not None
+        old_version.transaction_from = august_2
+        old_version.created_at = august_2
+        new_version.transaction_from = august_7
+        new_version.created_at = august_7
 
     selector = {
         "scope_type": ScopeType.REPOSITORY,

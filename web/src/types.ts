@@ -64,6 +64,9 @@ export interface EntityRecord {
 
 export interface ClaimRecord {
   id: string
+  version_id?: string
+  version_number?: number
+  identity_id?: string
   memory_id: string
   subject: EntityRecord | null
   predicate: string
@@ -76,6 +79,10 @@ export interface ClaimRecord {
   valid_from: string | null
   valid_to: string | null
   recorded_at: string
+  transaction_from?: string
+  transaction_to?: string | null
+  reason?: string
+  actor?: string
   stale_state: string
 }
 
@@ -192,6 +199,31 @@ export interface MemoryBenchReport {
   }
 }
 
+export interface CodingMemoryBenchMode {
+  retrieval_recall_at_5: number
+  temporal_accuracy: number
+  conflict: { precision: number; recall: number; f1: number }
+  perfect_score_warning: string | null
+  real_model: boolean
+  model_status: string
+}
+
+export interface CodingMemoryBenchReport {
+  schema: string
+  generated_at: string
+  blind_protocol: {
+    runtime_payload_contains_gold: boolean
+    gold_loaded_only_by_scorer: boolean
+    immutable_input_hash: string
+    immutable_gold_hash: string
+  }
+  sample_sizes: Record<string, number>
+  modes: Record<string, CodingMemoryBenchMode>
+  release_gates: Record<string, boolean>
+  all_measured_gates_passed: boolean
+  truthfulness: string
+}
+
 export interface StatusResponse {
   version: string
   database: string
@@ -283,4 +315,56 @@ export interface DoctorCheck {
 export interface DoctorResponse {
   overall: 'PASS' | 'WARN' | 'FAIL'
   checks: DoctorCheck[]
+}
+
+export type MemoryTemperature = 'hot' | 'warm' | 'cold' | 'archived'
+
+export interface MemoryHealthRecord {
+  memory_id: string
+  title: string
+  memory_status: MemoryStatus
+  temperature: MemoryTemperature
+  health_score: number
+  components: Record<string, number | string>
+  explanation: string
+  retrieval_count: number
+  last_retrieved_at: string | null
+  archived_at: string | null
+  evaluated_at: string
+}
+
+export interface PossibleConflictRecord {
+  id: string
+  left_claim_id: string
+  right_claim_id: string
+  status: 'possible' | 'confirmed' | 'dismissed' | 'abstained'
+  deterministic_relationship: string
+  deterministic_confidence: number
+  reason: string
+  model_result: {
+    relationship?: string
+    confidence?: number
+    explanation?: string
+    abstain?: boolean
+  }
+  provider_fingerprint: string | null
+  prompt_version: string | null
+  evidence_hash: string
+  created_at: string
+  resolved_at: string | null
+  resolved_by: string | null
+}
+
+export interface VectorIndexRecord {
+  namespace: string
+  backend: string
+  provider: string
+  model: string
+  model_fingerprint: string
+  dimensions: number
+  item_count: number
+  status: string
+  unavailable_reason: string | null
+  last_rebuild_at: string | null
+  updated_at: string
 }

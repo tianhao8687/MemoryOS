@@ -31,9 +31,9 @@ const claim = {
 function bodyFor(path: string) {
   if (path.startsWith('/api/status'))
     return {
-      version: '2.0.0',
+      version: '2.1.0',
       database: 'memoryos.db',
-      schema_version: '0002_memory_intelligence',
+      schema_version: '0003_reality_intelligence_hardening',
       counts: { candidate: 0, active: 1, superseded: 0, expired: 0, forgotten: 0, rejected: 0 },
       sources: 1,
       provenance_rate: 1,
@@ -59,6 +59,8 @@ function bodyFor(path: string) {
     return { task: 'architecture', repository: 'memoryos', branch: 'main', budget: 6000, characters_used: 420, retrieval_mode: 'rrf-fts5', retrieval_run_id: 'run-11111111', query_plan: { intent: 'current_decision' }, truth_state: 'resolved', sections: {}, manifest: [{ memory_id: claim.memory_id, claim_ids: [claim.id], included: true, inclusion_reason: 'required coverage: decision', exclusion_reason: null, utility: 0.91, cost: 220, truth_state: 'resolved', freshness: 'fresh', retrieval_trace: { fts_rank: 1 } }], text: 'Project Memory Context\nUse PostgreSQL', debug: { config_hash: 'b'.repeat(64), reranker: 'disabled', candidates: [] } }
   if (path.startsWith('/api/benchmarks/memorybench-v2'))
     return { schema: 'memorybench-v2-report@1', generated_at: '2026-08-10T10:00:00Z', seed: 20260810, config_hash: 'c'.repeat(64), git: { commit: 'd'.repeat(40), dirty: true }, provider_policy: { default: 'heuristic/deterministic-rules-v2' }, suites: { retrieval: { suite: 'R Retrieval', sample_size: 250, evidence_type: 'synthetic-deterministic', baseline: { recall_at_5: 0.8 }, v2: { recall_at_5: 1 }, gate: { passed: true, rule: 'Recall@5' } }, agent_ab: { suite: 'A Agent A/B', sample_size: 30, fixture: { baseline: { task_success: 0.5 }, memoryos_enabled: { task_success: 0.8 } }, truthfulness_gate: { passed: true, reason: 'fixture only' } } }, release_gates: { measured_all_passed: true, real_model_agent_effect: 'external_blocker', release_readiness: 'conditional_external_blocker', note: 'All measured gates pass.' } }
+  if (path.startsWith('/api/benchmarks/coding-memory-bench-v2.1'))
+    return { schema: 'coding-memory-bench-v2.1@1', generated_at: '2026-08-10T10:00:00Z', blind_protocol: { runtime_payload_contains_gold: false, gold_loaded_only_by_scorer: true, immutable_input_hash: 'e'.repeat(64), immutable_gold_hash: 'f'.repeat(64) }, sample_sizes: { retrieval_hard_negatives: 100, temporal: 100, conflict: 100 }, modes: { baseline: { retrieval_recall_at_5: 0, temporal_accuracy: 0, conflict: { precision: 0.5, recall: 1, f1: 0.667 }, perfect_score_warning: null, real_model: false, model_status: 'not_applicable' }, v2: { retrieval_recall_at_5: 1, temporal_accuracy: 1, conflict: { precision: 1, recall: 1, f1: 1 }, perfect_score_warning: 'Perfect score detected; expand adversarial cases.', real_model: false, model_status: 'not_applicable' }, v2_model: { retrieval_recall_at_5: 1, temporal_accuracy: 1, conflict: { precision: 1, recall: 1, f1: 1 }, perfect_score_warning: 'Perfect score detected; expand adversarial cases.', real_model: false, model_status: 'external_blocker' } }, release_gates: { blind_gold_isolation: true }, all_measured_gates_passed: true, truthfulness: 'No model effect claim.' }
   return []
 }
 
@@ -113,6 +115,8 @@ describe('Memory Intelligence Workbench', () => {
     renderRoute('/benchmarks')
     expect(await screen.findByRole('heading', { name: 'Benchmark Dashboard' })).toBeInTheDocument()
     expect(await screen.findByText('R Retrieval')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Blind CodingMemoryBench V2.1' })).toBeInTheDocument()
+    expect(screen.getByText('Gold isolated')).toBeInTheDocument()
     expect(screen.getByText('Real-model Agent A/B: external blocker')).toBeInTheDocument()
     expect(screen.getByText('Fixture only')).toBeInTheDocument()
   })

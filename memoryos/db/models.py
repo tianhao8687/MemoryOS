@@ -33,7 +33,9 @@ from memoryos.domain.schemas import (
     FeedbackValue,
     FreshnessState,
     MemoryStatus,
+    MemoryTemperature,
     MemoryType,
+    PossibleConflictStatus,
     RelationMethod,
     ScopeType,
     Sensitivity,
@@ -282,6 +284,106 @@ class ClaimRow(Base):
     )
 
 
+class ClaimIdentityRow(Base):
+    __tablename__ = "claim_identities"
+    __table_args__ = (
+        UniqueConstraint(
+            "scope_type",
+            "scope_key",
+            "stable_identity",
+            name="uq_claim_identity_scope_stable",
+        ),
+        Index("ix_claim_identity_subject_predicate", "subject_entity_id", "canonical_predicate"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    scope_type: Mapped[ScopeType] = mapped_column(enum_column(ScopeType), nullable=False)
+    scope_key: Mapped[str] = mapped_column(String(1000), nullable=False)
+    subject_entity_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("entities.id", ondelete="RESTRICT"), nullable=False
+    )
+    canonical_subject: Mapped[str] = mapped_column(String(500), nullable=False)
+    canonical_predicate: Mapped[str] = mapped_column(String(120), nullable=False)
+    stable_identity: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class ClaimVersionRow(Base):
+    __tablename__ = "claim_versions"
+    __table_args__ = (
+        UniqueConstraint("claim_id", "version_number", name="uq_claim_version_number"),
+        Index("ix_claim_versions_identity_transaction", "identity_id", "transaction_from"),
+        Index("ix_claim_versions_claim_current", "claim_id", "transaction_to"),
+        Index("ix_claim_versions_bitemporal", "valid_from", "valid_to", "transaction_from"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    claim_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("claims.id", ondelete="CASCADE"), nullable=False
+    )
+    identity_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("claim_identities.id", ondelete="CASCADE"), nullable=False
+    )
+    memory_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("memories.id", ondelete="CASCADE"), nullable=False
+    )
+    version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    object_kind: Mapped[ClaimObjectKind] = mapped_column(
+        enum_column(ClaimObjectKind), nullable=False
+    )
+    object_entity_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("entities.id", ondelete="RESTRICT")
+    )
+    object_value: Mapped[Any | None] = mapped_column(JSON)
+    polarity: Mapped[ClaimPolarity] = mapped_column(enum_column(ClaimPolarity), nullable=False)
+    modality: Mapped[ClaimModality] = mapped_column(enum_column(ClaimModality), nullable=False)
+    qualifiers_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    valid_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    transaction_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    transaction_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[ClaimStatus] = mapped_column(enum_column(ClaimStatus), nullable=False)
+    stale_state: Mapped[ClaimStaleState] = mapped_column(
+        enum_column(ClaimStaleState), nullable=False
+    )
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    actor: Mapped[str] = mapped_column(String(200), nullable=False)
+    source_event_id: Mapped[str | None] = mapped_column(String(36))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class PossibleConflictRow(Base):
+    __tablename__ = "possible_conflicts"
+    __table_args__ = (
+        UniqueConstraint("left_claim_id", "right_claim_id", name="uq_possible_conflict_pair"),
+        Index("ix_possible_conflicts_status", "status", "created_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    left_claim_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("claims.id", ondelete="CASCADE"), nullable=False
+    )
+    right_claim_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("claims.id", ondelete="CASCADE"), nullable=False
+    )
+    status: Mapped[PossibleConflictStatus] = mapped_column(
+        enum_column(PossibleConflictStatus),
+        nullable=False,
+        default=PossibleConflictStatus.POSSIBLE,
+    )
+    deterministic_relationship: Mapped[str] = mapped_column(String(64), nullable=False)
+    deterministic_confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    model_result_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    provider_fingerprint: Mapped[str | None] = mapped_column(String(500))
+    prompt_version: Mapped[str | None] = mapped_column(String(120))
+    evidence_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolved_by: Mapped[str | None] = mapped_column(String(200))
+
+
 class SourceAnchorRow(Base):
     __tablename__ = "source_anchors"
     __table_args__ = (
@@ -407,3 +509,40 @@ class ConsolidationCandidateRow(Base):
         JSON, nullable=False, default=list
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class AnnIndexStateRow(Base):
+    __tablename__ = "ann_index_state"
+
+    namespace: Mapped[str] = mapped_column(String(300), primary_key=True)
+    backend: Mapped[str] = mapped_column(String(120), nullable=False)
+    provider: Mapped[str] = mapped_column(String(120), nullable=False)
+    model: Mapped[str] = mapped_column(String(300), nullable=False)
+    model_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    dimensions: Mapped[int] = mapped_column(Integer, nullable=False)
+    item_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="ready")
+    unavailable_reason: Mapped[str | None] = mapped_column(Text)
+    last_rebuild_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class MemoryHealthRow(Base):
+    __tablename__ = "memory_health"
+    __table_args__ = (Index("ix_memory_health_temperature_score", "temperature", "health_score"),)
+
+    memory_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("memories.id", ondelete="CASCADE"), primary_key=True
+    )
+    temperature: Mapped[MemoryTemperature] = mapped_column(
+        enum_column(MemoryTemperature), nullable=False, default=MemoryTemperature.WARM
+    )
+    health_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
+    components_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    explanation: Mapped[str] = mapped_column(Text, nullable=False)
+    retrieval_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_retrieved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    evaluated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

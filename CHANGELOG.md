@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.0 - 2026-08-10
+
+### Added
+
+- Immutable `ClaimIdentity`/`ClaimVersion` transaction history and true valid-time/known-at reconstruction.
+- Deterministic uncertainty router plus auditable Possible Conflict queue with bounded model eligibility, abstention safety, provider fingerprint, prompt version, and evidence hash.
+- Persistent sqlite-vec namespaces by provider/model/dimension, exact fallback, doctor/status/rebuild operations, and packaged sqlite-vec runtime.
+- Explainable Hot/Warm/Cold/Archived memory health, reversible archive, sole-current-truth protection, and candidate-only distillation.
+- Grounded abstractive consolidation with validated support/counter IDs and independent-source constraints; explicitly labeled offline extractive fallback.
+- Blind CodingMemoryBench hard negatives with runtime/gold isolation, baseline/V2/V2+model modes, perfect-score warnings, and 100k full retrieval/context latency evidence.
+- Current Truth transaction details, Possible Conflicts review, Memory Health controls, and vector diagnostics in the responsive React Workbench.
+- Explicit `0003_reality_intelligence_hardening` migration and backup format 3.
+
+### Verification
+
+- Added A33–A52 tests, evidence manifest, merged-main release smoke, and the `scripts/verify_v21.py` fail-fast entrypoint.
+- The 50-pair real coding-agent run remains an explicit external blocker because no model endpoint or credentials were supplied. Fixture results are harness-only and `effect_claim=none`.
+
 ## 2.0.0 - 2026-08-10
 
 ### Added

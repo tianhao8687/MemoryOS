@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from collections import defaultdict
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from memoryos.claims.canonicalize import (
@@ -14,14 +15,24 @@ from memoryos.claims.canonicalize import (
     extract_claim_candidates,
     validate_claim_candidates,
 )
-from memoryos.claims.predicates import compare_claim_values, is_single_valued
+from memoryos.claims.predicates import (
+    RelationshipDecision,
+    classify_claim_values,
+    compare_claim_values,
+    is_single_valued,
+)
+from memoryos.claims.versioning import ClaimVersionStore
 from memoryos.db.models import (
     AuditEventRow,
     ClaimEvidenceRow,
+    ClaimIdentityRow,
     ClaimRelationRow,
     ClaimRow,
+    ClaimVersionRow,
     EntityRow,
+    MemoryHealthRow,
     MemoryRow,
+    PossibleConflictRow,
     SourceAnchorRow,
     SourceRow,
 )
@@ -34,11 +45,14 @@ from memoryos.domain.schemas import (
     ConflictStrategy,
     CurrentTruthRequest,
     MemoryStatus,
+    MemoryTemperature,
+    PossibleConflictStatus,
     RelationMethod,
     TruthState,
 )
 from memoryos.entities import EntityResolver, normalize_entity_name
-from memoryos.temporal import as_of, is_known_at
+from memoryos.errors import ProviderError
+from memoryos.providers.base import RelationshipJudge
 
 
 def _now() -> datetime:
@@ -48,8 +62,10 @@ def _now() -> datetime:
 class TruthMaintenanceService:
     """Claim lifecycle, semantic relationships, and bitemporal current truth."""
 
-    def __init__(self) -> None:
+    def __init__(self, relationship_judge: RelationshipJudge | None = None) -> None:
         self.entities = EntityResolver()
+        self.versions = ClaimVersionStore()
+        self.relationship_judge = relationship_judge
 
     def ensure_claims(
         self,
@@ -57,7 +73,14 @@ class TruthMaintenanceService:
         memory: MemoryRow,
         candidates: list[ClaimCandidate] | None = None,
     ) -> list[ClaimRow]:
-        existing = list(session.scalars(select(ClaimRow).where(ClaimRow.memory_id == memory.id)))
+        existing = list(
+            session.scalars(
+                select(ClaimRow).where(
+                    ClaimRow.memory_id == memory.id,
+                    ClaimRow.status.not_in([ClaimStatus.HISTORICAL, ClaimStatus.REJECTED]),
+                )
+            )
+        )
         if existing:
             return existing
         source = memory.sources[0] if memory.sources else None
@@ -128,6 +151,13 @@ class TruthMaintenanceService:
             )
             session.add(claim)
             session.flush()
+            self.versions.record_initial(
+                session,
+                claim,
+                memory,
+                actor="system:claim-extractor",
+                reason="Evidence-bound claim extracted",
+            )
             if source is not None:
                 evidence = candidate.evidence_span.quote
                 session.add(
@@ -173,7 +203,7 @@ class TruthMaintenanceService:
         conflicts: dict[str, MemoryRow] = {}
         for candidate_claim in candidate_claims:
             for active_claim in active_claims:
-                relation = compare_claim_values(
+                decision = classify_claim_values(
                     left_subject=entities[candidate_claim.subject_entity_id].normalized_name,
                     left_predicate=candidate_claim.predicate,
                     left_object=self._object_identity(session, candidate_claim),
@@ -187,11 +217,151 @@ class TruthMaintenanceService:
                     right_valid_from=active_claim.valid_from,
                     right_valid_to=active_claim.valid_to,
                 )
-                if relation == "contradicts":
+                if self._is_conflict_decision(
+                    session,
+                    candidate_claim,
+                    active_claim,
+                    decision,
+                ):
                     memory = session.get(MemoryRow, active_claim.memory_id)
                     if memory is not None:
                         conflicts[memory.id] = memory
         return list(conflicts.values())
+
+    def _is_conflict_decision(
+        self,
+        session: Session,
+        left: ClaimRow,
+        right: ClaimRow,
+        decision: RelationshipDecision,
+    ) -> bool:
+        if decision.relationship == "contradicts":
+            return True
+        if not decision.model_eligible:
+            return False
+        pair = tuple(sorted((left.id, right.id)))
+        existing = session.scalar(
+            select(PossibleConflictRow).where(
+                PossibleConflictRow.left_claim_id == pair[0],
+                PossibleConflictRow.right_claim_id == pair[1],
+            )
+        )
+        if existing is not None:
+            return existing.status is PossibleConflictStatus.CONFIRMED
+
+        evidence = self._evidence_for(session, [left.id, right.id])
+        bounded_evidence = [
+            {
+                "claim_id": item["claim_id"],
+                "source_ref": item["source_ref"],
+                "excerpt": str(item["excerpt"])[:1000],
+                "evidence_hash": item["evidence_hash"],
+            }
+            for item in evidence[:8]
+        ]
+        evidence_hash = hashlib.sha256(
+            json.dumps(bounded_evidence, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+        status = PossibleConflictStatus.POSSIBLE
+        result: dict[str, Any] = {
+            "relationship": "uncertain",
+            "confidence": decision.confidence,
+            "explanation": decision.reason,
+            "abstain": True,
+        }
+        fingerprint = None
+        prompt_version = None
+        if self.relationship_judge is not None:
+            metadata = self.relationship_judge.metadata
+            fingerprint_payload = {
+                "provider": metadata.provider,
+                "model": metadata.model,
+                "capabilities": metadata.capabilities,
+            }
+            digest = hashlib.sha256(
+                json.dumps(fingerprint_payload, sort_keys=True).encode("utf-8")
+            ).hexdigest()
+            fingerprint = f"{metadata.provider}:{metadata.model}:{digest[:16]}"
+            prompt_version = "relationship-judge-v2.1.0"
+            try:
+                result = self.relationship_judge.judge(
+                    self._judge_claim(session, left),
+                    self._judge_claim(session, right),
+                    bounded_evidence,
+                )
+                relationship = str(result.get("relationship", "uncertain"))
+                confidence = float(result.get("confidence", 0.0))
+                abstain = bool(result.get("abstain", False))
+                if (
+                    not abstain
+                    and confidence >= 0.7
+                    and relationship
+                    in {
+                        "contradicts",
+                        "supersedes_candidate",
+                    }
+                ):
+                    status = PossibleConflictStatus.CONFIRMED
+                elif (
+                    not abstain
+                    and confidence >= 0.7
+                    and relationship
+                    in {
+                        "equivalent",
+                        "supports",
+                        "independent",
+                    }
+                ):
+                    status = PossibleConflictStatus.DISMISSED
+                else:
+                    status = PossibleConflictStatus.ABSTAINED
+            except ProviderError as exc:
+                status = PossibleConflictStatus.ABSTAINED
+                result = {
+                    "relationship": "uncertain",
+                    "confidence": 0.0,
+                    "explanation": str(exc),
+                    "abstain": True,
+                }
+        row = PossibleConflictRow(
+            left_claim_id=pair[0],
+            right_claim_id=pair[1],
+            status=status,
+            deterministic_relationship=decision.relationship,
+            deterministic_confidence=decision.confidence,
+            reason=decision.reason,
+            model_result_json=result,
+            provider_fingerprint=fingerprint,
+            prompt_version=prompt_version,
+            evidence_hash=evidence_hash,
+        )
+        session.add(row)
+        session.flush()
+        if status is PossibleConflictStatus.CONFIRMED:
+            self._add_relation(
+                session,
+                left,
+                right,
+                ClaimRelationType.CONTRADICTS,
+                method=RelationMethod.MODEL_JUDGE,
+                explanation=str(result.get("explanation", "Model-confirmed conflict")),
+                confidence=float(result.get("confidence", 0.0)),
+            )
+            return True
+        return False
+
+    def _judge_claim(self, session: Session, claim: ClaimRow) -> dict[str, Any]:
+        subject = session.get(EntityRow, claim.subject_entity_id)
+        return {
+            "claim_id": claim.id,
+            "subject": subject.normalized_name if subject else claim.subject_entity_id,
+            "predicate": claim.predicate,
+            "object": self._object_identity(session, claim),
+            "polarity": claim.polarity.value,
+            "modality": claim.modality.value,
+            "valid_from": claim.valid_from.isoformat() if claim.valid_from else None,
+            "valid_to": claim.valid_to.isoformat() if claim.valid_to else None,
+        }
 
     def activate_claims(
         self,
@@ -201,11 +371,18 @@ class TruthMaintenanceService:
         strategy: ConflictStrategy | None,
         conflicts: list[MemoryRow],
         rationale: str | None,
+        actor: str = "manual",
     ) -> None:
         claims = self.ensure_claims(session, memory)
         if strategy is ConflictStrategy.REJECT:
             for claim in claims:
-                claim.status = ClaimStatus.REJECTED
+                self.versions.transition(
+                    session,
+                    claim,
+                    status=ClaimStatus.REJECTED,
+                    actor=actor,
+                    reason=rationale or "Candidate rejected during conflict resolution",
+                )
             return
         active_claims = list(
             session.scalars(
@@ -216,17 +393,45 @@ class TruthMaintenanceService:
             )
         )
         for claim in claims:
-            claim.status = ClaimStatus.ACCEPTED
+            if claim.status is not ClaimStatus.ACCEPTED:
+                self.versions.transition(
+                    session,
+                    claim,
+                    status=ClaimStatus.ACCEPTED,
+                    actor=actor,
+                    reason=rationale or "Candidate accepted",
+                )
             for active in active_claims:
-                if not self._contradicts(session, claim, active):
+                if not self._claims_conflict(session, claim, active):
                     continue
                 if strategy is ConflictStrategy.SUPERSEDE:
-                    active.status = ClaimStatus.SUPERSEDED
-                    active.valid_to = active.valid_to or _now()
+                    if active.status is not ClaimStatus.SUPERSEDED:
+                        self.versions.transition(
+                            session,
+                            active,
+                            status=ClaimStatus.SUPERSEDED,
+                            valid_to=active.valid_to or _now(),
+                            actor=actor,
+                            reason=rationale or f"Superseded by claim {claim.id}",
+                        )
                     relation_type = ClaimRelationType.SUPERSEDES
                 else:
-                    claim.status = ClaimStatus.CONTESTED
-                    active.status = ClaimStatus.CONTESTED
+                    if claim.status is not ClaimStatus.CONTESTED:
+                        self.versions.transition(
+                            session,
+                            claim,
+                            status=ClaimStatus.CONTESTED,
+                            actor=actor,
+                            reason=rationale or f"Conflicts with claim {active.id}",
+                        )
+                    if active.status is not ClaimStatus.CONTESTED:
+                        self.versions.transition(
+                            session,
+                            active,
+                            status=ClaimStatus.CONTESTED,
+                            actor=actor,
+                            reason=rationale or f"Conflicts with claim {claim.id}",
+                        )
                     relation_type = ClaimRelationType.CONTRADICTS
                 self._add_relation(
                     session,
@@ -238,9 +443,23 @@ class TruthMaintenanceService:
                     or "Claims overlap on a single-valued semantic dimension.",
                 )
 
-    def reject_claims(self, session: Session, memory_id: str) -> None:
+    def reject_claims(
+        self,
+        session: Session,
+        memory_id: str,
+        *,
+        actor: str = "manual",
+        reason: str = "Candidate rejected",
+    ) -> None:
         for claim in session.scalars(select(ClaimRow).where(ClaimRow.memory_id == memory_id)):
-            claim.status = ClaimStatus.REJECTED
+            if claim.status is not ClaimStatus.REJECTED:
+                self.versions.transition(
+                    session,
+                    claim,
+                    status=ClaimStatus.REJECTED,
+                    actor=actor,
+                    reason=reason,
+                )
 
     def reset_claims(
         self,
@@ -248,126 +467,185 @@ class TruthMaintenanceService:
         memory: MemoryRow,
         candidates: list[ClaimCandidate] | None = None,
     ) -> list[ClaimRow]:
-        claim_ids = list(
-            session.scalars(select(ClaimRow.id).where(ClaimRow.memory_id == memory.id))
-        )
-        if claim_ids:
-            session.execute(delete(ClaimRow).where(ClaimRow.id.in_(claim_ids)))
-            session.flush()
+        claims = list(session.scalars(select(ClaimRow).where(ClaimRow.memory_id == memory.id)))
+        for claim in claims:
+            if claim.status not in {ClaimStatus.HISTORICAL, ClaimStatus.REJECTED}:
+                self.versions.transition(
+                    session,
+                    claim,
+                    status=ClaimStatus.HISTORICAL,
+                    actor="manual:edit",
+                    reason="Candidate content was edited; prior extraction retained as history",
+                )
         return self.ensure_claims(session, memory, candidates)
 
-    def forget_claims(self, session: Session, memory_id: str) -> None:
+    def forget_claims(self, session: Session, memory_id: str, *, actor: str = "manual") -> None:
         for claim in session.scalars(select(ClaimRow).where(ClaimRow.memory_id == memory_id)):
-            claim.status = ClaimStatus.HISTORICAL
+            if claim.status is not ClaimStatus.HISTORICAL:
+                self.versions.transition(
+                    session,
+                    claim,
+                    status=ClaimStatus.HISTORICAL,
+                    actor=actor,
+                    reason="Memory forgotten; claim retained for historical reconstruction",
+                )
 
-    def mark_memory_stale(
-        self, session: Session, memory_id: str, stale_state: ClaimStaleState
+    def expire_claims(
+        self,
+        session: Session,
+        memory_id: str,
+        *,
+        reason: str,
+        at: datetime,
     ) -> None:
         for claim in session.scalars(select(ClaimRow).where(ClaimRow.memory_id == memory_id)):
-            claim.stale_state = stale_state
-            if stale_state is ClaimStaleState.STALE:
-                claim.status = ClaimStatus.STALE
+            if claim.status not in {ClaimStatus.HISTORICAL, ClaimStatus.REJECTED}:
+                self.versions.transition(
+                    session,
+                    claim,
+                    status=ClaimStatus.HISTORICAL,
+                    valid_to=claim.valid_to or at,
+                    actor="system:expiry",
+                    reason=reason,
+                    at=at,
+                )
+
+    def mark_memory_stale(
+        self,
+        session: Session,
+        memory_id: str,
+        stale_state: ClaimStaleState,
+        *,
+        actor: str = "system:freshness",
+    ) -> None:
+        for claim in session.scalars(select(ClaimRow).where(ClaimRow.memory_id == memory_id)):
+            status = ClaimStatus.STALE if stale_state is ClaimStaleState.STALE else None
+            if claim.stale_state is not stale_state or (status and claim.status is not status):
+                self.versions.transition(
+                    session,
+                    claim,
+                    stale_state=stale_state,
+                    status=status,
+                    actor=actor,
+                    reason=f"Freshness evaluation changed to {stale_state.value}",
+                )
 
     def current_truth(self, session: Session, request: CurrentTruthRequest) -> dict[str, Any]:
-        statement = select(ClaimRow).join(EntityRow, EntityRow.id == ClaimRow.subject_entity_id)
-        if request.scope_type is not None:
-            statement = statement.where(EntityRow.scope_type == request.scope_type)
-        if request.scope_key is not None:
-            statement = statement.where(EntityRow.scope_key == request.scope_key)
-        rows = list(
-            session.scalars(
-                statement.where(
-                    ClaimRow.status.in_(
-                        [
-                            ClaimStatus.ACCEPTED,
-                            ClaimStatus.CONTESTED,
-                            ClaimStatus.SUPERSEDED,
-                            ClaimStatus.STALE,
-                            ClaimStatus.HISTORICAL,
-                        ]
-                    )
-                )
-            )
-        )
         valid_moment = request.as_of_valid_time or _now()
         known_moment = request.as_known_at or _now()
+        rows = self.versions.visible_versions(
+            session,
+            valid_time=valid_moment,
+            known_time=known_moment,
+        )
         subject_query = normalize_entity_name(request.subject) if request.subject else None
         text_query = normalize_entity_name(request.query) if request.query else None
-        visible: list[ClaimRow] = []
+        visible: list[ClaimVersionRow] = []
+        identities: dict[str, ClaimIdentityRow] = {}
         entities: dict[str, EntityRow] = {}
-        for claim in rows:
-            entity = session.get(EntityRow, claim.subject_entity_id)
+        visible_statuses = {
+            ClaimStatus.ACCEPTED,
+            ClaimStatus.CONTESTED,
+            ClaimStatus.SUPERSEDED,
+            ClaimStatus.STALE,
+            ClaimStatus.HISTORICAL,
+        }
+        for version in rows:
+            if version.status not in visible_statuses:
+                continue
+            health = session.get(MemoryHealthRow, version.memory_id)
+            if health is not None and health.temperature is MemoryTemperature.ARCHIVED:
+                continue
+            identity = session.get(ClaimIdentityRow, version.identity_id)
+            if identity is None:
+                continue
+            entity = session.get(EntityRow, identity.subject_entity_id)
             if entity is None:
                 continue
+            if request.scope_type is not None and identity.scope_type is not request.scope_type:
+                continue
+            if request.scope_key is not None and identity.scope_key != request.scope_key:
+                continue
+            identities[identity.id] = identity
             entities[entity.id] = entity
             if subject_query and subject_query not in {
                 entity.normalized_name,
                 *entity.aliases_json,
             }:
                 continue
-            if request.predicate and claim.predicate != request.predicate:
+            if request.predicate and identity.canonical_predicate != request.predicate:
                 continue
             if text_query:
                 haystack = " ".join(
                     (
                         entity.normalized_name,
-                        claim.predicate,
-                        canonical_object(self._object_identity(session, claim)),
+                        identity.canonical_predicate,
+                        canonical_object(self._version_object_identity(session, version)),
                     )
                 )
                 if not all(token in haystack for token in text_query.split()):
                     continue
-            if not as_of(claim.valid_from, claim.valid_to, valid_moment):
-                continue
-            if not is_known_at(claim.recorded_at, known_moment):
-                continue
-            visible.append(claim)
+            visible.append(version)
 
-        grouped: dict[tuple[str, str], list[ClaimRow]] = defaultdict(list)
-        for claim in visible:
-            grouped[(claim.subject_entity_id, claim.predicate)].append(claim)
+        grouped: dict[str, list[ClaimVersionRow]] = defaultdict(list)
+        for version in visible:
+            grouped[version.identity_id].append(version)
         truths = []
         all_accepted: list[dict[str, Any]] = []
         all_conflicting: list[dict[str, Any]] = []
         all_evidence: list[dict[str, Any]] = []
         all_history: list[dict[str, Any]] = []
         states: list[TruthState] = []
-        for (entity_id, predicate), claims in grouped.items():
-            entity = entities[entity_id]
+        for identity_id, versions in grouped.items():
+            identity = identities[identity_id]
+            entity = entities[identity.subject_entity_id]
             non_stale = [
-                claim
-                for claim in claims
-                if claim.status is not ClaimStatus.STALE
-                and claim.stale_state is not ClaimStaleState.STALE
+                version
+                for version in versions
+                if version.status
+                in {
+                    ClaimStatus.ACCEPTED,
+                    ClaimStatus.CONTESTED,
+                }
+                and version.stale_state is not ClaimStaleState.STALE
             ]
             distinct = {
-                canonical_object(self._object_identity(session, claim)) for claim in non_stale
+                canonical_object(self._version_object_identity(session, version))
+                for version in non_stale
             }
-            contested = any(claim.status is ClaimStatus.CONTESTED for claim in claims) or (
-                is_single_valued(predicate, entity.normalized_name) and len(distinct) > 1
+            contested = any(version.status is ClaimStatus.CONTESTED for version in versions) or (
+                is_single_valued(identity.canonical_predicate, entity.normalized_name)
+                and len(distinct) > 1
             )
             if contested:
                 state = TruthState.CONTESTED
-            elif not non_stale and claims:
+            elif not non_stale and versions:
                 state = TruthState.STALE
             elif non_stale:
                 state = TruthState.RESOLVED
             else:
                 state = TruthState.UNKNOWN
             states.append(state)
-            serialized = [self.serialize_claim(session, claim) for claim in claims]
+            serialized = [
+                self.serialize_version(session, version, identity) for version in versions
+            ]
             accepted = [
                 item
                 for item in serialized
                 if item["status"] in {ClaimStatus.ACCEPTED.value, ClaimStatus.CONTESTED.value}
             ]
             conflicting = serialized if state is TruthState.CONTESTED else []
-            evidence = self._evidence_for(session, [claim.id for claim in claims])
-            history = self._relations_for(session, [claim.id for claim in claims])
+            claim_ids = [version.claim_id for version in versions]
+            evidence = self._evidence_for(session, claim_ids)
+            history = [
+                *self._version_history(session, claim_ids, known_moment),
+                *self._relations_for(session, claim_ids),
+            ]
             truths.append(
                 {
+                    "identity_id": identity.id,
                     "subject": self.serialize_entity(entity),
-                    "predicate": predicate,
+                    "predicate": identity.canonical_predicate,
                     "state": state.value,
                     "accepted_claims": accepted,
                     "conflicting_claims": conflicting,
@@ -391,6 +669,49 @@ class TruthMaintenanceService:
             "resolution_history": all_history,
             "as_of_valid_time": valid_moment.isoformat(),
             "as_known_at": known_moment.isoformat(),
+        }
+
+    def serialize_version(
+        self,
+        session: Session,
+        version: ClaimVersionRow,
+        identity: ClaimIdentityRow | None = None,
+    ) -> dict[str, Any]:
+        resolved_identity = identity or session.get(ClaimIdentityRow, version.identity_id)
+        subject = (
+            session.get(EntityRow, resolved_identity.subject_entity_id)
+            if resolved_identity is not None
+            else None
+        )
+        object_entity = (
+            session.get(EntityRow, version.object_entity_id) if version.object_entity_id else None
+        )
+        return {
+            "id": version.claim_id,
+            "version_id": version.id,
+            "version_number": version.version_number,
+            "identity_id": version.identity_id,
+            "memory_id": version.memory_id,
+            "subject": self.serialize_entity(subject) if subject else None,
+            "predicate": resolved_identity.canonical_predicate if resolved_identity else None,
+            "object_kind": version.object_kind.value,
+            "object_entity": self.serialize_entity(object_entity) if object_entity else None,
+            "object_value": version.object_value,
+            "polarity": version.polarity.value,
+            "modality": version.modality.value,
+            "qualifiers": version.qualifiers_json,
+            "confidence": version.confidence,
+            "status": version.status.value,
+            "valid_from": version.valid_from.isoformat() if version.valid_from else None,
+            "valid_to": version.valid_to.isoformat() if version.valid_to else None,
+            "transaction_from": version.transaction_from.isoformat(),
+            "transaction_to": (
+                version.transaction_to.isoformat() if version.transaction_to else None
+            ),
+            "stale_state": version.stale_state.value,
+            "reason": version.reason,
+            "actor": version.actor,
+            "source_event_id": version.source_event_id,
         }
 
     def serialize_claim(self, session: Session, claim: ClaimRow) -> dict[str, Any]:
@@ -454,12 +775,32 @@ class TruthMaintenanceService:
             == "contradicts"
         )
 
+    def _claims_conflict(self, session: Session, left: ClaimRow, right: ClaimRow) -> bool:
+        if self._contradicts(session, left, right):
+            return True
+        pair = tuple(sorted((left.id, right.id)))
+        confirmed = session.scalar(
+            select(PossibleConflictRow.id).where(
+                PossibleConflictRow.left_claim_id == pair[0],
+                PossibleConflictRow.right_claim_id == pair[1],
+                PossibleConflictRow.status == PossibleConflictStatus.CONFIRMED,
+            )
+        )
+        return confirmed is not None
+
     @staticmethod
     def _object_identity(session: Session, claim: ClaimRow) -> Any:
         if claim.object_entity_id:
             entity = session.get(EntityRow, claim.object_entity_id)
             return entity.normalized_name if entity else claim.object_value
         return claim.object_value
+
+    @staticmethod
+    def _version_object_identity(session: Session, version: ClaimVersionRow) -> Any:
+        if version.object_entity_id:
+            entity = session.get(EntityRow, version.object_entity_id)
+            return entity.normalized_name if entity else version.object_value
+        return version.object_value
 
     @staticmethod
     def _aggregate_state(states: list[TruthState]) -> TruthState:
@@ -480,6 +821,7 @@ class TruthMaintenanceService:
         *,
         method: RelationMethod,
         explanation: str,
+        confidence: float = 1.0,
     ) -> None:
         existing = session.scalar(
             select(ClaimRelationRow).where(
@@ -494,7 +836,7 @@ class TruthMaintenanceService:
                     from_claim_id=left.id,
                     to_claim_id=right.id,
                     relation_type=relation_type,
-                    confidence=1.0,
+                    confidence=confidence,
                     method=method,
                     explanation=explanation,
                 )
@@ -547,6 +889,43 @@ class TruthMaintenanceService:
                 "method": row.method.value,
                 "explanation": row.explanation,
                 "created_at": row.created_at.isoformat(),
+            }
+            for row in rows
+        ]
+
+    @staticmethod
+    def _version_history(
+        session: Session,
+        claim_ids: list[str],
+        known_moment: datetime,
+    ) -> list[dict[str, Any]]:
+        if not claim_ids:
+            return []
+        rows = list(
+            session.scalars(
+                select(ClaimVersionRow)
+                .where(
+                    ClaimVersionRow.claim_id.in_(claim_ids),
+                    ClaimVersionRow.transaction_from <= known_moment,
+                )
+                .order_by(
+                    ClaimVersionRow.transaction_from.asc(),
+                    ClaimVersionRow.version_number.asc(),
+                )
+            )
+        )
+        return [
+            {
+                "type": "claim_version",
+                "version_id": row.id,
+                "claim_id": row.claim_id,
+                "version_number": row.version_number,
+                "status": row.status.value,
+                "stale_state": row.stale_state.value,
+                "transaction_from": row.transaction_from.isoformat(),
+                "transaction_to": row.transaction_to.isoformat() if row.transaction_to else None,
+                "reason": row.reason,
+                "actor": row.actor,
             }
             for row in rows
         ]

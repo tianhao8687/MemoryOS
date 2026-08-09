@@ -1,12 +1,12 @@
-# MemoryOS V2.0 验收证据
+# MemoryOS V2.1 验收证据
 
 唯一全量入口：
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\verify.py
+.\.venv\Scripts\python.exe scripts\verify_v21.py
 ```
 
-脚本 fail-fast，并把 V2 汇总写入 `docs/verification/v2/verify-summary.json`。A15–A32 机器清单写入 `docs/verification/v2/acceptance-summary.json`；MemoryBench 原始报告为 JSON 和 HTML。
+脚本在干净 `main` 上 fail-fast，默认把 V2.1 汇总写入 `docs/verification/v2.1/verify-summary.json`。A33–A52 机器清单写入 `docs/verification/v2.1/acceptance-summary.json`；V1/V2 回归证据继续保留。
 
 ## A01–A14 V1 回归
 
@@ -52,7 +52,34 @@ V1 frozen baseline 位于 `docs/verification/v2/v1-baseline.json`（commit `83df
 | A31 V1 Regression | frozen V1 14/14 + V2 全量原测试 + 10k V1 benchmark + package regression |
 | A32 Package Upgrade | production smoke 创建真实 0001 DB，packaged EXE 自动迁移 0002，旧/新 memory 经 12-tool MCP、HTTP、UI、CLI、restart 共用；冻结包实际加载 Tree-sitter grammar 创建 symbol anchor |
 
-## MemoryBench 门槛
+## A33–A52 V2.1 强制验收
+
+| ID | 要求 | 自动证据与关键断言 |
+| --- | --- | --- |
+| A33 Clean Baseline | V2 完整基线从 clean commit `b0cae26...` 运行，dirty=false、16/16 gate PASS | `v2.1/v2-clean-baseline.json` + V2 原报告 |
+| A34 Immutable Migration | 0001/0002 不调用 live metadata；真实 0001→0002→0003、降级再升级，旧 claim 只回填一次 | `test_a34_immutable_migration_replays_v2_data` + package smoke |
+| A35 Claim Transaction History | candidate→accepted→forgotten 形成 append-only versions，旧版本 transaction_to 正确关闭 | `test_a35_a36_claim_versions_reconstruct_transaction_time` |
+| A36 Temporal Blind Accuracy | known-at 与 valid-at gold 隔离，V2 accuracy ≥0.98 | `coding-memory-bench.json` |
+| A37 Uncertain Routing | 规则明确 pair 不调用 judge；只有 uncertain/model-eligible pair 调用 bounded judge | `test_a37_a39_model_judge_only_receives_uncertain_pairs` |
+| A38 Blind Conflict F1 | hard/uncertain conflict F1 ≥0.88 | `coding-memory-bench.json` |
+| A39 Abstention Safety | abstain/异常写审计但不改变 accepted truth | benchmark gate + V2.1 tests |
+| A40 ANN Live | sqlite-vec provider/model/dimension namespace 真实写入、检索、状态持久化；发行包捆绑 runtime | ANN test + doctor + package smoke |
+| A41 Fallback | ANN 禁用/不可用时明确 `exact-fallback`，结果仍可检索 | ANN test |
+| A42 100K Search | 完整 RetrievalPipeline，100,000 records，P95 <150 ms | `full-pipeline-performance.json` |
+| A43 100K Context | TaskAwareContextCompiler 同一数据集 P95 <300 ms | `full-pipeline-performance.json` |
+| A44 Blind Recall@5 | 100 hard-negative retrieval cases，Recall@5 ≥0.90 | `coding-memory-bench.json` |
+| A45 Gold Isolation | runtime payload 不含 gold，gold 只由 scorer 加载，input/gold 独立 hash | `coding-memory-bench.json` |
+| A46 Paired Harness | ≥50 对 baseline/MemoryOS 任务，记录成功、重复错误、stale misuse、决策遵循、tools、context、latency | `agent-ab.json` + runner |
+| A47 Real Agent / Blocker | ≥50 对真实运行，或记录明确外部 blocker；两者不能混写 | `agent-ab.json` |
+| A48 Fixture Truthfulness | fixture=`real_model:false/harness_validation_only`，外部 blocker=`effect_claim:none` | `agent-ab.json` |
+| A49 Grounded Consolidation | 抽象输出只能引用允许 support/counter IDs 与独立来源；记录 provider/prompt | consolidation tests + service |
+| A50 Candidate First | consolidation/distillation 永不自动 active | consolidation/health tests |
+| A51 Health Safety | Hot/Warm/Cold/Archived 可解释、archive 可逆、唯一 accepted truth 受保护 | health test + UI tests |
+| A52 Main Release | 合并到 main 后，从 clean tree 构建并通过 0001→0003、MCP/API/UI/CLI/restart release smoke | `main-release-smoke.json` |
+
+`scripts/acceptance_v21.py` 不把实现存在等同于指标通过：A36/A38/A42/A43/A44/A45 直接读取测量字段，A47/A48 读取真实证据类型与 blocker 字段，A52 必须读取 `branch=main` 且 smoke 前 `git_dirty=false` 的报告。
+
+## Benchmark 门槛
 
 冻结配置、seed、commit、dirty state、provider/model、evidence type 和 config hash 全部进入报告。test 不参与调参。
 
@@ -69,32 +96,43 @@ V1 frozen baseline 位于 `docs/verification/v2/v1-baseline.json`（commit `83df
 
 真实 coding-agent A/B 需要外部模型/harness。本环境未配置，因此该效果项保持外部阻塞；这是 A30 要求的诚实结论，不把 fixture 成功率当产品准确率。
 
+V2.1 新门槛：temporal accuracy ≥0.98、conflict F1 ≥0.88、hard-negative Recall@5 ≥0.90、100k full-pipeline search P95 <150 ms、context P95 <300 ms。完美分数会在报告中产生警告，要求继续扩展 adversarial cases；它不是“已证明泛化”的声明。
+
 ## 命令级门禁
 
-`scripts/verify.py` 执行 16 个步骤：
+`scripts/verify_v21.py` 执行 19 个步骤：
 
 1. backend import
 2. Ruff lint
 3. Ruff format check
 4. Mypy strict
 5. Pytest
-6. MemoryBench V2
-7. TypeScript typecheck
-8. ESLint zero warnings
-9. Vitest
-10. Vite production build
-11. Playwright desktop/mobile + axe
-12. V1 10,000-record FTS/context regression
-13. backend wheel
-14. Windows PyInstaller onedir
-15. packaged V1→V2 production smoke
-16. A15–A32 evidence manifest
+6. MemoryBench V2 regression
+7. Blind CodingMemoryBench V2.1
+8. paired real-agent protocol or explicit blocker
+9. 100k full retrieval/context pipeline
+10. TypeScript typecheck
+11. ESLint zero warnings
+12. Vitest
+13. Vite production build
+14. Playwright desktop/mobile + axe
+15. backend wheel
+16. Windows PyInstaller onedir
+17. packaged V1→V2.1 production smoke
+18. clean merged-main release smoke
+19. A33–A52 evidence manifest
 
 ## 产物
 
-- wheel：`build/wheel/memoryos-2.0.0-py3-none-any.whl`
+- wheel：`build/wheel/memoryos-2.1.0-py3-none-any.whl`
 - Windows：`release/MemoryOS/MemoryOS.exe`（需保留整个 onedir）
 - MemoryBench：`docs/verification/v2/memorybench-report.{json,html}`
 - A15–A32：`docs/verification/v2/acceptance-summary.json`
 - package smoke：`docs/verification/package-smoke.json`
 - V2 verify：`docs/verification/v2/verify-summary.json`
+- CodingMemoryBench：`docs/verification/v2.1/coding-memory-bench.{json,html}`
+- 100k full pipeline：`docs/verification/v2.1/full-pipeline-performance.json`
+- real-agent/blocker：`docs/verification/v2.1/agent-ab.json`
+- A33–A52：`docs/verification/v2.1/acceptance-summary.json`
+- main release：`docs/verification/v2.1/main-release-smoke.json`
+- V2.1 verify：`docs/verification/v2.1/verify-summary.json`

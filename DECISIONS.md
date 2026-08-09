@@ -1,6 +1,6 @@
 # Implementation decisions
 
-This file records the non-blocking defaults selected while executing the V1.0 and V2.0 task specifications.
+This file records the non-blocking defaults selected while executing the V1.0, V2.0, and V2.1 task specifications.
 They are implementation commitments, not future proposals.
 
 ## Active decisions
@@ -68,3 +68,20 @@ They are implementation commitments, not future proposals.
 26. Treat synthetic and hand-authored MemoryBench fixtures as pipeline evidence, not real-model
     accuracy. Without an actual paired coding-agent harness, record an external blocker and make no
     effectiveness claim.
+27. Keep a stable ClaimIdentity per scoped subject/predicate and append ClaimVersion snapshots for
+    every lifecycle/freshness transition. Current Truth reads version transaction intervals rather
+    than reconstructing history from the mutable V2 projection.
+28. Route obvious semantic relationships through deterministic rules. Only uncertain pairs may
+    reach a bounded relationship judge; persist abstention/failure metadata and never mutate truth
+    from an unconfirmed result.
+29. Make sqlite-vec the persistent live semantic path when installed, isolated by
+    provider/model/dimensions. Exact NumPy and FTS5 remain explicit, observable fallbacks.
+30. Treat health temperature as retrieval governance, not truth. Archive is logical and reversible;
+    refuse to archive the only non-archived accepted support for a ClaimIdentity.
+31. Reject grounded-model consolidation output containing any support/counter ID outside the input
+    whitelist or appearing on both sides. Fall back to an explicitly labeled offline extractive
+    candidate, never an active fact.
+32. Separate blind benchmark runtime payloads from scorer gold and warn on perfect scores. A real
+    model mode is evidence only when an endpoint actually executed; absence is `external_blocker`.
+33. Require V2.1 release evidence to be produced after merge from a clean `main` checkout, including
+    packaged 0001→0003 migration and restart smoke.

@@ -41,17 +41,32 @@ function suiteSummaries(suite: MemoryBenchSuite) {
 
 export function BenchmarkDashboardPage() {
   const benchmark = useQuery({ queryKey: ['memorybench-v2'], queryFn: api.memorybench })
+  const coding = useQuery({
+    queryKey: ['coding-memory-bench-v2.1'],
+    queryFn: api.codingMemoryBench,
+  })
+  const error = benchmark.error ?? coding.error
   return (
     <div className="page intelligence-page">
       <header className="page-header">
         <div>
           <h1>Benchmark Dashboard</h1>
-          <p>Frozen V1 baseline versus V2 quality, performance, and evidence provenance.</p>
+          <p>Frozen V1/V2 regression plus blind V2.1 hard-negative and temporal evidence.</p>
         </div>
         <BarChart3 aria-hidden="true" />
       </header>
-      {benchmark.isLoading ? <LoadingState label="Loading MemoryBench V2" /> : null}
-      {benchmark.error ? <ErrorState error={benchmark.error} retry={() => void benchmark.refetch()} /> : null}
+      {benchmark.isLoading || coding.isLoading ? (
+        <LoadingState label="Loading benchmark evidence" />
+      ) : null}
+      {error ? (
+        <ErrorState
+          error={error}
+          retry={() => {
+            void benchmark.refetch()
+            void coding.refetch()
+          }}
+        />
+      ) : null}
       {benchmark.data ? (
         <>
           <section className="benchmark-banner" aria-label="Benchmark release status">
@@ -70,6 +85,44 @@ export function BenchmarkDashboardPage() {
             <AlertTriangle aria-hidden="true" />
             <div><strong>Real-model Agent A/B: external blocker</strong><p>Fixture results validate the paired harness and bootstrap confidence intervals only. No real coding-model effect is claimed.</p></div>
           </aside>
+          {coding.data ? (
+            <section className="benchmark-table panel" aria-labelledby="coding-benchmark-title">
+              <header className="panel-header">
+                <h2 id="coding-benchmark-title">
+                  <FlaskConical aria-hidden="true" />Blind CodingMemoryBench V2.1
+                </h2>
+                <span>
+                  {coding.data.blind_protocol.gold_loaded_only_by_scorer
+                    ? 'Gold isolated'
+                    : 'Isolation failed'}
+                </span>
+              </header>
+              <div className="table-scroll">
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Mode</th><th>Recall@5</th><th>Temporal</th><th>Conflict F1</th><th>Model evidence</th></tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(coding.data.modes).map(([name, mode]) => (
+                      <tr key={name}>
+                        <td><strong>{name}</strong></td>
+                        <td>{mode.retrieval_recall_at_5.toFixed(3)}</td>
+                        <td>{mode.temporal_accuracy.toFixed(3)}</td>
+                        <td>{mode.conflict.f1.toFixed(3)}</td>
+                        <td>{mode.model_status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {coding.data.modes.v2?.perfect_score_warning ? (
+                <p className="benchmark-warning">
+                  <AlertTriangle aria-hidden="true" />
+                  {coding.data.modes.v2.perfect_score_warning}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
           <section className="benchmark-table panel" aria-labelledby="benchmark-suites-title">
             <header className="panel-header"><h2 id="benchmark-suites-title"><FlaskConical aria-hidden="true" />MemoryBench suites</h2><span>{Object.keys(benchmark.data.suites).length} suites</span></header>
             <div className="table-scroll">

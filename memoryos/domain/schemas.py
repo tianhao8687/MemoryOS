@@ -151,6 +151,20 @@ class FeedbackValue(StrEnum):
     UNKNOWN = "unknown"
 
 
+class MemoryTemperature(StrEnum):
+    HOT = "hot"
+    WARM = "warm"
+    COLD = "cold"
+    ARCHIVED = "archived"
+
+
+class PossibleConflictStatus(StrEnum):
+    POSSIBLE = "possible"
+    CONFIRMED = "confirmed"
+    DISMISSED = "dismissed"
+    ABSTAINED = "abstained"
+
+
 class QueryIntent(StrEnum):
     CURRENT_DECISION = "current_decision"
     CONSTRAINT_LOOKUP = "constraint_lookup"

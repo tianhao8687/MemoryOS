@@ -1,4 +1,4 @@
-# MemoryOS V2 架构
+# MemoryOS V2.1 架构
 
 ## 原则
 
@@ -19,10 +19,12 @@ flowchart LR
     Service --> Fresh["Source Anchor / Git Freshness"]
     Service --> Retrieval["Retrieval 2.0"]
     Service --> Consolidation["Consolidation / Feedback"]
+    Service --> Health["Memory Health / Archive"]
     Truth --> DB["SQLite WAL + FTS5"]
     Fresh --> DB
     Retrieval --> DB
     Consolidation --> DB
+    Health --> DB
     Retrieval -. optional .-> Providers["Embedding / Reranker / Judges"]
     Retrieval -. optional .-> ANN["sqlite-vec ANN"]
 ```
@@ -37,13 +39,22 @@ flowchart LR
 - `retrieval_runs`、`memory_feedback`
 - `consolidation_candidates`
 
+`0003_reality_intelligence_hardening` 新增：
+
+- `claim_identities` 与只追加的 `claim_versions`
+- `possible_conflicts`
+- `ann_index_state`
+- `memory_health`
+
+0001/0002 迁移是显式、不可变的 Alembic operation，不再引用运行时 `Base.metadata`。0003 对既有 claim 保守回填首个 version；迁移可降级再重放而不重复历史。
+
 现有 V1 memory 不会被迁移脚本凭空补成 accepted claim；首次正常操作可保守、lazy normalize。备份格式为 V2 且显式接受 V1 import。生产 smoke 以真实 `0001_initial` DB 启动 packaged executable，验证自动升级和旧数据保留。
 
 ## Claim、Entity 与双时态 Truth
 
-每个 Claim 绑定 exact evidence span，并包含 scoped subject entity、canonical predicate/object、polarity、modality、confidence、status、valid interval、recorded time 和 stale state。Entity alias 仅在相同 scope/type 解析，merge 通过 redirect 和 event 保持可审计、可逆语义。
+每个 Claim 绑定 exact evidence span。稳定 ClaimIdentity 指向 append-only ClaimVersion；每个版本保存 canonical predicate/object、polarity、modality、confidence、status、valid interval、transaction interval、reason 和 actor。Current Truth 先在 transaction time 截面选择当时可见版本，再按 valid time 求解，因此历史确认、遗忘和修订不会被当前行覆盖。
 
-语义比较优先确定性 predicate registry，关系为 equivalent/supports/contradicts/independent；可选 judge 只处理规则不确定的 bounded claim/evidence。Current Truth 同时按 valid time 和 known-at 过滤，并返回 accepted、conflicting、evidence、freshness 与 resolution history。
+语义比较优先确定性 predicate registry，关系为 equivalent/supports/contradicts/independent。明确 pair 不会调用模型；只有 `uncertain/model_eligible` pair 才发送 bounded claim/evidence。每次结果、弃权或失败都持久化 PossibleConflict 审计信息，失败不得改变 accepted truth。
 
 ## Git-aware Freshness
 
@@ -78,15 +89,17 @@ flowchart LR
     MMR --> Trace["Top-N + persisted trace"]
 ```
 
-每个结果记录 FTS/vector/graph/temporal rank、fused score、scope、freshness、evidence count、reranker score 和 final reasons。V1 fixed linear search 保留为 baseline；V2 使用 RRF。Embedding 区分 query/document instruction。`VectorIndex` 提供 exact NumPy baseline 和可选 `sqlite-vec` adapter；扩展不可用返回空 capability，由核心 exact/FTS 路径继续运行。
+每个结果记录 FTS/vector/graph/temporal rank、fused score、scope、freshness、evidence count、reranker score 和 final reasons。Embedding 区分 query/document instruction。sqlite-vec 以 `<provider>/<model>/<dimensions>` namespace 持久化，写入 memory embedding 时同步 upsert；状态、item count、失败原因和重建时间进入主库。扩展禁用/不可用或查询失败时显式使用 exact NumPy fallback，FTS5 始终可用。
 
 ## Task-aware Context Compiler
 
 Compiler 先构造严格 scope chain，再按 intent 要求 decision/constraint/failure/preference/state coverage。候选 utility 综合 relevance、confidence、freshness、evidence、feedback 和字符成本。预算内选择最小证据集，manifest 解释 include/exclude；同一 contested group 只要一边入选，就强制纳入双方。
 
-## Consolidation 与 Feedback
+## Consolidation、Health 与 Feedback
 
-Consolidation 只处理跨独立 source、达到最小时间跨度的 active episodic claims。输出 candidate/contested proposal、counterevidence、source memory IDs 和 `consolidated_from` lineage，不自动激活。Feedback 必须引用真实 RetrievalRun 中的 memory，写入 audit-friendly row，只改变未来 utility factor。
+Consolidation 只处理跨独立 source、达到最小时间跨度的 active episodic claims。模型抽象必须只引用输入中允许的 supporting/counter memory IDs，并满足独立来源约束；非法输出降级为明确标注的 extractive candidate。输出 candidate/contested proposal、counterevidence 和 lineage，永不自动激活。
+
+Memory Health 根据状态、更新时间、检索使用、证据和 accepted truth 角色生成分数、Hot/Warm/Cold/Archived 温度与解释。Archive 是逻辑且可逆的；系统阻止归档唯一 accepted current truth。只有 Cold/Archived 集合可 distill，结果仍是 agent-created candidate。
 
 ## Provider 边界
 
@@ -94,4 +107,4 @@ CandidateExtractor、ClaimExtractor、EmbeddingProvider、RelationshipJudge、Re
 
 ## 部署
 
-HTTP 强制 loopback。MCP 是 stdio 子进程。Windows onedir 包捆绑 migrations、Tree-sitter grammars、React dist 和 MemoryBench report。V1 与 V2 客户端使用同一 `data_dir` 时读取同一数据库；写入状态转换始终在事务中完成。
+HTTP 强制 loopback。MCP 是 stdio 子进程。Windows onedir 包捆绑 migrations、Tree-sitter grammars、sqlite-vec、React dist、MemoryBench V2 和 CodingMemoryBench V2.1 report。V1 数据原地升级至 0003；写入状态转换始终在事务中完成。

@@ -1,5 +1,6 @@
 import type {
   AuditEvent,
+  CodingMemoryBenchReport,
   ConflictRecord,
   ClaimGraphResponse,
   ConsolidationProposal,
@@ -10,10 +11,14 @@ import type {
   ExplainResponse,
   MemoryRecord,
   MemoryBenchReport,
+  MemoryHealthRecord,
   FreshnessRecord,
   Repository,
   SearchResponse,
   StatusResponse,
+  MemoryTemperature,
+  PossibleConflictRecord,
+  VectorIndexRecord,
 } from '../types'
 
 export class ApiError extends Error {
@@ -65,6 +70,34 @@ function queryString(values: Record<string, string | number | boolean | null | u
 export const api = {
   status: () => request<StatusResponse>('/api/status'),
   doctor: () => request<DoctorResponse>('/api/doctor'),
+  vectorIndex: () => request<VectorIndexRecord[]>('/api/vector-index'),
+  rebuildVectorIndex: () =>
+    request<{ ok: true; status: string; namespaces: VectorIndexRecord[] }>(
+      '/api/vector-index/rebuild',
+      { method: 'POST' },
+    ),
+  memoryHealth: (temperature?: MemoryTemperature | '') =>
+    request<MemoryHealthRecord[]>(
+      `/api/memory-health?${queryString({ temperature: temperature || null })}`,
+    ),
+  evaluateMemoryHealth: () =>
+    request<{ ok: true; evaluated: number; counts: Record<string, number> }>(
+      '/api/memory-health/evaluate',
+      { method: 'POST' },
+    ),
+  archiveMemory: (id: string) =>
+    request<{ ok: true; health: MemoryHealthRecord }>(`/api/memory-health/${id}/archive`, {
+      method: 'POST',
+    }),
+  restoreMemory: (id: string) =>
+    request<{ ok: true; health: MemoryHealthRecord }>(`/api/memory-health/${id}/restore`, {
+      method: 'POST',
+    }),
+  distillMemories: (memoryIds: string[], title?: string) =>
+    request<{ ok: true; candidate: MemoryRecord; supporting_memory_ids: string[] }>(
+      '/api/memory-health/distill',
+      { method: 'POST', body: JSON.stringify({ memory_ids: memoryIds, title: title || null }) },
+    ),
   repositories: () => request<Repository[]>('/api/repositories'),
   detectRepository: (path: string) =>
     request<Repository>('/api/repositories/detect', {
@@ -142,7 +175,18 @@ export const api = {
       }),
     }),
   memorybench: () => request<MemoryBenchReport>('/api/benchmarks/memorybench-v2'),
+  codingMemoryBench: () =>
+    request<CodingMemoryBenchReport>('/api/benchmarks/coding-memory-bench-v2.1'),
   conflicts: () => request<ConflictRecord[]>('/api/conflicts'),
+  possibleConflicts: () => request<PossibleConflictRecord[]>('/api/possible-conflicts'),
+  resolvePossibleConflict: (id: string, confirmed: boolean, rationale?: string) =>
+    request<{ ok: true; conflict: PossibleConflictRecord }>(
+      `/api/possible-conflicts/${id}/resolve`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ confirmed, rationale: rationale || null }),
+      },
+    ),
   resolveConflict: (id: string, strategy: string, rationale: string) =>
     request<{ ok: true; memory: MemoryRecord }>(`/api/conflicts/${id}/resolve`, {
       method: 'POST',

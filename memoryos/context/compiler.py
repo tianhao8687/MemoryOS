@@ -50,7 +50,7 @@ class TaskAwareContextCompiler:
                 include_history=request.include_historical,
                 as_of_valid_time=request.as_of_valid_time,
                 as_known_at=request.as_known_at,
-                limit=150,
+                limit=80,
             ),
             allowed_scopes=allowed,
             task=request.task,

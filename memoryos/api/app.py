@@ -25,6 +25,7 @@ from memoryos.domain.schemas import (
     FeedbackCreate,
     MemoryCreate,
     MemoryStatus,
+    MemoryTemperature,
     MemoryType,
     MemoryUpdate,
     RefreshRequest,
@@ -35,7 +36,7 @@ from memoryos.domain.schemas import (
 )
 from memoryos.engine import MemoryService
 from memoryos.errors import AuthenticationError, MemoryOSError, OriginRejectedError
-from memoryos.evaluation.report import load_memorybench_report
+from memoryos.evaluation.report import load_coding_memory_bench_report, load_memorybench_report
 from memoryos.integrations.git import discover_git_context, upsert_repository
 from memoryos.providers.base import CandidateExtractor
 from memoryos.providers.heuristic import HeuristicExtractor
@@ -48,6 +49,18 @@ class ConfirmRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     strategy: ConflictStrategy | None = None
     rationale: str | None = Field(default=None, max_length=2000)
+
+
+class PossibleConflictResolveRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    confirmed: bool
+    rationale: str | None = Field(default=None, max_length=2000)
+
+
+class DistillRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    memory_ids: list[str] = Field(min_length=2, max_length=100)
+    title: str | None = Field(default=None, min_length=1, max_length=300)
 
 
 class ExtractRequest(BaseModel):
@@ -103,7 +116,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
 
     app = FastAPI(
         title="MemoryOS",
-        version="2.0.0",
+        version="2.1.0",
         description="Local-first truth and memory intelligence for coding agents",
         lifespan=lifespan,
     )
@@ -161,7 +174,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:
-        return {"ok": True, "version": "2.0.0", "database": database.integrity_check()}
+        return {"ok": True, "version": "2.1.0", "database": database.integrity_check()}
 
     @app.get("/api/status")
     def get_status() -> dict[str, Any]:
@@ -170,6 +183,52 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     @app.get("/api/doctor")
     def doctor() -> dict[str, Any]:
         return run_doctor(database, settings)
+
+    @app.get("/api/vector-index")
+    def vector_index_status() -> list[dict[str, Any]]:
+        return service.vector_status()
+
+    @app.post("/api/vector-index/rebuild", dependencies=[Depends(require_write_access)])
+    def rebuild_vector_index() -> dict[str, Any]:
+        return {"ok": True, **service.rebuild_vector_index()}
+
+    @app.get("/api/memory-health")
+    def memory_health(
+        temperature: MemoryTemperature | None = None,
+    ) -> list[dict[str, Any]]:
+        return service.memory_health(temperature=temperature)
+
+    @app.post("/api/memory-health/evaluate", dependencies=[Depends(require_write_access)])
+    def evaluate_memory_health() -> dict[str, Any]:
+        return {"ok": True, **service.evaluate_memory_health()}
+
+    @app.post(
+        "/api/memory-health/{memory_id}/archive",
+        dependencies=[Depends(require_write_access)],
+    )
+    def archive_memory_health(memory_id: str) -> dict[str, Any]:
+        return {"ok": True, "health": service.archive_memory(memory_id, actor="http")}
+
+    @app.post(
+        "/api/memory-health/{memory_id}/restore",
+        dependencies=[Depends(require_write_access)],
+    )
+    def restore_memory_health(memory_id: str) -> dict[str, Any]:
+        return {
+            "ok": True,
+            "health": service.restore_archived_memory(memory_id, actor="http"),
+        }
+
+    @app.post("/api/memory-health/distill", dependencies=[Depends(require_write_access)])
+    def distill_memory_health(payload: DistillRequest) -> dict[str, Any]:
+        return {
+            "ok": True,
+            **service.distill_memories(
+                payload.memory_ids,
+                title=payload.title,
+                actor="http",
+            ),
+        }
 
     @app.get("/api/memories")
     def list_memories(
@@ -278,6 +337,10 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     def memorybench_v2_report() -> dict[str, Any]:
         return load_memorybench_report()
 
+    @app.get("/api/benchmarks/coding-memory-bench-v2.1")
+    def coding_memory_bench_v21_report() -> dict[str, Any]:
+        return load_coding_memory_bench_report()
+
     @app.post("/api/memories/{memory_id}/anchors", dependencies=[Depends(require_write_access)])
     def create_source_anchor(memory_id: str, payload: SourceAnchorRequest) -> dict[str, Any]:
         return {
@@ -295,6 +358,30 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     @app.get("/api/conflicts")
     def get_conflicts(limit: int = Query(default=100, ge=1, le=500)) -> list[dict[str, Any]]:
         return service.conflicts(limit=limit)
+
+    @app.get("/api/possible-conflicts")
+    def get_possible_conflicts(
+        limit: int = Query(default=100, ge=1, le=500),
+    ) -> list[dict[str, Any]]:
+        return service.possible_conflicts(limit=limit)
+
+    @app.post(
+        "/api/possible-conflicts/{conflict_id}/resolve",
+        dependencies=[Depends(require_write_access)],
+    )
+    def resolve_possible_conflict(
+        conflict_id: str,
+        payload: PossibleConflictResolveRequest,
+    ) -> dict[str, Any]:
+        return {
+            "ok": True,
+            "conflict": service.resolve_possible_conflict(
+                conflict_id,
+                confirmed=payload.confirmed,
+                actor="http",
+                rationale=payload.rationale,
+            ),
+        }
 
     @app.post("/api/conflicts/{candidate_id}/resolve", dependencies=[Depends(require_write_access)])
     def resolve_conflict(candidate_id: str, payload: ConfirmRequest) -> dict[str, Any]:
@@ -402,7 +489,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
             else "offline",
             "host": settings.host,
             "telemetry": False,
-            "version": "2.0.0",
+            "version": "2.1.0",
             "provider_capabilities": [
                 "candidate_extraction",
                 "claim_extraction",
