@@ -1,0 +1,100 @@
+{"id":"E001","text":"We decided to use PostgreSQL for production writes.","expected":["decision"]}
+{"id":"E002","text":"Use FastAPI for the local authentication API.","expected":["decision"]}
+{"id":"E003","text":"The team will adopt pnpm for workspace installs.","expected":["decision"]}
+{"id":"E004","text":"We decided to keep SQLite for the offline cache.","expected":["decision"]}
+{"id":"E005","text":"Standardize on Python 3.12 for this repository.","expected":["decision"]}
+{"id":"E006","text":"We use React for the management workbench.","expected":["decision"]}
+{"id":"E007","text":"决定生产数据库采用 PostgreSQL。","expected":["decision"]}
+{"id":"E008","text":"统一使用 pnpm 管理前端依赖。","expected":["decision"]}
+{"id":"E009","text":"这个项目采用 FastAPI 提供本地接口。","expected":["decision"]}
+{"id":"E010","text":"决定继续使用 SQLite 作为本地事实源。","expected":["decision"]}
+{"id":"E011","text":"We decided to use Alembic for schema migrations.","expected":["decision"]}
+{"id":"E012","text":"Adopt Ruff as the Python lint gate.","expected":["decision"]}
+{"id":"E013","text":"Use Vitest for component behavior tests.","expected":["decision"]}
+{"id":"E014","text":"We decided to use MCP stdio for agent integration.","expected":["decision"]}
+{"id":"E015","text":"统一采用 UTC 保存数据库时间。","expected":["decision"]}
+{"id":"E016","text":"决定将当前真相建模为 Claim Graph。","expected":["decision"]}
+{"id":"E017","text":"Use reciprocal rank fusion for retrieval channels.","expected":["decision"]}
+{"id":"E018","text":"We adopt a local-first deployment boundary.","expected":["decision"]}
+{"id":"E019","text":"决定保留现有 MemoryRow 兼容旧客户端。","expected":["decision"]}
+{"id":"E020","text":"Standardize on JSON responses for provider judgements.","expected":["decision"]}
+{"id":"E021","text":"Do not introduce Redis in V2.","expected":["constraint"]}
+{"id":"E022","text":"Never log bearer tokens or API keys.","expected":["constraint"]}
+{"id":"E023","text":"The provider must not activate memory directly.","expected":["constraint"]}
+{"id":"E024","text":"Source evidence is required for every accepted claim.","expected":["constraint"]}
+{"id":"E025","text":"This constraint requires SQLite to remain the fact source.","expected":["constraint"]}
+{"id":"E026","text":"Do not scan the whole repository during context compilation.","expected":["constraint"]}
+{"id":"E027","text":"不要在 V2 中引入 Electron。","expected":["constraint"]}
+{"id":"E028","text":"禁止模型直接删除 accepted claim。","expected":["constraint"]}
+{"id":"E029","text":"所有写操作必须保留审计记录。","expected":["constraint"]}
+{"id":"E030","text":"不要把 fixture 指标写成真实模型准确率。","expected":["constraint"]}
+{"id":"E031","text":"The API must not bind to a non-loopback address.","expected":["constraint"]}
+{"id":"E032","text":"A rationale is required when resolving a conflict.","expected":["constraint"]}
+{"id":"E033","text":"Never store a complete source repository in memory.","expected":["constraint"]}
+{"id":"E034","text":"Do not silently choose one side of a contested truth.","expected":["constraint"]}
+{"id":"E035","text":"必须区分 valid time 与 transaction time。","expected":["constraint"]}
+{"id":"E036","text":"禁止使用测试集调节 RRF 权重。","expected":["constraint"]}
+{"id":"E037","text":"The ANN extension must not be required for startup.","expected":["constraint"]}
+{"id":"E038","text":"Every model judgement requires schema validation.","expected":["constraint"]}
+{"id":"E039","text":"不要让 stale claim 进入默认上下文。","expected":["constraint"]}
+{"id":"E040","text":"Telemetry must not be enabled by default.","expected":["constraint"]}
+{"id":"E041","text":"The previous Redis worker design failed under concurrent writes.","expected":["failure"]}
+{"id":"E042","text":"Root cause was a missing transaction boundary.","expected":["failure"]}
+{"id":"E043","text":"The first migration did not work on an existing V1 database.","expected":["failure"]}
+{"id":"E044","text":"The package smoke failed because the UI assets were missing.","expected":["failure"]}
+{"id":"E045","text":"Authentication broke when the symbol moved to another file.","expected":["failure"]}
+{"id":"E046","text":"The FTS query failed on unescaped punctuation.","expected":["failure"]}
+{"id":"E047","text":"上一次缓存方案失败，根因是写竞争。","expected":["failure"]}
+{"id":"E048","text":"打包后接口不工作，根因是迁移目录未包含。","expected":["failure"]}
+{"id":"E049","text":"这个修复失败，因为 branch scope 泄漏。","expected":["failure"]}
+{"id":"E050","text":"旧的 symbol anchor 不工作，文件已被删除。","expected":["failure"]}
+{"id":"E051","text":"The benchmark failed after using the test split for tuning.","expected":["failure"]}
+{"id":"E052","text":"The provider response failed JSON schema validation.","expected":["failure"]}
+{"id":"E053","text":"The restore failed integrity_check and was rolled back.","expected":["failure"]}
+{"id":"E054","text":"The candidate merge broke repository isolation.","expected":["failure"]}
+{"id":"E055","text":"并发写入失败，根因是没有启用 WAL。","expected":["failure"]}
+{"id":"E056","text":"检索失败，因为 embedding endpoint 超时。","expected":["failure"]}
+{"id":"E057","text":"The context compiler failed to preserve both contested claims.","expected":["failure"]}
+{"id":"E058","text":"The initial reranker did not work without a provider.","expected":["failure"]}
+{"id":"E059","text":"UI build failed on an unchecked optional field.","expected":["failure"]}
+{"id":"E060","text":"The stale detector failed after a pure Git rename.","expected":["failure"]}
+{"id":"E061","text":"We prefer pnpm for JavaScript workspaces.","expected":["preference"]}
+{"id":"E062","text":"Always use explicit SQLAlchemy transactions.","expected":["preference"]}
+{"id":"E063","text":"The team preference is to keep services local-first.","expected":["preference"]}
+{"id":"E064","text":"We prefer small pure functions for ranking logic.","expected":["preference"]}
+{"id":"E065","text":"Always use a candidate before activating model output.","expected":["preference"]}
+{"id":"E066","text":"偏好使用清晰的结构化 JSON 输出。","expected":["preference"]}
+{"id":"E067","text":"以后优先使用确定性规则处理高置信冲突。","expected":["preference"]}
+{"id":"E068","text":"团队偏好在本地运行 MemoryOS。","expected":["preference"]}
+{"id":"E069","text":"We prefer readable traces over opaque ranking weights.","expected":["preference"]}
+{"id":"E070","text":"Always use bounded evidence excerpts for code anchors.","expected":["preference"]}
+{"id":"E071","text":"My preference is to keep historical episodes auditable.","expected":["preference"]}
+{"id":"E072","text":"偏好先运行离线 fallback，再调用可选模型。","expected":["preference"]}
+{"id":"E073","text":"We prefer UTC timestamps in reports.","expected":["preference"]}
+{"id":"E074","text":"Always use train and dev splits before freezing config.","expected":["preference"]}
+{"id":"E075","text":"以后使用 MMR 避免重复上下文。","expected":["preference"]}
+{"id":"E076","text":"The current goal is to finish the claim graph migration.","expected":["state"]}
+{"id":"E077","text":"We are working on the retrieval debugger page.","expected":["state"]}
+{"id":"E078","text":"The next task is to run the package upgrade smoke.","expected":["state"]}
+{"id":"E079","text":"当前目标是完成 Git freshness 测试。","expected":["state"]}
+{"id":"E080","text":"正在实现 consolidation inbox。","expected":["state"]}
+{"id":"E081","text":"下一步运行 100k 检索性能测试。","expected":["state"]}
+{"id":"E082","text":"The current goal is to review contested claims.","expected":["state"]}
+{"id":"E083","text":"We are working on V1 backup import compatibility.","expected":["state"]}
+{"id":"E084","text":"The next task is to freeze benchmark configuration.","expected":["state"]}
+{"id":"E085","text":"正在检查分支隔离是否正确。","expected":["state"]}
+{"id":"E086","text":"Thanks for the update; I will read it later.","expected":[]}
+{"id":"E087","text":"The weather is pleasant today.","expected":[]}
+{"id":"E088","text":"Hello, how are you?","expected":[]}
+{"id":"E089","text":"That explanation makes sense to me.","expected":[]}
+{"id":"E090","text":"Please show the next page of results.","expected":[]}
+{"id":"E091","text":"谢谢，内容我已经看到了。","expected":[]}
+{"id":"E092","text":"今天先讨论到这里。","expected":[]}
+{"id":"E093","text":"Can you repeat the last sentence?","expected":[]}
+{"id":"E094","text":"This is an example conversation with no project fact.","expected":[]}
+{"id":"E095","text":"I have no additional information right now.","expected":[]}
+{"id":"E096","text":"稍后再看这个问题。","expected":[]}
+{"id":"E097","text":"The meeting starts at noon.","expected":[]}
+{"id":"E098","text":"Please format the answer as a short paragraph.","expected":[]}
+{"id":"E099","text":"I agree with your summary.","expected":[]}
+{"id":"E100","text":"收到。","expected":[]}

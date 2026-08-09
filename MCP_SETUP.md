@@ -91,18 +91,25 @@ claude mcp add --transport stdio memoryos -- "C:\Users\Admin\Documents\ChatGPT\�
 | `memory_forget` | 逻辑忘却，保留最小 provenance/audit | 是 |
 | `memory_history` | 查询 memory ID 或 semantic key 的状态/替代历史 | 否 |
 | `memory_explain` | 返回来源、hash、作用域、创建者、状态、关系和审计 | 否 |
+| `memory_current_truth` | 按 entity/predicate 或自然语言查询 resolved/contested/stale truth | 否 |
+| `memory_feedback` | 对指定 retrieval run 中的 memory 提交 helpful/unhelpful 反馈 | 是 |
+| `memory_consolidate` | 扫描 episodic pattern；默认 dry-run，只生成候选 | 可选 |
+| `memory_refresh` | 重算 Git anchor freshness，并可生成 replacement candidate | 是 |
+| `memory_debug_context` | 返回 query plan、RRF/rerank、过滤、manifest 和预算选择 | 否 |
 
 ## 建议的 Agent 工作流
 
-1. 开始任务时调用 `memory_context`，传入当前 repo 和 branch。
-2. 不确定时用 `memory_search`；需要可信理由时用 `memory_explain`。
+1. 开始任务时调用 `memory_context`，传入当前 repo 和 branch；调试召回时使用 `memory_debug_context`。
+2. 不确定时用 `memory_search`；查询当前结论时用 `memory_current_truth`；需要可信理由时用 `memory_explain`。
 3. 仅对稳定、可复用且有明确来源的信息调用 `memory_propose`。
 4. 让用户或有明确授权的工作流调用 `memory_confirm`；不要自动解决语义冲突。
-5. 信息过时时用 `memory_forget` 或通过新 candidate 建立 supersession 链，不直接删库。
+5. 代码证据可能过时时先用 `memory_refresh`；它生成候选而不会静默改原结论。
+6. 只对本次 retrieval 中实际使用过的 memory 调用 `memory_feedback`；反馈不是真相编辑。
+7. 定期用 `memory_consolidate` 预览重复 episode，确认反证和 lineage 后再人工激活候选。
 
 ## 连接验证
 
-以下自动测试使用官方 Python MCP client 启动真实 stdio 子进程，列出 7 个工具，完成 propose → confirm → context，关闭 MCP 后再用 HTTP 读取同一条记忆：
+以下自动测试使用官方 Python MCP client 启动真实 stdio 子进程，列出 12 个工具，完成 propose → confirm → context，关闭 MCP 后再用 HTTP 读取同一条记忆：
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q tests\test_mcp_stdio.py

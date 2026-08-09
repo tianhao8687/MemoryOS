@@ -13,6 +13,7 @@ from memoryos.db.session import Database
 from memoryos.domain.schemas import MemoryStatus, SearchRequest
 from memoryos.errors import ProviderError
 from memoryos.providers.base import EmbeddingProvider
+from memoryos.retrieval.vector import ExactVectorIndex
 
 TOKEN_RE = re.compile(r"[\w.]+", re.UNICODE)
 
@@ -42,7 +43,11 @@ class RetrievalEngine:
             memory = session.get(MemoryRow, memory_id)
             if memory is None:
                 return False
-            vector = self.embedding_provider.embed([f"{memory.title}\n{memory.content}"])[0]
+            document = f"{memory.title}\n{memory.content}"
+            if hasattr(self.embedding_provider, "embed_documents"):
+                vector = self.embedding_provider.embed_documents([document])[0]
+            else:
+                vector = self.embedding_provider.embed([document])[0]
             existing = session.scalar(
                 select(EmbeddingRow).where(EmbeddingRow.memory_id == memory_id)
             )
@@ -106,9 +111,10 @@ class RetrievalEngine:
             provider_failed = False
             if self.embedding_provider is not None and request.query.strip():
                 try:
-                    query_vector = np.asarray(
-                        self.embedding_provider.embed([request.query])[0], dtype=np.float32
-                    )
+                    if hasattr(self.embedding_provider, "embed_query"):
+                        embedded_query = self.embedding_provider.embed_query(request.query)
+                    else:
+                        embedded_query = self.embedding_provider.embed([request.query])[0]
                     embeddings = list(
                         session.scalars(
                             select(EmbeddingRow).where(
@@ -118,16 +124,18 @@ class RetrievalEngine:
                             )
                         )
                     )
-                    query_norm = float(np.linalg.norm(query_vector))
-                    if query_norm:
-                        for embedding in embeddings:
-                            stored = np.asarray(embedding.vector_json or [], dtype=np.float32)
-                            if stored.shape != query_vector.shape:
-                                continue
-                            denominator = query_norm * float(np.linalg.norm(stored))
-                            if denominator:
-                                cosine = float(np.dot(query_vector, stored) / denominator)
-                                semantic[embedding.memory_id] = (cosine + 1.0) / 2.0
+                    exact_index = ExactVectorIndex(
+                        {
+                            embedding.memory_id: list(embedding.vector_json or [])
+                            for embedding in embeddings
+                        }
+                    )
+                    semantic = {
+                        memory_id: (cosine + 1.0) / 2.0
+                        for memory_id, cosine in exact_index.search(
+                            embedded_query, limit=len(embeddings)
+                        )
+                    }
                     if semantic:
                         mode = "hybrid"
                 except ProviderError:

@@ -5,6 +5,7 @@ import socket
 import threading
 import webbrowser
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -20,10 +21,16 @@ from memoryos.db import Database
 from memoryos.doctor import run_doctor
 from memoryos.domain.schemas import (
     ConflictStrategy,
+    ConsolidateRequest,
+    ContextRequest,
     CreatedBy,
+    CurrentTruthRequest,
+    FeedbackCreate,
+    FeedbackValue,
     MemoryCreate,
     MemoryStatus,
     MemoryType,
+    RefreshRequest,
     ScopeType,
     SearchRequest,
     SourceCreate,
@@ -241,6 +248,156 @@ def forget(context: typer.Context, memory_id: str) -> None:
     database, service, _ = _runtime(context).components()
     try:
         console.print_json(data=service.forget(memory_id, actor="cli"))
+    finally:
+        database.close()
+
+
+@app.command("current-truth")
+def current_truth(
+    context: typer.Context,
+    subject: Annotated[str | None, typer.Option()] = None,
+    predicate: Annotated[str | None, typer.Option()] = None,
+    query: Annotated[str | None, typer.Option()] = None,
+    scope_type: Annotated[ScopeType | None, typer.Option()] = None,
+    scope_key: Annotated[str | None, typer.Option()] = None,
+    as_of: Annotated[str | None, typer.Option()] = None,
+    known_at: Annotated[str | None, typer.Option()] = None,
+) -> None:
+    """Query bitemporal current truth for an entity/predicate or natural-language selector."""
+    database, service, _ = _runtime(context).components()
+    try:
+        console.print_json(
+            data=service.current_truth(
+                CurrentTruthRequest(
+                    subject=subject,
+                    predicate=predicate,
+                    query=query,
+                    scope_type=scope_type,
+                    scope_key=scope_key,
+                    as_of_valid_time=datetime.fromisoformat(as_of) if as_of else None,
+                    as_known_at=datetime.fromisoformat(known_at) if known_at else None,
+                )
+            )
+        )
+    finally:
+        database.close()
+
+
+@app.command()
+def consolidate(
+    context: typer.Context,
+    scope_key: Annotated[str, typer.Option()],
+    scope_type: Annotated[ScopeType, typer.Option()] = ScopeType.REPOSITORY,
+    dry_run: Annotated[bool, typer.Option("--dry-run/--persist-candidate")] = True,
+    minimum_sources: Annotated[int, typer.Option(min=2, max=20)] = 3,
+    minimum_span_days: Annotated[int, typer.Option(min=0, max=3650)] = 7,
+) -> None:
+    """Generate consolidation candidates without automatic activation."""
+    database, service, _ = _runtime(context).components()
+    try:
+        console.print_json(
+            data=service.consolidate(
+                ConsolidateRequest(
+                    scope_type=scope_type,
+                    scope_key=scope_key,
+                    dry_run=dry_run,
+                    minimum_sources=minimum_sources,
+                    minimum_span_days=minimum_span_days,
+                )
+            )
+        )
+    finally:
+        database.close()
+
+
+@app.command()
+def feedback(
+    context: typer.Context,
+    retrieval_run_id: str,
+    memory_id: str,
+    helpful: FeedbackValue,
+    reason: Annotated[str | None, typer.Option()] = None,
+) -> None:
+    """Record a reproducible retrieval utility signal."""
+    database, service, _ = _runtime(context).components()
+    try:
+        console.print_json(
+            data=service.feedback(
+                FeedbackCreate(
+                    retrieval_run_id=retrieval_run_id,
+                    memory_id=memory_id,
+                    helpful=helpful,
+                    actor="cli",
+                    reason=reason,
+                )
+            )
+        )
+    finally:
+        database.close()
+
+
+@app.command()
+def refresh(
+    context: typer.Context,
+    memory_id: str,
+    repository_path: Path,
+    create_replacement_candidate: Annotated[bool, typer.Option()] = False,
+) -> None:
+    """Refresh Git freshness and optionally create a replacement candidate."""
+    database, service, _ = _runtime(context).components()
+    try:
+        console.print_json(
+            data=service.refresh_memory(
+                RefreshRequest(
+                    memory_id=memory_id,
+                    repository_path=str(repository_path),
+                    create_replacement_candidate=create_replacement_candidate,
+                )
+            )
+        )
+    finally:
+        database.close()
+
+
+@app.command()
+def anchor(
+    context: typer.Context,
+    memory_id: str,
+    repository_path: Path,
+    path: str,
+    symbol_fqn: Annotated[str | None, typer.Option()] = None,
+) -> None:
+    """Attach bounded Git evidence to a memory claim."""
+    database, service, _ = _runtime(context).components()
+    try:
+        console.print_json(
+            data=service.create_source_anchor(
+                memory_id=memory_id,
+                repository_path=str(repository_path),
+                path=path,
+                symbol_fqn=symbol_fqn,
+            )
+        )
+    finally:
+        database.close()
+
+
+@app.command("debug-context")
+def debug_context(
+    context: typer.Context,
+    task: str,
+    repo: str,
+    branch: Annotated[str | None, typer.Option()] = None,
+    budget: Annotated[int, typer.Option(min=500, max=50000)] = 6000,
+) -> None:
+    """Show query plan, retrieval trace, filters, and context manifest."""
+    database, service, _ = _runtime(context).components()
+    try:
+        console.print_json(
+            data=service.debug_context(
+                ContextRequest(task=task, repository=repo, branch=branch, budget=budget)
+            )
+        )
     finally:
         database.close()
 

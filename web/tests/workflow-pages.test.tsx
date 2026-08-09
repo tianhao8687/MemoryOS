@@ -39,9 +39,9 @@ const candidate = {
 } as const
 
 const status = {
-  version: '1.0.0',
+  version: '2.0.0',
   database: 'memoryos.db',
-  schema_version: '0001_initial',
+  schema_version: '0002_memory_intelligence',
   counts: {
     candidate: 1,
     active: 1,

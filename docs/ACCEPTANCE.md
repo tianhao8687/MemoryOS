@@ -1,66 +1,100 @@
-# MemoryOS V1.0 验收证据
+# MemoryOS V2.0 验收证据
 
-本文档将总任务书的 A01–A14 强制验收项映射到可重复执行的测试和产物。最终唯一入口是：
+唯一全量入口：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\verify.py
 ```
 
-脚本在首个失败门禁处返回非零，并将已执行步骤写入 `docs/verification/verify-summary.json`。只有所有 14 个质量/产物门禁通过才写入 `result: PASS`。
+脚本 fail-fast，并把 V2 汇总写入 `docs/verification/v2/verify-summary.json`。A15–A32 机器清单写入 `docs/verification/v2/acceptance-summary.json`；MemoryBench 原始报告为 JSON 和 HTML。
 
-## A01–A14
+## A01–A14 V1 回归
 
-| ID | 要求 | 自动证据 | 关键断言 |
-| --- | --- | --- | --- |
-| A01 Persistence | active 写入后重启仍可读 | `scripts/production_smoke.py` | MCP propose/confirm，停止发行包服务，重启后 HTTP 搜索到同一 ID |
-| A02 Cross-client | MCP 写、HTTP/CLI 读同一数据 | `tests/test_mcp_stdio.py::test_real_stdio_cross_client_persistence` + package smoke | 真实 stdio 子进程写入后，TestClient 通过 HTTP 读取；打包 CLI 对同一 data dir 执行 status |
-| A03 Conflict | 同 repo/key 冲突不静默覆盖 | `tests/test_database_and_core.py::test_conflict_requires_resolution_and_preserves_supersession_chain` | 无 strategy 确认时抛出 `ConflictDetectedError`，旧 active 值保留 |
-| A04 Supersede | 新值确认后旧值 superseded，history 完整 | 同 A03 测试 | 新值 `supersedes_id` 指向旧值，旧值状态为 `superseded`，explain 含关系 |
-| A05 TTL | 过期 working memory 不进入默认 context | `tests/test_database_and_core.py::test_ttl_expiration_is_excluded_but_auditable` | 默认搜索不返回，状态转 `expired`，audit 含 `expire` |
-| A06 Branch Isolation | feature 分支记忆不污染 main | `tests/test_database_and_core.py::test_branch_scope_isolation_in_context` | 相同 repo 下 feature context 可见，main context 不可见 |
-| A07 Provenance | active memory 至少一个 source 且可 explain | `tests/test_database_and_core.py::test_provenance_fts_and_secret_redaction` + MCP test | explain 含 source、64 字符 SHA-256、audit 和关系 |
-| A08 Offline | 无模型/无网络仍可运行检索 | `tests/test_providers.py::test_heuristic_extractor_works_offline_and_only_returns_candidates` + `scripts/benchmark_search.py` | heuristic 本地提取，10,000 条基准明确使用 `mode: fts5` |
-| A09 Provider Failure | 超时/非法 JSON 不污染 DB | `tests/test_providers.py` 中 invalid JSON 和 timeout 测试 | 均返回 `ProviderError`，`memories` 行数仍为 0 |
-| A10 Security | 无 token 或恶意 Origin 的写请求被拒 | `tests/test_api_security.py` | 无 token 返回 401，恶意 Origin 返回 403，非 loopback bind 配置被拒绝 |
-| A11 Backup | 备份/恢复后核心数据一致 | `tests/test_backup_restore.py` | SQLite round trip、版本化 JSONL 导入导出、safety backup、损坏 DB 拒绝且活数据不变 |
-| A12 No Source-code Hoarding | 仓库扫描不批量存源码 | `tests/test_git_integration.py::test_repository_identity_survives_path_move_and_does_not_hoard_source` | 识别移动后的同一 remote 仓库，`memories` 行数仍为 0 |
-| A13 UI E2E | 候选确认、冲突、搜索、忘却、explain | `web/e2e/memoryos.spec.ts` | 真实 FastAPI + Chromium 完成所有主流程，desktop/mobile 视口，axe 0 violation，console/page error 为 0 |
-| A14 Package Smoke | 干净路径的 PyInstaller 产物可运行 | `scripts/build_windows.py` + `scripts/production_smoke.py` | 将整个发行目录复制到带空格的临时路径，验证 HTTP/UI/7 MCP tools/CLI/重启持久化 |
+V1 frozen baseline 位于 `docs/verification/v2/v1-baseline.json`（commit `83df3903954751188c731ac097b93e2a2c71d26c`，14/14 PASS）。V2 的全量 Pytest、Playwright、10k regression 和 package smoke 会再次运行原场景。
 
-## 质量和构建门禁
+| ID | 要求 | 自动证据 |
+| --- | --- | --- |
+| A01 Persistence | active 重启可读 | packaged smoke 两次启动 |
+| A02 Cross-client | MCP 写，HTTP/CLI 读 | `tests/test_mcp_stdio.py` + packaged smoke |
+| A03 Conflict | 冲突不静默覆盖 | `tests/test_database_and_core.py` |
+| A04 Supersede | replacement/history 完整 | `tests/test_database_and_core.py` |
+| A05 TTL | 过期默认不可检索且可审计 | `tests/test_database_and_core.py` |
+| A06 Branch Isolation | sibling branch 不泄漏 | V1 core test + V2 scope-narrowing test |
+| A07 Provenance | source/hash/explain | core + MCP tests |
+| A08 Offline | 无模型仍可用 | provider tests + FTS benchmarks |
+| A09 Provider Failure | timeout/非法 JSON 不污染 DB | `tests/test_providers.py` |
+| A10 Security | token/origin/loopback | `tests/test_api_security.py` |
+| A11 Backup | 备份、恢复、损坏拒绝 | `tests/test_backup_restore.py` |
+| A12 No Hoarding | 不批量收藏源码 | `tests/test_git_integration.py` |
+| A13 UI E2E | 核心工作流、desktop/mobile、axe | `web/e2e/memoryos.spec.ts` |
+| A14 Package Smoke | clean path EXE/UI/MCP/CLI/restart | `scripts/production_smoke.py` |
 
-`scripts/verify.py` 执行下列 14 个命令级门禁：
+## A15–A32 V2 强制验收
+
+| ID | 要求 | 自动证据与关键断言 |
+| --- | --- | --- |
+| A15 Claim Normalization | `tests/test_v2_claims_truth.py`：一句拆多个 Claim；每个 exact span 可回切原文；同义/大小写改写保持 equivalent |
+| A16 Entity Resolution | 同 repo/type 的 Postgres/PostgreSQL alias 合并；跨 repo/type ID 不同 |
+| A17 Semantic Conflict | 不同 key、相同语义维度的 FastAPI/Django 进入 review |
+| A18 Truth State | resolved/contested/stale/unknown 均由 Current Truth 状态机返回 |
+| A19 Bitemporal | valid-time 与 known-at 分离测试，历史、尚未知、当前结果不同 |
+| A20 Git Fresh | `tests/test_v2_freshness.py`：真实 Git repo 未变 anchor 为 fresh；四语言 Tree-sitter symbol test |
+| A21 Git Moved | `git mv` 后 blob/symbol 重定位为 moved/fresh-like |
+| A22 Git Stale | 实质修改为 suspect/stale、删除为 stale；replacement 仍是 candidate |
+| A23 Retrieval Trace | persisted run/manifest 含 FTS/vector/graph/temporal rank、fusion/filter/reason |
+| A24 RRF/Rerank Fallback | failing embedding 返回 FTS fallback；EmbeddingRow 仍为 0；exact/optional ANN fallback 单测 |
+| A25 Context Contest | contested group 双方均入 context；sibling branch 完全不进 candidate manifest |
+| A26 Consolidation | 三个独立 source、跨七日生成 candidate、lineage 为 consolidated_from、不激活 |
+| A27 Counterevidence | 反证输出 contested/counterevidence，不产单一确定事实 |
+| A28 Feedback | feedback 必须属于 RetrievalRun，可审计，仅改 utility factor，fact status unchanged |
+| A29 MemoryBench | `memorybench-report.json`：E100/R250/C200/T120/G120/L80/X150/A30/P100k，均含 V1 baseline |
+| A30 Real Model Truthfulness | fixture 明确 `real_model:false` 和 `harness_validation_only`；真实模型为 `external_blocker/not_evaluated` |
+| A31 V1 Regression | frozen V1 14/14 + V2 全量原测试 + 10k V1 benchmark + package regression |
+| A32 Package Upgrade | production smoke 创建真实 0001 DB，packaged EXE 自动迁移 0002，旧/新 memory 经 12-tool MCP、HTTP、UI、CLI、restart 共用；冻结包实际加载 Tree-sitter grammar 创建 symbol anchor |
+
+## MemoryBench 门槛
+
+冻结配置、seed、commit、dirty state、provider/model、evidence type 和 config hash 全部进入报告。test 不参与调参。
+
+| 门槛 | 目标 | 报告字段 |
+| --- | --- | --- |
+| Branch leakage | 0 | `suites.context.v2.branch_leakage` |
+| Temporal accuracy | ≥0.95 | `suites.temporal.v2.accuracy` |
+| Conflict macro F1 | ≥0.85 | `suites.conflict.v2.f1` |
+| Git stale recall | ≥0.90 | `suites.git_freshness.v2.stale_recall` |
+| Context selected precision | ≥0.80 | `suites.context.v2.selected_precision` |
+| Retrieval Recall@5 | V1 +10% 或 ≥0.90 | `suites.retrieval` |
+| Redundancy | ≤0.20 | `suites.context.v2.redundancy_rate` |
+| 100k FTS5 P95，无 reranker | <500 ms | `suites.performance_100k.v2.p95_ms` |
+
+真实 coding-agent A/B 需要外部模型/harness。本环境未配置，因此该效果项保持外部阻塞；这是 A30 要求的诚实结论，不把 fixture 成功率当产品准确率。
+
+## 命令级门禁
+
+`scripts/verify.py` 执行 16 个步骤：
 
 1. backend import
 2. Ruff lint
 3. Ruff format check
 4. Mypy strict
 5. Pytest
-6. TypeScript typecheck
-7. ESLint（zero warnings）
-8. Vitest
-9. Vite production build
-10. Playwright E2E
-11. 10,000-record FTS-only benchmark
-12. backend wheel
-13. Windows PyInstaller
-14. packaged production smoke
-
-## 性能证据
-
-`docs/verification/performance.json` 保存当前机器的真实数据，不使用造出的目标数字。基准每次创建临时数据库，批量写入 10,000 条带 provenance 的 active memory，预热后分别执行 7 次 search 和 context。任一次超过 1,000 ms 会导致脚本失败。
-
-## UI 视觉证据
-
-生成的设计参考位于 `docs/design/`，真实应用截图位于 `docs/verification/`。验证视口包括 1536×1024 desktop 和 412×915 mobile；主要对比点是 graphite 导航、cool-gray 画布、teal active 状态、amber conflict 状态、高密度 ledger/table 和右侧 inspector。
-
-Playwright 自动验收之外，还使用应用内浏览器检查 desktop/mobile 布局、console、抽屉尺寸和水平溢出。移动端最终测量为 body/document/drawer 宽度均不超过 412 px，drawer 从 54 px 顶部导航下方开始。
+6. MemoryBench V2
+7. TypeScript typecheck
+8. ESLint zero warnings
+9. Vitest
+10. Vite production build
+11. Playwright desktop/mobile + axe
+12. V1 10,000-record FTS/context regression
+13. backend wheel
+14. Windows PyInstaller onedir
+15. packaged V1→V2 production smoke
+16. A15–A32 evidence manifest
 
 ## 产物
 
-- Python wheel：`build/wheel/memoryos-1.0.0-py3-none-any.whl`
-- Windows 发行目录：`release/MemoryOS/`
-- 主可执行文件：`release/MemoryOS/MemoryOS.exe`
-- 性能报告：`docs/verification/performance.json`
-- 发行包冒烟报告：`docs/verification/package-smoke.json`
-- 全门禁汇总：`docs/verification/verify-summary.json`
+- wheel：`build/wheel/memoryos-2.0.0-py3-none-any.whl`
+- Windows：`release/MemoryOS/MemoryOS.exe`（需保留整个 onedir）
+- MemoryBench：`docs/verification/v2/memorybench-report.{json,html}`
+- A15–A32：`docs/verification/v2/acceptance-summary.json`
+- package smoke：`docs/verification/package-smoke.json`
+- V2 verify：`docs/verification/v2/verify-summary.json`

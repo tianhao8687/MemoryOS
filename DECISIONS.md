@@ -1,6 +1,6 @@
 # Implementation decisions
 
-This file records the non-blocking defaults selected while executing the V1.0 task specification.
+This file records the non-blocking defaults selected while executing the V1.0 and V2.0 task specifications.
 They are implementation commitments, not future proposals.
 
 ## Active decisions
@@ -20,9 +20,9 @@ They are implementation commitments, not future proposals.
 6. Use SQLite WAL + FTS5 as the source of truth and offline search baseline. Optional embedding and
    OpenAI-compatible extraction adapters are disabled by default and may not make core behavior
    unavailable.
-7. Rank retrieval using explicit weights: lexical 0.32, semantic 0.22, scope 0.18, importance 0.12,
-   recency 0.08, confidence 0.08. In FTS-only mode, semantic contributes zero and the response mode
-   states this truthfully.
+7. Preserve the V1 fixed linear weights as the frozen baseline. V2 fuses FTS/vector/graph/temporal
+   rankings with weighted RRF, then applies scope/freshness/evidence/feedback factors, optional top-N
+   reranking, and MMR. Every selection keeps a machine-readable trace.
 8. Interpret the context `budget` as a character budget in V1. The output reports
    `characters_used`; this avoids pretending to have a tokenizer when providers are optional.
    Task-scoped memory without an explicit TTL receives a seven-day default; working memory in
@@ -41,10 +41,30 @@ They are implementation commitments, not future proposals.
     This makes bundled migrations/UI assets explicit and gives faster, more diagnosable startup.
 14. Let `serve` select a free loopback port when `--port 0` (the default). Persist the chosen port in
     `runtime.json` and print it before starting Uvicorn.
-15. Do not crawl or index repository source. Git integration records only repository identity,
-    root, remote, branch, and HEAD; memory text must be explicitly supplied by a user or Agent.
+15. Do not crawl or index repository source. Git integration may read only an explicitly anchored
+    file and persist a bounded excerpt plus symbol/path/hash metadata; it never stores a repository
+    snapshot or scans the full tree.
 16. Use an engineering-ledger visual system for the React UI: graphite navigation, cool gray canvas,
     teal verified state, amber conflict state, table/list-first layouts, and provenance typography.
 17. Keep third-party client setup claims narrow. The MCP protocol is verified with a real Python
     stdio client and the packaged executable; Cursor and Claude Code snippets are clearly marked as
     configuration templates because their UIs were not automated in this workspace.
+18. Keep V1 memories as the lifecycle/provenance envelope and add normalized Claims as the truth
+    unit. Migration does not fabricate claims for old rows; normalization is conservative and lazy.
+19. Resolve entity aliases only inside the same scope and entity type. Similarity can propose a
+    merge, but persisted merge redirects require an auditable event.
+20. Treat `valid_from/valid_to` as world validity and `recorded_at` as knowledge time. Current Truth
+    accepts both bounds and never collapses them into one timestamp.
+21. Use Tree-sitter language grammars for Python/TS/JS/Rust anchors. Unsupported languages use
+    bounded path/snippet hashes; parser failure must not trigger whole-repository inspection.
+22. Exclude stale claims from current context by default, downweight and label suspect claims, and
+    make refresh produce a candidate instead of mutating accepted evidence.
+23. Keep exact NumPy as the portable vector index. Offer `sqlite-vec` through an optional adapter;
+    missing or broken extensions yield an unavailable capability and never prevent FTS startup.
+24. Consolidation requires at least three independent sources across seven days by default. It
+    persists proposals and counterevidence but cannot activate or delete memory.
+25. User feedback affects retrieval utility only after validating that the memory belonged to the
+    referenced RetrievalRun. It never changes Claim status or Current Truth directly.
+26. Treat synthetic and hand-authored MemoryBench fixtures as pipeline evidence, not real-model
+    accuracy. Without an actual paired coding-agent harness, record an external blocker and make no
+    effectiveness claim.

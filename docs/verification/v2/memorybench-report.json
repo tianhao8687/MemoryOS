@@ -1,0 +1,1699 @@
+{
+  "schema": "memorybench-v2-report@1",
+  "generated_at": "2026-08-09T17:05:08.902189+00:00",
+  "seed": 20260810,
+  "config_hash": "73dd051e904e7ab6ffee36436da5f3f8f3fdfe109624d156bf6423f6bb6ca0b4",
+  "git": {
+    "commit": "83df3903954751188c731ac097b93e2a2c71d26c",
+    "dirty": true
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+    "sqlite": "3.50.4",
+    "cpu_count": 16
+  },
+  "provider_policy": {
+    "default": "heuristic/deterministic-rules-v2",
+    "real_model": false,
+    "model_judges": "disabled",
+    "full_prompts_recorded": false
+  },
+  "data_protocol": {
+    "gold_sources": [
+      "synthetic-deterministic",
+      "hand-authored"
+    ],
+    "train": "configuration design only; no test cases inspected at runtime",
+    "dev": "rule regression cases frozen before this run",
+    "test": "all reported suite cases; final config only",
+    "anti_cheating": "No query-specific special cases are constructed from test text.",
+    "frozen_config": {
+      "seed": 20260810,
+      "retrieval_queries": 250,
+      "conflict_pairs": 200,
+      "temporal_scenarios": 120,
+      "git_mutations": 120,
+      "consolidation_sequences": 80,
+      "context_tasks": 150,
+      "agent_tasks": 30,
+      "performance_records": 100000,
+      "retrieval_k": 5,
+      "context_selected": 3,
+      "rrf_k": 60,
+      "mmr_lambda": 0.78,
+      "release_targets": {
+        "branch_leakage_max": 0.0,
+        "temporal_accuracy_min": 0.95,
+        "conflict_f1_min": 0.85,
+        "git_stale_recall_min": 0.9,
+        "context_precision_min": 0.8,
+        "retrieval_recall_at_5_min": 0.9,
+        "retrieval_relative_gain_min": 0.1,
+        "redundancy_rate_max": 0.2,
+        "search_100k_p95_ms_max": 500.0
+      }
+    }
+  },
+  "suites": {
+    "extraction": {
+      "suite": "E Extraction",
+      "sample_size": 100,
+      "evidence_type": "hand-authored",
+      "dataset": "benchmarks/memorybench_v2/data/extraction_cases.jsonl",
+      "provider": {
+        "provider": "heuristic",
+        "model": "deterministic-rules-v2",
+        "real_model": false,
+        "max_input_chars": 50000,
+        "capabilities": [
+          "candidate_extraction",
+          "claim_extraction",
+          "offline_fallback"
+        ]
+      },
+      "baseline": {
+        "name": "V1 heuristic snapshot",
+        "precision": 0.9618055555555555,
+        "recall": 0.9472222222222223,
+        "f1": 0.9495576108479334,
+        "accuracy": 0.95,
+        "per_label": {
+          "decision": {
+            "precision": 0.8333333333333334,
+            "recall": 1.0,
+            "f1": 0.9090909090909091
+          },
+          "constraint": {
+            "precision": 1.0,
+            "recall": 0.95,
+            "f1": 0.9743589743589743
+          },
+          "failure": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "preference": {
+            "precision": 1.0,
+            "recall": 0.7333333333333333,
+            "f1": 0.846153846153846
+          },
+          "state": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "none": {
+            "precision": 0.9375,
+            "recall": 1.0,
+            "f1": 0.967741935483871
+          }
+        },
+        "confusion": {
+          "decision->decision": 20,
+          "constraint->constraint": 19,
+          "constraint->none": 1,
+          "failure->failure": 20,
+          "preference->preference": 11,
+          "preference->decision": 4,
+          "state->state": 10,
+          "none->none": 15
+        }
+      },
+      "v2": {
+        "name": "V2 deterministic heuristic",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "per_label": {
+          "decision": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "constraint": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "failure": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "preference": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "state": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "none": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          }
+        },
+        "confusion": {
+          "decision->decision": 20,
+          "constraint->constraint": 20,
+          "failure->failure": 20,
+          "preference->preference": 15,
+          "state->state": 10,
+          "none->none": 15
+        }
+      },
+      "cases": [
+        {
+          "id": "E001",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E002",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E003",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E004",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E005",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E006",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E007",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E008",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E009",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E010",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E011",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E012",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E013",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E014",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E015",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E016",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E017",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E018",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E019",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E020",
+          "expected": "decision",
+          "predicted": "decision"
+        },
+        {
+          "id": "E021",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E022",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E023",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E024",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E025",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E026",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E027",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E028",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E029",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E030",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E031",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E032",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E033",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E034",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E035",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E036",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E037",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E038",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E039",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E040",
+          "expected": "constraint",
+          "predicted": "constraint"
+        },
+        {
+          "id": "E041",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E042",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E043",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E044",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E045",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E046",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E047",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E048",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E049",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E050",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E051",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E052",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E053",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E054",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E055",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E056",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E057",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E058",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E059",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E060",
+          "expected": "failure",
+          "predicted": "failure"
+        },
+        {
+          "id": "E061",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E062",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E063",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E064",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E065",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E066",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E067",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E068",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E069",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E070",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E071",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E072",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E073",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E074",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E075",
+          "expected": "preference",
+          "predicted": "preference"
+        },
+        {
+          "id": "E076",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E077",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E078",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E079",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E080",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E081",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E082",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E083",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E084",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E085",
+          "expected": "state",
+          "predicted": "state"
+        },
+        {
+          "id": "E086",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E087",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E088",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E089",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E090",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E091",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E092",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E093",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E094",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E095",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E096",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E097",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E098",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E099",
+          "expected": "none",
+          "predicted": "none"
+        },
+        {
+          "id": "E100",
+          "expected": "none",
+          "predicted": "none"
+        }
+      ]
+    },
+    "retrieval": {
+      "suite": "R Retrieval",
+      "sample_size": 250,
+      "evidence_type": "synthetic-deterministic",
+      "split": "test",
+      "baseline": {
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_10": 1.0,
+        "elapsed_seconds": 0.21084320000227308
+      },
+      "v2": {
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_10": 1.0,
+        "elapsed_seconds": 0.41673269999591867
+      },
+      "relative_recall_gain": 0.0,
+      "gate": {
+        "passed": true,
+        "rule": "relative gain >=10% OR Recall@5 >=0.90"
+      }
+    },
+    "conflict": {
+      "suite": "C Conflict",
+      "sample_size": 200,
+      "evidence_type": "hand-authored-deterministic-generator",
+      "baseline": {
+        "precision": 0.8333333333333334,
+        "recall": 0.5,
+        "f1": 0.375,
+        "accuracy": 0.5,
+        "per_label": {
+          "equivalent": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "supports": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "contradicts": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "independent": {
+            "precision": 0.3333333333333333,
+            "recall": 1.0,
+            "f1": 0.5
+          }
+        },
+        "confusion": {
+          "equivalent->equivalent": 50,
+          "supports->independent": 50,
+          "contradicts->independent": 50,
+          "independent->independent": 50
+        },
+        "abstain_rate": 0.0
+      },
+      "v2": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "per_label": {
+          "equivalent": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "supports": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "contradicts": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "independent": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          }
+        },
+        "confusion": {
+          "equivalent->equivalent": 50,
+          "supports->supports": 50,
+          "contradicts->contradicts": 50,
+          "independent->independent": 50
+        },
+        "abstain_rate": 0.0
+      },
+      "gate": {
+        "passed": true,
+        "rule": "macro F1 >=0.85"
+      }
+    },
+    "temporal": {
+      "suite": "T Temporal",
+      "sample_size": 120,
+      "evidence_type": "synthetic-deterministic",
+      "baseline": {
+        "precision": 0.75,
+        "recall": 0.8333333333333333,
+        "f1": 0.7333333333333334,
+        "accuracy": 0.75,
+        "per_label": {
+          "visible": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666
+          },
+          "not_visible": {
+            "precision": 1.0,
+            "recall": 0.6666666666666666,
+            "f1": 0.8
+          }
+        },
+        "confusion": {
+          "visible->visible": 30,
+          "not_visible->not_visible": 60,
+          "not_visible->visible": 30
+        }
+      },
+      "v2": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "per_label": {
+          "visible": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "not_visible": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          }
+        },
+        "confusion": {
+          "visible->visible": 30,
+          "not_visible->not_visible": 90
+        }
+      },
+      "gate": {
+        "passed": true,
+        "rule": "temporal accuracy >=0.95"
+      }
+    },
+    "git_freshness": {
+      "suite": "G Git Freshness",
+      "sample_size": 120,
+      "evidence_type": "synthetic-deterministic-state-machine",
+      "baseline": {
+        "precision": 0.8,
+        "recall": 0.2,
+        "f1": 0.0,
+        "accuracy": 0.0,
+        "per_label": {
+          "fresh": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "moved": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "suspect": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "stale": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "unknown": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0
+          }
+        },
+        "confusion": {
+          "fresh->unknown": 40,
+          "moved->unknown": 30,
+          "suspect->unknown": 20,
+          "stale->unknown": 30
+        },
+        "stale_recall": 0.0,
+        "false_stale_rate": 0.0
+      },
+      "v2": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "per_label": {
+          "fresh": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "moved": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "suspect": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "stale": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "unknown": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          }
+        },
+        "confusion": {
+          "fresh->fresh": 40,
+          "moved->moved": 30,
+          "suspect->suspect": 20,
+          "stale->stale": 30
+        },
+        "stale_recall": 1.0,
+        "false_stale_rate": 0.0
+      },
+      "gate": {
+        "passed": true,
+        "rule": "stale recall >=0.90"
+      }
+    },
+    "consolidation": {
+      "suite": "L Consolidation",
+      "sample_size": 80,
+      "evidence_type": "synthetic-deterministic",
+      "baseline": {
+        "precision": 0.8333333333333334,
+        "recall": 0.3333333333333333,
+        "f1": 0.2222222222222222,
+        "accuracy": 0.5,
+        "per_label": {
+          "candidate": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "contested": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "none": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666
+          }
+        },
+        "confusion": {
+          "candidate->none": 20,
+          "contested->none": 20,
+          "none->none": 40
+        }
+      },
+      "v2": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "per_label": {
+          "candidate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "contested": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "none": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          }
+        },
+        "confusion": {
+          "candidate->candidate": 20,
+          "contested->contested": 20,
+          "none->none": 40
+        }
+      },
+      "gate": {
+        "passed": true,
+        "rule": "candidate macro F1 >=0.85"
+      }
+    },
+    "context": {
+      "suite": "X Context",
+      "sample_size": 150,
+      "evidence_type": "synthetic-deterministic",
+      "budget": {
+        "selected_memories": 3
+      },
+      "baseline": {
+        "selected_precision": 0.3333333333333333,
+        "coverage": 0.3333333333333333,
+        "redundancy_rate": 0.0,
+        "branch_leakage": 0.3333333333333333
+      },
+      "v2": {
+        "selected_precision": 1.0,
+        "coverage": 1.0,
+        "redundancy_rate": 0.0,
+        "branch_leakage": 0.0
+      },
+      "gate": {
+        "passed": true,
+        "rule": "precision >=0.80; redundancy <=0.20; branch leakage =0"
+      }
+    },
+    "agent_ab": {
+      "suite": "A Agent A/B",
+      "sample_size": 30,
+      "fixture": {
+        "sample_size": 30,
+        "evidence_type": "fixture",
+        "real_model": false,
+        "claim": "harness_validation_only",
+        "baseline": {
+          "task_success": 0.6,
+          "repeated_mistake_rate": 0.5,
+          "stale_memory_misuse": 0.26666666666666666,
+          "confirmed_decision_compliance": 0.6333333333333333,
+          "unnecessary_tool_calls": 10.0,
+          "context_cost_chars": 0.0,
+          "latency_seconds": 24.5
+        },
+        "memoryos_enabled": {
+          "task_success": 0.8666666666666667,
+          "repeated_mistake_rate": 0.13333333333333333,
+          "stale_memory_misuse": 0.0,
+          "confirmed_decision_compliance": 0.8666666666666667,
+          "unnecessary_tool_calls": 7.0,
+          "context_cost_chars": 1783.3333333333333,
+          "latency_seconds": 22.0
+        },
+        "task_success_difference": {
+          "difference": 0.2666666666666667,
+          "ci95_low": 0.13333333333333333,
+          "ci95_high": 0.43333333333333335
+        },
+        "repeated_mistake_difference": {
+          "difference": -0.3666666666666667,
+          "ci95_low": -0.5333333333333333,
+          "ci95_high": -0.2
+        },
+        "decision_compliance_difference": {
+          "difference": 0.2333333333333334,
+          "ci95_low": 0.1,
+          "ci95_high": 0.4
+        },
+        "stale_misuse_difference": {
+          "difference": -0.26666666666666666,
+          "ci95_low": -0.43333333333333335,
+          "ci95_high": -0.13333333333333333
+        },
+        "unnecessary_tool_calls_difference": {
+          "difference": -3.0,
+          "ci95_low": -3.6,
+          "ci95_high": -2.433333333333333
+        },
+        "context_cost_difference": {
+          "difference": 1783.3333333333333,
+          "ci95_low": 1713.3333333333333,
+          "ci95_high": 1856.6666666666667
+        },
+        "latency_difference": {
+          "difference": -2.5,
+          "ci95_low": -3.2666666666666666,
+          "ci95_high": -1.7
+        },
+        "interpretation": "Synthetic fixture validates pairing, metrics, and confidence-interval plumbing only; it is not evidence that a real coding model improves.",
+        "records": [
+          {
+            "task_id": "fixture-agent-task-01",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": true,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 8,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1500,
+            "baseline_latency_seconds": 22.0,
+            "memoryos_latency_seconds": 20.0
+          },
+          {
+            "task_id": "fixture-agent-task-02",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 9,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1600,
+            "baseline_latency_seconds": 23.0,
+            "memoryos_latency_seconds": 21.0
+          },
+          {
+            "task_id": "fixture-agent-task-03",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 10,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1700,
+            "baseline_latency_seconds": 24.0,
+            "memoryos_latency_seconds": 22.0
+          },
+          {
+            "task_id": "fixture-agent-task-04",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 11,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1800,
+            "baseline_latency_seconds": 25.0,
+            "memoryos_latency_seconds": 23.0
+          },
+          {
+            "task_id": "fixture-agent-task-05",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": true,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 12,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1900,
+            "baseline_latency_seconds": 26.0,
+            "memoryos_latency_seconds": 24.0
+          },
+          {
+            "task_id": "fixture-agent-task-06",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": false,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": true,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": false,
+            "baseline_tool_calls": 8,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 2000,
+            "baseline_latency_seconds": 27.0,
+            "memoryos_latency_seconds": 20.0
+          },
+          {
+            "task_id": "fixture-agent-task-07",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 9,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 2100,
+            "baseline_latency_seconds": 22.0,
+            "memoryos_latency_seconds": 21.0
+          },
+          {
+            "task_id": "fixture-agent-task-08",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 10,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1500,
+            "baseline_latency_seconds": 23.0,
+            "memoryos_latency_seconds": 22.0
+          },
+          {
+            "task_id": "fixture-agent-task-09",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": true,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 11,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1600,
+            "baseline_latency_seconds": 24.0,
+            "memoryos_latency_seconds": 23.0
+          },
+          {
+            "task_id": "fixture-agent-task-10",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 12,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1700,
+            "baseline_latency_seconds": 25.0,
+            "memoryos_latency_seconds": 24.0
+          },
+          {
+            "task_id": "fixture-agent-task-11",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 8,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1800,
+            "baseline_latency_seconds": 26.0,
+            "memoryos_latency_seconds": 20.0
+          },
+          {
+            "task_id": "fixture-agent-task-12",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 9,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1900,
+            "baseline_latency_seconds": 27.0,
+            "memoryos_latency_seconds": 21.0
+          },
+          {
+            "task_id": "fixture-agent-task-13",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": true,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 10,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 2000,
+            "baseline_latency_seconds": 22.0,
+            "memoryos_latency_seconds": 22.0
+          },
+          {
+            "task_id": "fixture-agent-task-14",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 11,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 2100,
+            "baseline_latency_seconds": 23.0,
+            "memoryos_latency_seconds": 23.0
+          },
+          {
+            "task_id": "fixture-agent-task-15",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 12,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1500,
+            "baseline_latency_seconds": 24.0,
+            "memoryos_latency_seconds": 24.0
+          },
+          {
+            "task_id": "fixture-agent-task-16",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": false,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": true,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": false,
+            "baseline_tool_calls": 8,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1600,
+            "baseline_latency_seconds": 25.0,
+            "memoryos_latency_seconds": 20.0
+          },
+          {
+            "task_id": "fixture-agent-task-17",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": true,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 9,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1700,
+            "baseline_latency_seconds": 26.0,
+            "memoryos_latency_seconds": 21.0
+          },
+          {
+            "task_id": "fixture-agent-task-18",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 10,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1800,
+            "baseline_latency_seconds": 27.0,
+            "memoryos_latency_seconds": 22.0
+          },
+          {
+            "task_id": "fixture-agent-task-19",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 11,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1900,
+            "baseline_latency_seconds": 22.0,
+            "memoryos_latency_seconds": 23.0
+          },
+          {
+            "task_id": "fixture-agent-task-20",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 12,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 2000,
+            "baseline_latency_seconds": 23.0,
+            "memoryos_latency_seconds": 24.0
+          },
+          {
+            "task_id": "fixture-agent-task-21",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": true,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 8,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 2100,
+            "baseline_latency_seconds": 24.0,
+            "memoryos_latency_seconds": 20.0
+          },
+          {
+            "task_id": "fixture-agent-task-22",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": false,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": true,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": false,
+            "baseline_tool_calls": 9,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1500,
+            "baseline_latency_seconds": 25.0,
+            "memoryos_latency_seconds": 21.0
+          },
+          {
+            "task_id": "fixture-agent-task-23",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 10,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1600,
+            "baseline_latency_seconds": 26.0,
+            "memoryos_latency_seconds": 22.0
+          },
+          {
+            "task_id": "fixture-agent-task-24",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 11,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1700,
+            "baseline_latency_seconds": 27.0,
+            "memoryos_latency_seconds": 23.0
+          },
+          {
+            "task_id": "fixture-agent-task-25",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": true,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 12,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1800,
+            "baseline_latency_seconds": 22.0,
+            "memoryos_latency_seconds": 24.0
+          },
+          {
+            "task_id": "fixture-agent-task-26",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 8,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1900,
+            "baseline_latency_seconds": 23.0,
+            "memoryos_latency_seconds": 20.0
+          },
+          {
+            "task_id": "fixture-agent-task-27",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 9,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 2000,
+            "baseline_latency_seconds": 24.0,
+            "memoryos_latency_seconds": 21.0
+          },
+          {
+            "task_id": "fixture-agent-task-28",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 10,
+            "memoryos_tool_calls": 6,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 2100,
+            "baseline_latency_seconds": 25.0,
+            "memoryos_latency_seconds": 22.0
+          },
+          {
+            "task_id": "fixture-agent-task-29",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": false,
+            "memoryos_success": false,
+            "baseline_repeated_mistake": true,
+            "memoryos_repeated_mistake": true,
+            "baseline_stale_misuse": true,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": false,
+            "memoryos_decision_compliance": false,
+            "baseline_tool_calls": 11,
+            "memoryos_tool_calls": 7,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1500,
+            "baseline_latency_seconds": 26.0,
+            "memoryos_latency_seconds": 23.0
+          },
+          {
+            "task_id": "fixture-agent-task-30",
+            "seeded_decision": "Use FastAPI and do not introduce Redis.",
+            "seeded_failure": "The previous cache worker race must not be repeated.",
+            "baseline_success": true,
+            "memoryos_success": true,
+            "baseline_repeated_mistake": false,
+            "memoryos_repeated_mistake": false,
+            "baseline_stale_misuse": false,
+            "memoryos_stale_misuse": false,
+            "baseline_decision_compliance": true,
+            "memoryos_decision_compliance": true,
+            "baseline_tool_calls": 12,
+            "memoryos_tool_calls": 8,
+            "baseline_context_chars": 0,
+            "memoryos_context_chars": 1600,
+            "baseline_latency_seconds": 27.0,
+            "memoryos_latency_seconds": 24.0
+          }
+        ]
+      },
+      "real_model": {
+        "evidence_type": "real-model",
+        "real_model": true,
+        "status": "external_blocker",
+        "reason": "No configured coding-agent harness/model endpoint was available. Set an OpenAI-compatible agent runner and rerun the paired 30-task protocol.",
+        "effect_claim": "not_evaluated"
+      },
+      "truthfulness_gate": {
+        "passed": true,
+        "reason": "Fixture results are labeled harness-only and are not presented as model effectiveness."
+      }
+    },
+    "performance_100k": {
+      "suite": "P 100k Search",
+      "sample_size": 100000,
+      "queries_per_variant": 80,
+      "evidence_type": "measured-local-machine",
+      "reranker": "disabled",
+      "build_seconds": 0.48913899999752175,
+      "database_bytes": 20623360,
+      "baseline": {
+        "p50_ms": 0.028799993742723018,
+        "p95_ms": 0.03860000288113952,
+        "max_ms": 0.05709999823011458
+      },
+      "v2": {
+        "p50_ms": 0.027599999157246202,
+        "p95_ms": 0.03390000347280875,
+        "max_ms": 0.04150000313529745
+      },
+      "gate": {
+        "passed": true,
+        "rule": "P95 <500 ms"
+      }
+    }
+  },
+  "release_gates": {
+    "measured": {
+      "extraction": true,
+      "retrieval": true,
+      "conflict": true,
+      "temporal": true,
+      "git_freshness": true,
+      "consolidation": true,
+      "context": true,
+      "performance_100k": true
+    },
+    "measured_all_passed": true,
+    "real_model_agent_effect": "external_blocker",
+    "release_readiness": "conditional_external_blocker",
+    "note": "All locally measurable quality/performance gates pass; real-model Agent A/B remains unclaimed."
+  }
+}

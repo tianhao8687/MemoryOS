@@ -1,10 +1,16 @@
 import type {
   AuditEvent,
   ConflictRecord,
+  ClaimGraphResponse,
+  ConsolidationProposal,
+  ConsolidationRecord,
   ContextResponse,
+  CurrentTruthResponse,
   DoctorResponse,
   ExplainResponse,
   MemoryRecord,
+  MemoryBenchReport,
+  FreshnessRecord,
   Repository,
   SearchResponse,
   StatusResponse,
@@ -98,6 +104,44 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ repository, branch, task, budget: 6000 }),
     }),
+  currentTruth: (payload: Record<string, unknown>) =>
+    request<CurrentTruthResponse>('/api/current-truth', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  claimGraph: (payload: Record<string, unknown>) =>
+    request<ClaimGraphResponse>('/api/claim-graph', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  debugContext: (repository: string, branch: string, task: string, budget: number) =>
+    request<ContextResponse>('/api/debug/context', {
+      method: 'POST',
+      body: JSON.stringify({ repository, branch, task, budget }),
+    }),
+  freshness: () => request<FreshnessRecord[]>('/api/freshness'),
+  refresh: (memoryId: string, repositoryPath: string, createReplacementCandidate: boolean) =>
+    request<{ ok: true; refresh: Record<string, unknown> }>('/api/refresh', {
+      method: 'POST',
+      body: JSON.stringify({
+        memory_id: memoryId,
+        repository_path: repositoryPath,
+        create_replacement_candidate: createReplacementCandidate,
+      }),
+    }),
+  consolidations: () => request<ConsolidationRecord[]>('/api/consolidations'),
+  consolidate: (scopeKey: string, dryRun: boolean) =>
+    request<{ ok: true; count: number; proposals: ConsolidationProposal[] }>('/api/consolidate', {
+      method: 'POST',
+      body: JSON.stringify({
+        scope_type: 'repository',
+        scope_key: scopeKey,
+        dry_run: dryRun,
+        minimum_sources: 3,
+        minimum_span_days: 7,
+      }),
+    }),
+  memorybench: () => request<MemoryBenchReport>('/api/benchmarks/memorybench-v2'),
   conflicts: () => request<ConflictRecord[]>('/api/conflicts'),
   resolveConflict: (id: string, strategy: string, rationale: string) =>
     request<{ ok: true; memory: MemoryRecord }>(`/api/conflicts/${id}/resolve`, {

@@ -47,6 +47,12 @@ class MemoryOSSettings(BaseSettings):
     extractor_base_url: str | None = None
     extractor_model: str | None = None
     extractor_api_key: str | None = None
+    provider_timeout_seconds: float = 20.0
+    provider_max_input_chars: int = 12000
+    relationship_model: str | None = None
+    reranker_model: str | None = None
+    consolidation_model: str | None = None
+    staleness_model: str | None = None
 
     @field_validator("host")
     @classmethod

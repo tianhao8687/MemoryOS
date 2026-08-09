@@ -1,104 +1,97 @@
-# MemoryOS 架构
+# MemoryOS V2 架构
 
-## 设计目标
+## 原则
 
-MemoryOS 在一台本机上为多个编码客户端提供同一套可追溯记忆。数据库是唯一事实源；MCP、HTTP、CLI 和 UI 只是不同适配层。默认路径完全离线，模型提取和 embedding 不是正常运行的前置条件。
+SQLite 是本机唯一事实源，MCP、HTTP、CLI 和 UI 是同一 `MemoryService` 的适配层。FTS5、确定性 Claim/Truth/Freshness 规则和 exact NumPy 保证完全离线可用；embedding、reranker、model judge 和 ANN 均可选且失败可降级。
 
-V1 的明确非目标：不做云同步、多用户账号系统、自动源码索引、远程网络服务或后台遥测。
+MemoryOS 不做云同步、多用户账号、远程服务、全仓源码索引或源码 hoarding。
 
-## 组件图
+## 组件
 
 ```mermaid
 flowchart LR
-    C1["Codex / Cursor / Claude Code"] -->|"MCP stdio"| MCP["7-tool MCP adapter"]
-    CLI["Typer CLI"] --> SVC["Memory service"]
-    UI["React management UI"] -->|"localhost HTTP"| API["FastAPI adapter"]
-    API --> SVC
-    MCP --> SVC
-    SVC --> RET["Retrieval + context builder"]
-    SVC --> GIT["Git metadata integration"]
-    SVC --> BAK["Backup / import-export"]
-    SVC --> DB["SQLite WAL + FTS5"]
-    RET --> DB
-    RET -. "optional" .-> EMB["OpenAI-compatible embeddings"]
-    API -. "optional" .-> EXT["OpenAI-compatible extractor"]
+    Agents["Coding agents"] -->|"12-tool MCP stdio"| MCP["MCP adapter"]
+    CLI["Typer CLI"] --> Service["MemoryService"]
+    UI["React Workbench"] -->|"loopback HTTP"| API["FastAPI"]
+    MCP --> Service
+    API --> Service
+    Service --> Truth["Claim / Entity / Current Truth"]
+    Service --> Fresh["Source Anchor / Git Freshness"]
+    Service --> Retrieval["Retrieval 2.0"]
+    Service --> Consolidation["Consolidation / Feedback"]
+    Truth --> DB["SQLite WAL + FTS5"]
+    Fresh --> DB
+    Retrieval --> DB
+    Consolidation --> DB
+    Retrieval -. optional .-> Providers["Embedding / Reranker / Judges"]
+    Retrieval -. optional .-> ANN["sqlite-vec ANN"]
 ```
 
-`memoryos.engine.MemoryService` 集中执行状态转换、冲突、过期、审计和来源规则，因此不同适配层不会产生不同语义。
+## 数据模型与迁移
 
-## 数据模型
+`0001_initial` 的 repositories、memories、sources、relations、embeddings、audit、settings 和 FTS5 原样保留。`0002_memory_intelligence` 新增：
 
-Alembic `0001_initial` 迁移创建以下表：
+- `entities`、`entity_merge_events`
+- `claims`、`claim_evidence`、`claim_relations`
+- `source_anchors`
+- `retrieval_runs`、`memory_feedback`
+- `consolidation_candidates`
 
-- `repositories`：稳定仓库键与当前路径/remote/branch 元数据。
-- `memories`：作用域、类型、语义键、正文、状态、置信度、重要性、有效期和创建者。
-- `sources` + `memory_sources`：来源引用、脱敏 excerpt、SHA-256 内容哈希及多对多关联。
-- `relations`：包括 supersession 在内的记忆关系。
-- `embeddings`：可选 provider/model/vector 索引。
-- `audit_events`：不可由常规忘却操作删除的行为记录。
-- `settings`：持久化设置。
-- `memory_fts`：由 SQLite trigger 同步的 FTS5 虚拟表。
+现有 V1 memory 不会被迁移脚本凭空补成 accepted claim；首次正常操作可保守、lazy normalize。备份格式为 V2 且显式接受 V1 import。生产 smoke 以真实 `0001_initial` DB 启动 packaged executable，验证自动升级和旧数据保留。
 
-作用域从宽到窄为 `user → workspace → repository → branch → task`。Context builder 只组合请求指定的仓库、分支和任务链；分支记忆不会泄漏到其他分支。
+## Claim、Entity 与双时态 Truth
 
-## 生命周期
+每个 Claim 绑定 exact evidence span，并包含 scoped subject entity、canonical predicate/object、polarity、modality、confidence、status、valid interval、recorded time 和 stale state。Entity alias 仅在相同 scope/type 解析，merge 通过 redirect 和 event 保持可审计、可逆语义。
+
+语义比较优先确定性 predicate registry，关系为 equivalent/supports/contradicts/independent；可选 judge 只处理规则不确定的 bounded claim/evidence。Current Truth 同时按 valid time 和 known-at 过滤，并返回 accepted、conflicting、evidence、freshness 与 resolution history。
+
+## Git-aware Freshness
+
+Source Anchor 保存 repository stable key、commit/blob、path、language、symbol FQN/kind、line、excerpt/context hash。Python、TypeScript、JavaScript 和 Rust 使用真实 Tree-sitter grammar，只解析 anchor 文件；不支持语言退化到 bounded snippet/context hash。
+
+Freshness lazy 计算并按 HEAD 缓存：
+
+- `fresh`：blob 未变或 symbol/snippet 等价。
+- `moved`：路径/行变化但证据可靠重定位。
+- `suspect`：symbol 有实质变化但证据不足以断言 stale。
+- `stale`：文件/symbol 删除或不再存在。
+- `unknown`：仓库不可读、stable key 不匹配或语言不支持。
+
+默认 context 排除 stale、显著降权并标记 suspect。Refresh 更新 freshness，并在有当前证据时生成 replacement candidate；不修改原 accepted fact。
+
+## Retrieval 2.0
 
 ```mermaid
-stateDiagram-v2
-    [*] --> candidate: "Agent / extractor / import proposes"
-    [*] --> active: "explicit manual activation"
-    candidate --> active: "confirm"
-    candidate --> rejected: "reject"
-    candidate --> candidate: "edit"
-    active --> superseded: "confirmed replacement"
-    active --> expired: "TTL or valid_to"
-    active --> forgotten: "logical forget"
-    candidate --> forgotten: "logical forget"
-    superseded --> forgotten: "logical forget"
+flowchart LR
+    Q["Task query"] --> Planner["Intent + entities + scopes + time"]
+    Planner --> FTS["FTS5 BM25"]
+    Planner --> Vec["Embedding index"]
+    Planner --> Graph["Claim/entity graph"]
+    Planner --> Temporal["Current truth / temporal"]
+    FTS --> RRF["Weighted RRF"]
+    Vec --> RRF
+    Graph --> RRF
+    Temporal --> RRF
+    RRF --> Filter["Scope / freshness / evidence / feedback"]
+    Filter --> Rerank["Optional top 20–40 reranker"]
+    Rerank --> MMR["MMR diversity"]
+    MMR --> Trace["Top-N + persisted trace"]
 ```
 
-同一作用域和语义键上已有 active 记忆时，普通 `confirm` 返回冲突，而不是静默覆盖。用户必须选择：
+每个结果记录 FTS/vector/graph/temporal rank、fused score、scope、freshness、evidence count、reranker score 和 final reasons。V1 fixed linear search 保留为 baseline；V2 使用 RRF。Embedding 区分 query/document instruction。`VectorIndex` 提供 exact NumPy baseline 和可选 `sqlite-vec` adapter；扩展不可用返回空 capability，由核心 exact/FTS 路径继续运行。
 
-- `supersede`：旧记忆变为 `superseded`，新记忆激活，建立双向可解释链。
-- `keep_both`：保留两条 active 记忆，记录解决理由。
-- `reject`：候选项转为 `rejected`。
+## Task-aware Context Compiler
 
-所有转换在同一数据库事务内更新记忆、关系、FTS 及审计记录。
+Compiler 先构造严格 scope chain，再按 intent 要求 decision/constraint/failure/preference/state coverage。候选 utility 综合 relevance、confidence、freshness、evidence、feedback 和字符成本。预算内选择最小证据集，manifest 解释 include/exclude；同一 contested group 只要一边入选，就强制纳入双方。
 
-## 写入和读取流程
+## Consolidation 与 Feedback
 
-### 写入
+Consolidation 只处理跨独立 source、达到最小时间跨度的 active episodic claims。输出 candidate/contested proposal、counterevidence、source memory IDs 和 `consolidated_from` lineage，不自动激活。Feedback 必须引用真实 RetrievalRun 中的 memory，写入 audit-friendly row，只改变未来 utility factor。
 
-1. Pydantic 以 `extra=forbid` 校验请求。
-2. 正文和来源 excerpt 经密钥模式脱敏；excerpt 按配置上限截断。
-3. 创建 source 和 content hash，再创建 candidate/active 及审计事件。
-4. SQLite trigger 使 FTS5 索引与主表同步。
-5. 如已配置 embedding provider，可为记忆建立向量；失败时搜索回退到 FTS5。
+## Provider 边界
 
-### 搜索
+CandidateExtractor、ClaimExtractor、EmbeddingProvider、RelationshipJudge、Reranker、ConsolidationJudge 和 StalenessJudge 均暴露 provider/model、real/fixture、capabilities、timeout、max input 和 stats。OpenAI-compatible JSON 输出经 `extra=forbid` schema 与 evidence span 校验；异常统一转为 `ProviderError`，不写污染数据，也不记录完整 prompt。
 
-FTS5 BM25 先给出候选，排名再合并 lexical 0.32、semantic 0.22、scope 0.18、importance 0.12、recency 0.08 和 confidence 0.08。未配置 embedding 时只使用 FTS5 基线，返回的 `mode` 会如实标记为 `fts5`、`hybrid` 或 `fts5-fallback`。
+## 部署
 
-### Context builder
-
-Context builder 先限定作用域，再排名、去重和按字符预算裁剪，最后组织为：
-
-1. current decisions
-2. active constraints
-3. known failures / do not repeat
-4. relevant preferences
-5. current branch / task state
-6. historical / superseded（仅显式请求）
-
-每条输出包含 memory ID 和 provenance reference，便于 Agent 继续调用 `memory_explain`。
-
-## 持久化与并发
-
-- SQLAlchemy session 上下文在成功时 commit、失败时 rollback。
-- SQLite 启用 WAL、foreign keys 和 5,000 ms busy timeout。
-- WAL 和 busy timeout 负责协调并发连接；16 条/8 线程的验收测试验证了完整写入。
-- MCP、HTTP 和 CLI 使用同一 `data_dir` 时读写同一数据库；真实 stdio 子进程与 HTTP 客户端的交叉测试验证了持久化。
-
-## 部署拓扑
-
-V1 只支持单机 loopback 部署。HTTP 服务拒绝 `0.0.0.0`、LAN IP 和非 loopback 主机。MCP 以 stdio 子进程形式由客户端启动，不开放网络端口。Windows 发行包捆绑 Python runtime、迁移和前端静态产物。
+HTTP 强制 loopback。MCP 是 stdio 子进程。Windows onedir 包捆绑 migrations、Tree-sitter grammars、React dist 和 MemoryBench report。V1 与 V2 客户端使用同一 `data_dir` 时读取同一数据库；写入状态转换始终在事务中完成。

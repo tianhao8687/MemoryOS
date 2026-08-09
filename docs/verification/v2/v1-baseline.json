@@ -1,0 +1,41 @@
+{
+  "baseline": "MemoryOS V1.0",
+  "git_commit": "83df3903954751188c731ac097b93e2a2c71d26c",
+  "captured_at": "2026-08-09T23:54:57+08:00",
+  "result": "PASS",
+  "quality_gates": {
+    "passed": 14,
+    "total": 14,
+    "pytest": {
+      "passed": 26,
+      "warnings": 1
+    },
+    "frontend_unit_tests": {
+      "passed": 6
+    },
+    "playwright": {
+      "passed": 6,
+      "skipped_by_matrix": 4
+    }
+  },
+  "retrieval_10000": {
+    "mode": "fts5",
+    "search_median_ms": 23.882,
+    "search_max_ms": 40.134,
+    "context_median_ms": 29.719,
+    "context_max_ms": 50.258
+  },
+  "package_smoke": {
+    "result": "PASS",
+    "mcp_tools": 7,
+    "restart_persistence": true,
+    "ui_health": true,
+    "cli_status": true,
+    "elapsed_seconds": 6.764
+  },
+  "evidence": {
+    "verify_summary": "docs/verification/verify-summary.json",
+    "performance": "docs/verification/performance.json",
+    "package_smoke": "docs/verification/package-smoke.json"
+  }
+}

@@ -1,4 +1,4 @@
-"""Run every MemoryOS V1 quality, acceptance, build, and production gate."""
+"""Run MemoryOS V1 compatibility plus V2 A15-A32 quality and production gates."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
-REPORT = ROOT / "docs" / "verification" / "verify-summary.json"
+REPORT = ROOT / "docs" / "verification" / "v2" / "verify-summary.json"
 
 
 def _pnpm() -> tuple[str, dict[str, str]]:
@@ -96,6 +96,11 @@ def main() -> None:
     )
     run("Mypy", [python, "-m", "mypy", "memoryos"], steps)
     run("Pytest", [python, "-m", "pytest", "-q"], steps)
+    run(
+        "MemoryBench V2",
+        [python, "scripts/memorybench_v2.py"],
+        steps,
+    )
     run("Frontend typecheck", [pnpm, "typecheck"], steps, cwd=WEB, environment=frontend_environment)
     run("Frontend lint", [pnpm, "lint"], steps, cwd=WEB, environment=frontend_environment)
     run("Frontend unit tests", [pnpm, "test"], steps, cwd=WEB, environment=frontend_environment)
@@ -149,8 +154,9 @@ def main() -> None:
         ],
         steps,
     )
+    run("A15-A32 evidence manifest", [python, "scripts/acceptance_v2.py"], steps)
     _write_report("PASS", steps)
-    print(f"\nMemoryOS V1 verification passed ({len(steps)} gates).")
+    print(f"\nMemoryOS V2 verification passed ({len(steps)} gates).")
     print(REPORT)
 
 

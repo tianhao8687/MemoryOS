@@ -2,7 +2,7 @@
 
 ## 信任边界
 
-MemoryOS V1 是单用户、单机、loopback-only 工具。它信任当前操作系统用户和用该用户身份启动的 MCP 客户端，不把本机其他用户、未信任网页、LAN 设备或外部 provider 视为可信边界。
+MemoryOS V2 是单用户、单机、loopback-only 工具。它信任当前操作系统用户和用该用户身份启动的 MCP 客户端，不把本机其他用户、未信任网页、LAN 设备或外部 provider 视为可信边界。
 
 安全目标：
 
@@ -20,7 +20,7 @@ MemoryOS V1 是单用户、单机、loopback-only 工具。它信任当前操作
 - `host` 配置只接受 `localhost`、`127.0.0.0/8` 或 `::1`；`0.0.0.0`、LAN IP 和任意主机名在设置校验时被拒绝。
 - HTTP 读端点不要求身份验证，因此依赖 loopback 和操作系统账号边界。
 - 所有 HTTP 写端点需要随机 48-byte URL-safe token。外部客户端使用 `Authorization: Bearer <token>`。
-- 管理 UI 从根页获得 `HttpOnly` + `SameSite=Strict` cookie，仅用于同源本机写操作。因为 V1 使用 localhost HTTP，cookie 没有 `Secure` 标志。
+- 管理 UI 从根页获得 `HttpOnly` + `SameSite=Strict` cookie，仅用于同源本机写操作。因为 V2 使用 localhost HTTP，cookie 没有 `Secure` 标志。
 - 写请求还校验 `Origin`；仅接受 localhost/loopback origin。CORS 是浏览器边界，不替代 token 校验。
 - MCP 使用 stdio，不打开网络端口；其权限等同于启动它的本机客户端进程。
 
@@ -52,14 +52,14 @@ Provider 返回非法 JSON 时请求失败且不写入数据库；embedding 不�
 
 ## 源码最小化
 
-Git 检测仅执行元数据命令：仓库根、当前 branch/HEAD 和 origin URL。稳定身份由规范化 remote 的哈希生成；无 remote 时使用本地 marker。集成不读取、分块、embedding 或存储源文件内容。
+仓库发现仅执行元数据命令：仓库根、当前 branch/HEAD 和 origin URL。稳定身份由规范化 remote 的哈希生成；无 remote 时使用本地 marker。V2 Source Anchor 只在用户或调用方明确给出 `path`/`symbol_fqn` 后读取该文件，并仅保存 bounded excerpt、hash、symbol 与 commit 元数据；不会扫描、分块、embedding 或收藏整个仓库源码。
 
 ## 已知边界
 
 - SQLite 文件、备份和 token 不做应用层静态加密；依赖 BitLocker/EFS 等操作系统加密和 NTFS ACL。
-- `sensitivity=sensitive` 是可审计标记，V1 不会据此建立独立密钥或行级权限。
+- `sensitivity=sensitive` 是可审计标记，V2 不会据此建立独立密钥或行级权限。
 - 读 API 对本机进程开放；不适用于不信任的共享主机。
-- 导入档案有结构与哈希校验，但 V1 没有对压缩包大小做配额控制；不应导入不可信的超大 ZIP。
+- 导入档案有结构与哈希校验，但 V2 没有对压缩包大小做配额控制；不应导入不可信的超大 ZIP。
 - 该服务没有为网络或多用户部署设计；不应通过反向代理暴露。
 
 ## 运行检查

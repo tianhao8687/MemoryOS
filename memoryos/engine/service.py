@@ -9,22 +9,38 @@ from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from memoryos.claims.truth import TruthMaintenanceService
 from memoryos.config import MemoryOSSettings
+from memoryos.consolidation import ConsolidationService
+from memoryos.context import TaskAwareContextCompiler
 from memoryos.db.models import (
     AuditEventRow,
+    ClaimEvidenceRow,
+    ClaimRelationRow,
+    ClaimRow,
+    ConsolidationCandidateRow,
     MemoryRow,
     RelationRow,
+    RetrievalRunRow,
+    SourceAnchorRow,
     SourceRow,
 )
 from memoryos.db.session import Database
 from memoryos.domain.schemas import (
     ConflictStrategy,
+    ConsolidateRequest,
     ContextRequest,
+    CreatedBy,
+    CurrentTruthRequest,
+    FeedbackCreate,
     MemoryCreate,
     MemoryStatus,
     MemoryUpdate,
     MemoryView,
+    RefreshRequest,
     SearchRequest,
+    SourceCreate,
+    SourceType,
 )
 from memoryos.errors import (
     ConflictDetectedError,
@@ -32,9 +48,14 @@ from memoryos.errors import (
     NotFoundError,
     ProviderError,
 )
-from memoryos.providers.openai_compatible import OpenAICompatibleEmbeddingProvider
-from memoryos.retrieval.context import ContextBuilder
+from memoryos.feedback import FeedbackService
+from memoryos.freshness import SourceAnchorService
+from memoryos.providers.openai_compatible import (
+    OpenAICompatibleEmbeddingProvider,
+    OpenAICompatibleReranker,
+)
 from memoryos.retrieval.search import RetrievalEngine
+from memoryos.retrieval_v2 import RetrievalPipeline
 from memoryos.security.redaction import redact_secrets
 
 logger = logging.getLogger(__name__)
@@ -59,9 +80,25 @@ class MemoryService:
                 base_url=settings.embedding_base_url,
                 model=settings.embedding_model,
                 api_key=settings.embedding_api_key,
+                timeout=settings.provider_timeout_seconds,
+                max_input_chars=settings.provider_max_input_chars,
+            )
+        reranker = None
+        if settings.extractor_base_url and settings.reranker_model:
+            reranker = OpenAICompatibleReranker(
+                base_url=settings.extractor_base_url,
+                model=settings.reranker_model,
+                api_key=settings.extractor_api_key,
+                timeout=settings.provider_timeout_seconds,
+                max_input_chars=settings.provider_max_input_chars,
             )
         self.retrieval = RetrievalEngine(database, embedding_provider)
-        self.context_builder = ContextBuilder(self.retrieval)
+        self.retrieval_v2 = RetrievalPipeline(database, self.retrieval, reranker)
+        self.context_builder = TaskAwareContextCompiler(self.retrieval_v2)
+        self.truth = TruthMaintenanceService()
+        self.anchors = SourceAnchorService(database)
+        self.consolidation = ConsolidationService(database)
+        self.feedback_service = FeedbackService(database)
 
     def _index_memory_safely(self, memory_id: str) -> None:
         try:
@@ -171,6 +208,11 @@ class MemoryService:
             memory.sources.append(source)
             session.add(memory)
             session.flush()
+            self.truth.ensure_claims(
+                session,
+                memory,
+                payload.claim_candidates if payload.claim_candidates else None,
+            )
             if status is MemoryStatus.ACTIVE:
                 conflicts = self._find_conflicts(session, memory)
                 if conflicts:
@@ -220,6 +262,17 @@ class MemoryService:
                 changes["metadata_json"] = changes.pop("metadata")
             for field, value in changes.items():
                 setattr(memory, field, value)
+            if {"title", "content", "category", "subject", "key"}.intersection(changes):
+                source = SourceRow(
+                    source_type=SourceType.MANUAL,
+                    source_ref=f"{actor}:edit:{memory.id}",
+                    captured_at=datetime.now(UTC),
+                    excerpt=memory.content,
+                    content_hash=hashlib.sha256(memory.content.encode("utf-8")).hexdigest(),
+                    metadata_json={"edited_candidate": True},
+                )
+                memory.sources.insert(0, source)
+                self.truth.reset_claims(session, memory)
             memory.updated_at = datetime.now(UTC)
             self._audit(
                 session, "edit", memory.id, actor=actor, details={"fields": sorted(changes)}
@@ -239,7 +292,9 @@ class MemoryService:
                 )
             )
         )
-        return [row for row in active_rows if _normalized_key(row) == semantic_key]
+        exact = [row for row in active_rows if _normalized_key(row) == semantic_key]
+        semantic = self.truth.find_semantic_conflict_memories(session, candidate)
+        return list({row.id: row for row in [*exact, *semantic]}.values())
 
     def confirm(
         self,
@@ -268,6 +323,7 @@ class MemoryService:
                 )
             if strategy is ConflictStrategy.REJECT:
                 memory.status = MemoryStatus.REJECTED
+                self.truth.reject_claims(session, memory.id)
                 self._audit(
                     session,
                     "reject",
@@ -309,6 +365,13 @@ class MemoryService:
 
                 memory.status = MemoryStatus.ACTIVE
                 memory.updated_at = datetime.now(UTC)
+                self.truth.activate_claims(
+                    session,
+                    memory,
+                    strategy=strategy,
+                    conflicts=conflicts,
+                    rationale=rationale,
+                )
                 self._audit(
                     session,
                     "confirm",
@@ -332,6 +395,7 @@ class MemoryService:
             if memory.status is not MemoryStatus.CANDIDATE:
                 raise InvalidTransitionError("only candidate memories can be rejected")
             memory.status = MemoryStatus.REJECTED
+            self.truth.reject_claims(session, memory.id)
             self._audit(session, "reject", memory.id, actor=actor)
             session.flush()
             return self._serialize_memory(memory)
@@ -346,6 +410,7 @@ class MemoryService:
                 )
             previous = memory.status
             memory.status = MemoryStatus.FORGOTTEN
+            self.truth.forget_claims(session, memory.id)
             self._audit(
                 session,
                 "forget",
@@ -364,12 +429,198 @@ class MemoryService:
     def search(self, request: SearchRequest) -> dict[str, Any]:
         with self.database.session() as session:
             self._expire_due(session)
-        return self.retrieval.search(request)
+        return self.retrieval_v2.search(request)
 
     def context(self, request: ContextRequest) -> dict[str, Any]:
         with self.database.session() as session:
             self._expire_due(session)
         return self.context_builder.build(request)
+
+    def current_truth(self, request: CurrentTruthRequest) -> dict[str, Any]:
+        with self.database.session() as session:
+            self._expire_due(session)
+            return self.truth.current_truth(session, request)
+
+    def create_source_anchor(
+        self,
+        *,
+        memory_id: str,
+        repository_path: str,
+        path: str,
+        symbol_fqn: str | None = None,
+        line_start: int | None = None,
+        line_end: int | None = None,
+    ) -> dict[str, Any]:
+        return self.anchors.create(
+            memory_id=memory_id,
+            repository_path=repository_path,
+            path=path,
+            symbol_fqn=symbol_fqn,
+            line_start=line_start,
+            line_end=line_end,
+        )
+
+    def refresh_memory(self, request: RefreshRequest) -> dict[str, Any]:
+        result = self.anchors.refresh(
+            memory_id=request.memory_id,
+            repository_path=request.repository_path,
+        )
+        suggestion = result.get("replacement_candidate")
+        if request.create_replacement_candidate and isinstance(suggestion, dict):
+            evidence = suggestion.get("evidence")
+            if isinstance(evidence, str) and evidence.strip():
+                original = self.get(request.memory_id)
+                replacement = self.propose(
+                    MemoryCreate(
+                        scope_type=original["scope_type"],
+                        scope_key=original["scope_key"],
+                        memory_type=original["memory_type"],
+                        category=original["category"],
+                        subject=original["subject"],
+                        key=original["key"],
+                        title=f"Refresh: {original['title']}",
+                        content=original["content"],
+                        confidence=max(0.0, float(original["confidence"]) * 0.8),
+                        importance=float(original["importance"]),
+                        created_by=CreatedBy.AGENT,
+                        metadata={
+                            "refresh_of": request.memory_id,
+                            "freshness": result["freshness"],
+                        },
+                        source=SourceCreate(
+                            source_type=SourceType.FILE_REFERENCE,
+                            source_ref=f"git-refresh:{request.repository_path}",
+                            excerpt=evidence,
+                        ),
+                    ),
+                    actor="memory_refresh",
+                )
+                result["replacement_candidate"] = replacement
+        return result
+
+    def consolidate(self, request: ConsolidateRequest) -> dict[str, Any]:
+        return self.consolidation.propose(request)
+
+    def feedback(self, payload: FeedbackCreate) -> dict[str, Any]:
+        return self.feedback_service.submit(payload)
+
+    def debug_context(self, request: ContextRequest) -> dict[str, Any]:
+        return self.context(request)
+
+    def claim_graph(self, request: CurrentTruthRequest) -> dict[str, Any]:
+        with self.database.session() as session:
+            truth = self.truth.current_truth(session, request)
+            claim_ids = {
+                item["id"]
+                for group in truth["truths"]
+                for item in [*group["accepted_claims"], *group["conflicting_claims"]]
+            }
+            claims = [
+                self.truth.serialize_claim(session, claim)
+                for claim in session.scalars(
+                    select(ClaimRow).where(ClaimRow.id.in_(claim_ids or {""}))
+                )
+            ]
+            relations = list(
+                session.scalars(
+                    select(ClaimRelationRow).where(
+                        or_(
+                            ClaimRelationRow.from_claim_id.in_(claim_ids or {""}),
+                            ClaimRelationRow.to_claim_id.in_(claim_ids or {""}),
+                        )
+                    )
+                )
+            )
+            return {
+                "state": truth["state"],
+                "nodes": claims,
+                "edges": [
+                    {
+                        "id": row.id,
+                        "from": row.from_claim_id,
+                        "to": row.to_claim_id,
+                        "type": row.relation_type.value,
+                        "confidence": row.confidence,
+                        "method": row.method.value,
+                        "explanation": row.explanation,
+                    }
+                    for row in relations
+                ],
+            }
+
+    def freshness(self, *, limit: int = 200) -> list[dict[str, Any]]:
+        with self.database.session() as session:
+            rows = session.execute(
+                select(SourceAnchorRow, ClaimRow, MemoryRow)
+                .join(ClaimEvidenceRow, ClaimEvidenceRow.source_anchor_id == SourceAnchorRow.id)
+                .join(ClaimRow, ClaimRow.id == ClaimEvidenceRow.claim_id)
+                .join(MemoryRow, MemoryRow.id == ClaimRow.memory_id)
+                .order_by(SourceAnchorRow.created_at.desc())
+                .limit(limit)
+            ).all()
+            seen: set[str] = set()
+            items = []
+            for anchor, claim, memory in rows:
+                if anchor.id in seen:
+                    continue
+                seen.add(anchor.id)
+                items.append(
+                    {
+                        "anchor_id": anchor.id,
+                        "memory_id": memory.id,
+                        "memory_title": memory.title,
+                        "claim_id": claim.id,
+                        "path": anchor.path,
+                        "symbol_fqn": anchor.symbol_fqn,
+                        "freshness": anchor.freshness_state.value,
+                        "commit_sha": anchor.commit_sha,
+                        "cached_head": anchor.cached_head,
+                        "checked_at": anchor.checked_at.isoformat() if anchor.checked_at else None,
+                    }
+                )
+            return items
+
+    def consolidation_inbox(self, *, limit: int = 100) -> list[dict[str, Any]]:
+        with self.database.session() as session:
+            rows = list(
+                session.scalars(
+                    select(ConsolidationCandidateRow)
+                    .order_by(ConsolidationCandidateRow.created_at.desc())
+                    .limit(limit)
+                )
+            )
+            return [
+                {
+                    "id": row.id,
+                    "scope_type": row.scope_type.value,
+                    "scope_key": row.scope_key,
+                    "subject_entity_id": row.subject_entity_id,
+                    "predicate": row.predicate,
+                    "proposal": row.proposal_json,
+                    "status": row.status,
+                    "source_memory_ids": row.source_memory_ids,
+                    "counterevidence": row.counterevidence_json,
+                    "created_at": row.created_at.isoformat(),
+                }
+                for row in rows
+            ]
+
+    def retrieval_run(self, run_id: str) -> dict[str, Any]:
+        with self.database.session() as session:
+            row = session.get(RetrievalRunRow, run_id)
+            if row is None:
+                raise NotFoundError("retrieval run was not found")
+            return {
+                "id": row.id,
+                "query": row.query,
+                "task": row.task,
+                "scope": row.scope_json,
+                "selected_memory_ids": row.selected_memory_ids,
+                "candidate_features": row.candidate_features,
+                "context_manifest": row.context_manifest,
+                "config_hash": row.config_hash,
+                "created_at": row.created_at.isoformat(),
+            }
 
     def conflicts(self, *, limit: int = 100) -> list[dict[str, Any]]:
         with self.database.session() as session:
@@ -449,6 +700,13 @@ class MemoryService:
                     .order_by(AuditEventRow.timestamp.asc())
                 )
             )
+            claims = list(
+                session.scalars(
+                    select(ClaimRow)
+                    .where(ClaimRow.memory_id == memory.id)
+                    .order_by(ClaimRow.recorded_at.asc())
+                )
+            )
             return {
                 "memory": self._serialize_memory(memory),
                 "sources": sources,
@@ -463,6 +721,7 @@ class MemoryService:
                     for relation in relations
                 ],
                 "audit": [self._serialize_audit(event) for event in audit],
+                "claims": [self.truth.serialize_claim(session, claim) for claim in claims],
                 "reason": (
                     "This memory is known because it has explicit, hashed provenance "
                     "and a complete audit trail."
@@ -493,6 +752,7 @@ class MemoryService:
                 for status in MemoryStatus
             }
             source_count = int(session.scalar(select(func.count()).select_from(SourceRow)) or 0)
+            claim_count = int(session.scalar(select(func.count()).select_from(ClaimRow)) or 0)
             active_count = counts[MemoryStatus.ACTIVE.value]
             active_with_source = int(
                 session.scalar(
@@ -505,11 +765,12 @@ class MemoryService:
             )
             provenance_rate = active_with_source / active_count if active_count else 1.0
             return {
-                "version": "1.0.0",
+                "version": "2.0.0",
                 "database": str(self.settings.database_path),
                 "schema_version": self.database.schema_version(),
                 "counts": counts,
                 "sources": source_count,
+                "claims": claim_count,
                 "provenance_rate": provenance_rate,
                 "conflicts": len(self.conflicts()),
                 "embedding_provider": "configured"

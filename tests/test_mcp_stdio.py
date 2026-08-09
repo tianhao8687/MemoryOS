@@ -50,7 +50,13 @@ async def test_real_stdio_cross_client_persistence(tmp_path: Path) -> None:
             "memory_forget",
             "memory_history",
             "memory_explain",
+            "memory_current_truth",
+            "memory_feedback",
+            "memory_consolidate",
+            "memory_refresh",
+            "memory_debug_context",
         }.issubset(tool_names)
+        assert len(tool_names) == 12
         proposed = _payload(
             await session.call_tool(
                 "memory_propose",

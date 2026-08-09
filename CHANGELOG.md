@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.0.0 - 2026-08-10
+
+### Added
+
+- Claim/entity graph, evidence spans, semantic relations, scoped aliases, bitemporal truth, and `resolved/contested/stale/unknown` Current Truth.
+- Tree-sitter Source Anchors for Python/TypeScript/JavaScript/Rust with Git fresh/moved/suspect/stale state, lazy caching, and replacement-candidate refresh.
+- Retrieval 2.0 query planner, FTS/vector/graph/temporal union, RRF, MMR, per-result traces, exact NumPy `VectorIndex`, and optional `sqlite-vec` ANN.
+- Task-aware context compiler with coverage, utility/cost budgeting, stale policy, contested-side inclusion, and persisted manifests.
+- Consolidation candidates with counterevidence and lineage, auditable helpful/unhelpful feedback, and six schema-validated provider interfaces.
+- Five V2 MCP tools, V2 HTTP/CLI operations, and six Memory Intelligence Workbench pages while preserving all V1 interfaces.
+- MemoryBench V2 with frozen sample counts, baseline/V2 comparisons, 100k measured FTS5 P95, 30-task fixture A/B harness, bootstrap 95% CIs, JSON/HTML reports, and explicit real-model evidence labeling.
+- `0002_memory_intelligence`, V1 backup import, V2 backup versioning, and packaged V1 DB → V2 migration smoke.
+
+### Verification
+
+- Added A15–A32 tests and evidence manifest while retaining A01–A14 regression gates.
+- Real coding-agent A/B was not run because no real-model harness endpoint was configured. Fixture results are labeled harness-only and no real-model effect claim is made.
+
 ## 1.0.0 - 2026-08-09
 
 ### Added

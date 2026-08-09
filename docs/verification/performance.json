@@ -3,14 +3,14 @@
   "records": 10000,
   "rounds": 7,
   "mode": "fts5",
-  "seed_seconds": 1.075951,
+  "seed_seconds": 0.915758,
   "search_ms": {
-    "median": 22.083,
-    "max": 43.161
+    "median": 60.074,
+    "max": 84.32
   },
   "context_ms": {
-    "median": 28.724,
-    "max": 44.874
+    "median": 103.453,
+    "max": 133.132
   },
   "python": "3.12.13",
   "platform": "Windows-11-10.0.26200-SP0"

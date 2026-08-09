@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import shutil
@@ -12,11 +13,17 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx
+from alembic import command
+from alembic.config import Config
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from sqlalchemy import text
+
+from memoryos.config import settings_for
+from memoryos.db import Database
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -72,12 +79,130 @@ def _wait_for_health(process: subprocess.Popen[str], base_url: str) -> dict[str,
             response = httpx.get(f"{base_url}/api/health", timeout=1, trust_env=False)
             if response.status_code == 200:
                 payload = response.json()
-                if payload.get("ok") is True:
-                    return payload
+                if isinstance(payload, dict) and payload.get("ok") is True:
+                    return cast(dict[str, Any], payload)
         except (httpx.HTTPError, ValueError) as exc:
             last_error = str(exc)
         time.sleep(0.2)
     raise RuntimeError(f"packaged server health timeout: {last_error}")
+
+
+def _prepare_v1_database(data_dir: Path) -> str:
+    """Create an actual 0001 database so the packaged app must perform the V2 upgrade."""
+
+    database = Database(settings_for(data_dir))
+    database.initialize()
+    migrations = ROOT / "memoryos" / "db" / "migrations"
+    config = Config()
+    config.set_main_option("script_location", str(migrations))
+    with database.engine.begin() as connection:
+        config.attributes["connection"] = connection
+        command.downgrade(config, "0001_initial")
+    legacy_id = "00000000-0000-0000-0000-000000000001"
+    source_id = "00000000-0000-0000-0000-000000000002"
+    excerpt = "V1 packaged upgrade memory must survive migration."
+    with database.engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO memories (
+                    id, scope_type, scope_key, memory_type, category, subject, key,
+                    title, content, status, confidence, importance, valid_from, valid_to,
+                    ttl_seconds, supersedes_id, created_at, updated_at, created_by,
+                    sensitivity, metadata_json
+                ) VALUES (
+                    :id, 'repository', 'package-repo', 'project', 'decision',
+                    'release migration', 'release.v1.upgrade', :title, :content, 'active',
+                    0.9, 0.8, NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP, 'manual', 'normal', '{}'
+                )
+                """
+            ),
+            {"id": legacy_id, "title": "V1 upgrade persistence", "content": excerpt},
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO sources (
+                    id, source_type, source_ref, captured_at, excerpt,
+                    content_hash, metadata_json, created_at
+                ) VALUES (
+                    :id, 'import', 'package-smoke:v1', CURRENT_TIMESTAMP, :excerpt,
+                    :content_hash, '{}', CURRENT_TIMESTAMP
+                )
+                """
+            ),
+            {
+                "id": source_id,
+                "excerpt": excerpt,
+                "content_hash": hashlib.sha256(excerpt.encode("utf-8")).hexdigest(),
+            },
+        )
+        connection.execute(
+            text("INSERT INTO memory_sources (memory_id, source_id) VALUES (:memory, :source)"),
+            {"memory": legacy_id, "source": source_id},
+        )
+    if database.schema_version() != "0001_initial":
+        raise RuntimeError("failed to prepare the V1 migration fixture")
+    database.close()
+    return legacy_id
+
+
+def _git(root: Path, *args: str) -> str:
+    completed = subprocess.run(
+        ["git", "-C", str(root), *args],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if completed.returncode:
+        raise RuntimeError(f"Git fixture command failed: {completed.stderr}")
+    return completed.stdout.strip()
+
+
+def _prepare_anchor_repository(clean_root: Path) -> Path:
+    repository = clean_root / "tree-sitter repository"
+    source = repository / "src" / "store.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        'class Store:\n    def refresh(self) -> str:\n        return "fresh"\n',
+        encoding="utf-8",
+    )
+    _git(repository, "init")
+    _git(repository, "config", "user.name", "MemoryOS Package Smoke")
+    _git(repository, "config", "user.email", "memoryos@example.invalid")
+    _git(repository, "add", "-A")
+    _git(repository, "commit", "-m", "package tree-sitter anchor")
+    return repository
+
+
+def _run_packaged_json(
+    executable: Path,
+    data_dir: Path,
+    *arguments: str,
+) -> dict[str, Any]:
+    completed = subprocess.run(
+        [str(executable), "--data-dir", str(data_dir), *arguments],
+        cwd=executable.parent,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if completed.returncode:
+        raise RuntimeError(
+            f"packaged CLI {' '.join(arguments)} failed:\n{completed.stdout}\n{completed.stderr}"
+        )
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"packaged CLI returned invalid JSON: {completed.stdout}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("packaged CLI JSON must be an object")
+    return cast(dict[str, Any], payload)
 
 
 def _tool_payload(result: Any) -> dict[str, Any]:
@@ -93,7 +218,7 @@ def _tool_payload(result: Any) -> dict[str, Any]:
     raise RuntimeError("packaged MCP tool returned no structured JSON")
 
 
-async def _mcp_write(executable: Path, data_dir: Path) -> str:
+async def _mcp_write(executable: Path, data_dir: Path) -> tuple[str, int]:
     parameters = StdioServerParameters(
         command=str(executable), args=["--data-dir", str(data_dir), "mcp"]
     )
@@ -111,6 +236,11 @@ async def _mcp_write(executable: Path, data_dir: Path) -> str:
             "memory_forget",
             "memory_history",
             "memory_explain",
+            "memory_current_truth",
+            "memory_feedback",
+            "memory_consolidate",
+            "memory_refresh",
+            "memory_debug_context",
         }
         if not required.issubset(names):
             raise RuntimeError(f"packaged MCP tools are incomplete: {sorted(names)}")
@@ -145,14 +275,29 @@ async def _mcp_write(executable: Path, data_dir: Path) -> str:
         )
         if "Package smoke" not in context["result"]["text"]:
             raise RuntimeError("packaged MCP context did not return the confirmed memory")
-        return memory_id
+        return memory_id, len(names)
 
 
-def _assert_http_state(base_url: str, memory_id: str | None = None) -> None:
+def _assert_http_state(
+    base_url: str,
+    memory_id: str | None = None,
+    legacy_id: str | None = None,
+) -> None:
     with httpx.Client(base_url=base_url, timeout=5, trust_env=False) as client:
         root = client.get("/")
         if root.status_code != 200 or '<div id="root"></div>' not in root.text:
             raise RuntimeError("bundled management UI is unavailable")
+        benchmark = client.get("/api/benchmarks/memorybench-v2")
+        if (
+            benchmark.status_code != 200
+            or benchmark.json().get("schema") != "memorybench-v2-report@1"
+        ):
+            raise RuntimeError("bundled MemoryBench report is unavailable")
+        if legacy_id is not None:
+            legacy = client.get("/api/memories", params={"q": "V1 upgrade persistence"})
+            legacy_ids = {item["memory"]["id"] for item in legacy.json().get("items", [])}
+            if legacy.status_code != 200 or legacy_id not in legacy_ids:
+                raise RuntimeError("V1 memory did not survive the packaged V2 migration")
         if memory_id is not None:
             search = client.get("/api/memories", params={"q": "Package smoke"})
             if search.status_code != 200 or search.json().get("total") != 1:
@@ -182,20 +327,47 @@ def main() -> None:
         shutil.copytree(distribution, clean_distribution)
         executable = clean_distribution / "MemoryOS.exe"
         data_dir = clean_root / "user data"
+        legacy_id = _prepare_v1_database(data_dir)
         port = _free_port()
         base_url = f"http://127.0.0.1:{port}"
         first = _start(executable, data_dir, port)
         try:
             first_health = _wait_for_health(first, base_url)
-            _assert_http_state(base_url)
-            memory_id = asyncio.run(_mcp_write(executable, data_dir))
-            _assert_http_state(base_url, memory_id)
+            _assert_http_state(base_url, legacy_id=legacy_id)
+            with httpx.Client(base_url=base_url, timeout=5, trust_env=False) as client:
+                first_status = client.get("/api/status").json()
+            if first_status.get("schema_version") != "0002_memory_intelligence":
+                raise RuntimeError("packaged app did not migrate the V1 database to V2")
+            memory_id, mcp_tool_count = asyncio.run(_mcp_write(executable, data_dir))
+            anchor_repository = _prepare_anchor_repository(clean_root)
+            anchor = _run_packaged_json(
+                executable,
+                data_dir,
+                "anchor",
+                memory_id,
+                str(anchor_repository),
+                "src/store.py",
+                "--symbol-fqn",
+                "Store.refresh",
+            )
+            if anchor.get("parser_backend") != "tree-sitter":
+                raise RuntimeError("packaged Tree-sitter grammar did not load for a Python symbol")
+            refreshed = _run_packaged_json(
+                executable,
+                data_dir,
+                "refresh",
+                memory_id,
+                str(anchor_repository),
+            )
+            if refreshed.get("freshness") != "fresh":
+                raise RuntimeError("packaged source anchor did not refresh as fresh")
+            _assert_http_state(base_url, memory_id, legacy_id)
         finally:
             first_output = _stop(first)
         second = _start(executable, data_dir, port)
         try:
             second_health = _wait_for_health(second, base_url)
-            _assert_http_state(base_url, memory_id)
+            _assert_http_state(base_url, memory_id, legacy_id)
         finally:
             second_output = _stop(second)
         cli = subprocess.run(
@@ -215,8 +387,13 @@ def main() -> None:
         "clean_path_copy": True,
         "first_health": first_health,
         "second_health": second_health,
-        "mcp_tools": 7,
+        "mcp_tools": mcp_tool_count,
         "memory_id": memory_id,
+        "legacy_memory_id": legacy_id,
+        "v1_to_v2_migration": True,
+        "schema_version": first_status["schema_version"],
+        "memorybench_bundled": True,
+        "tree_sitter_bundled": anchor["parser_backend"] == "tree-sitter",
         "restart_persistence": True,
         "ui_health": True,
         "cli_status": True,

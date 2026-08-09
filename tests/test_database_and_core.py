@@ -30,7 +30,7 @@ def test_database_migration_and_sqlite_pragmas(database: Database) -> None:
         fts_table = connection.execute(
             text("SELECT name FROM sqlite_master WHERE name='memory_fts'")
         ).scalar_one()
-    assert database.schema_version() == "0001_initial"
+    assert database.schema_version() == "0002_memory_intelligence"
     assert foreign_keys == 1
     assert str(journal_mode).lower() == "wal"
     assert fts_table == "memory_fts"
