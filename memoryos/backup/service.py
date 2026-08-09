@@ -15,26 +15,52 @@ from sqlalchemy import select
 from memoryos.config import MemoryOSSettings
 from memoryos.db.models import (
     AuditEventRow,
+    ClaimEvidenceRow,
+    ClaimIdentityRow,
+    ClaimRelationRow,
+    ClaimRow,
+    ClaimVersionRow,
+    ConsolidationCandidateRow,
     EmbeddingRow,
+    EntityMergeEventRow,
+    EntityRow,
+    MemoryFeedbackRow,
+    MemoryHealthRow,
     MemoryRow,
     MemorySourceRow,
+    PossibleConflictRow,
     RelationRow,
     RepositoryRow,
+    RetrievalRunRow,
     SettingRow,
+    SourceAnchorRow,
     SourceRow,
 )
 from memoryos.db.session import Database
 from memoryos.domain.schemas import (
+    ClaimModality,
+    ClaimObjectKind,
+    ClaimPolarity,
+    ClaimRelationType,
+    ClaimStaleState,
+    ClaimStatus,
     CreatedBy,
+    EntityType,
+    FeedbackValue,
+    FreshnessState,
     MemoryStatus,
+    MemoryTemperature,
     MemoryType,
+    PossibleConflictStatus,
+    RelationMethod,
     ScopeType,
     Sensitivity,
     SourceType,
 )
 from memoryos.errors import BackupError
 
-FORMAT_VERSION = 1
+FORMAT_VERSION = 3
+SUPPORTED_IMPORT_VERSIONS = {1, 2, FORMAT_VERSION}
 
 
 def _sha256(data: bytes) -> str:
@@ -78,7 +104,7 @@ class BackupService:
             database_bytes = archive.read("memoryos.db")
         if (
             manifest.get("format") != "memoryos-sqlite-backup"
-            or manifest.get("format_version") != FORMAT_VERSION
+            or manifest.get("format_version") not in SUPPORTED_IMPORT_VERSIONS
         ):
             raise BackupError("unsupported backup format")
         if not isinstance(manifest.get("database_sha256"), str) or not hmac.compare_digest(
@@ -147,6 +173,32 @@ class BackupService:
                 self._append(lines, "relation", self._relation(relation))
             for embedding in session.scalars(select(EmbeddingRow)):
                 self._append(lines, "embedding", self._embedding(embedding))
+            for entity in session.scalars(select(EntityRow)):
+                self._append(lines, "entity", self._entity(entity))
+            for identity in session.scalars(select(ClaimIdentityRow)):
+                self._append(lines, "claim_identity", self._claim_identity(identity))
+            for merge_event in session.scalars(select(EntityMergeEventRow)):
+                self._append(lines, "entity_merge", self._entity_merge(merge_event))
+            for anchor in session.scalars(select(SourceAnchorRow)):
+                self._append(lines, "source_anchor", self._source_anchor(anchor))
+            for claim in session.scalars(select(ClaimRow)):
+                self._append(lines, "claim", self._claim(claim))
+            for version in session.scalars(select(ClaimVersionRow)):
+                self._append(lines, "claim_version", self._claim_version(version))
+            for evidence in session.scalars(select(ClaimEvidenceRow)):
+                self._append(lines, "claim_evidence", self._claim_evidence(evidence))
+            for claim_relation in session.scalars(select(ClaimRelationRow)):
+                self._append(lines, "claim_relation", self._claim_relation(claim_relation))
+            for possible in session.scalars(select(PossibleConflictRow)):
+                self._append(lines, "possible_conflict", self._possible_conflict(possible))
+            for health in session.scalars(select(MemoryHealthRow)):
+                self._append(lines, "memory_health", self._memory_health(health))
+            for retrieval_run in session.scalars(select(RetrievalRunRow)):
+                self._append(lines, "retrieval_run", self._retrieval_run(retrieval_run))
+            for feedback in session.scalars(select(MemoryFeedbackRow)):
+                self._append(lines, "feedback", self._feedback(feedback))
+            for consolidation in session.scalars(select(ConsolidationCandidateRow)):
+                self._append(lines, "consolidation", self._consolidation(consolidation))
             for audit_event in session.scalars(select(AuditEventRow)):
                 self._append(lines, "audit", self._audit(audit_event))
             for setting in session.scalars(select(SettingRow)):
@@ -175,7 +227,7 @@ class BackupService:
             payload = archive.read("data.jsonl")
         if (
             manifest.get("format") != "memoryos-jsonl-export"
-            or manifest.get("format_version") != FORMAT_VERSION
+            or manifest.get("format_version") not in SUPPORTED_IMPORT_VERSIONS
         ):
             raise BackupError("unsupported import format")
         if not isinstance(manifest.get("data_sha256"), str) or not hmac.compare_digest(
@@ -193,6 +245,19 @@ class BackupService:
             "memory_source",
             "relation",
             "embedding",
+            "entity",
+            "claim_identity",
+            "entity_merge",
+            "source_anchor",
+            "claim",
+            "claim_version",
+            "claim_evidence",
+            "claim_relation",
+            "possible_conflict",
+            "memory_health",
+            "retrieval_run",
+            "feedback",
+            "consolidation",
             "audit",
             "setting",
         }
@@ -212,8 +277,21 @@ class BackupService:
             "memory_source": 3,
             "relation": 4,
             "embedding": 5,
-            "audit": 6,
-            "setting": 7,
+            "entity": 6,
+            "claim_identity": 7,
+            "entity_merge": 8,
+            "source_anchor": 9,
+            "claim": 10,
+            "claim_version": 11,
+            "claim_evidence": 12,
+            "claim_relation": 13,
+            "possible_conflict": 14,
+            "memory_health": 15,
+            "retrieval_run": 16,
+            "feedback": 17,
+            "consolidation": 18,
+            "audit": 19,
+            "setting": 20,
         }
         records.sort(key=lambda record: type_order.get(str(record["type"]), len(order)))
         with self.database.session() as session:
@@ -308,6 +386,206 @@ class BackupService:
             "created_at": self._iso(row.created_at),
         }
 
+    def _entity(self, row: EntityRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "scope_type": row.scope_type.value,
+            "scope_key": row.scope_key,
+            "entity_type": row.entity_type.value,
+            "canonical_name": row.canonical_name,
+            "normalized_name": row.normalized_name,
+            "aliases_json": row.aliases_json,
+            "stable_external_key": row.stable_external_key,
+            "redirect_to_id": row.redirect_to_id,
+            "created_at": self._iso(row.created_at),
+            "updated_at": self._iso(row.updated_at),
+        }
+
+    def _claim_identity(self, row: ClaimIdentityRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "scope_type": row.scope_type.value,
+            "scope_key": row.scope_key,
+            "subject_entity_id": row.subject_entity_id,
+            "canonical_subject": row.canonical_subject,
+            "canonical_predicate": row.canonical_predicate,
+            "stable_identity": row.stable_identity,
+            "created_at": self._iso(row.created_at),
+        }
+
+    def _entity_merge(self, row: EntityMergeEventRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "from_entity_id": row.from_entity_id,
+            "to_entity_id": row.to_entity_id,
+            "actor": row.actor,
+            "rationale": row.rationale,
+            "reversible": row.reversible,
+            "created_at": self._iso(row.created_at),
+        }
+
+    def _source_anchor(self, row: SourceAnchorRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "repository_stable_key": row.repository_stable_key,
+            "commit_sha": row.commit_sha,
+            "path": row.path,
+            "blob_sha": row.blob_sha,
+            "language": row.language,
+            "symbol_fqn": row.symbol_fqn,
+            "symbol_kind": row.symbol_kind,
+            "line_start": row.line_start,
+            "line_end": row.line_end,
+            "evidence_excerpt": row.evidence_excerpt,
+            "excerpt_hash": row.excerpt_hash,
+            "context_hash": row.context_hash,
+            "freshness_state": row.freshness_state.value,
+            "cached_head": row.cached_head,
+            "checked_at": self._iso(row.checked_at),
+            "metadata_json": row.metadata_json,
+            "created_at": self._iso(row.created_at),
+        }
+
+    def _claim(self, row: ClaimRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "memory_id": row.memory_id,
+            "subject_entity_id": row.subject_entity_id,
+            "predicate": row.predicate,
+            "object_kind": row.object_kind.value,
+            "object_entity_id": row.object_entity_id,
+            "object_value": row.object_value,
+            "polarity": row.polarity.value,
+            "modality": row.modality.value,
+            "qualifiers_json": row.qualifiers_json,
+            "canonical_key": row.canonical_key,
+            "confidence": row.confidence,
+            "status": row.status.value,
+            "valid_from": self._iso(row.valid_from),
+            "valid_to": self._iso(row.valid_to),
+            "recorded_at": self._iso(row.recorded_at),
+            "stale_state": row.stale_state.value,
+        }
+
+    def _claim_version(self, row: ClaimVersionRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "claim_id": row.claim_id,
+            "identity_id": row.identity_id,
+            "memory_id": row.memory_id,
+            "version_number": row.version_number,
+            "object_kind": row.object_kind.value,
+            "object_entity_id": row.object_entity_id,
+            "object_value": row.object_value,
+            "polarity": row.polarity.value,
+            "modality": row.modality.value,
+            "qualifiers_json": row.qualifiers_json,
+            "valid_from": self._iso(row.valid_from),
+            "valid_to": self._iso(row.valid_to),
+            "transaction_from": self._iso(row.transaction_from),
+            "transaction_to": self._iso(row.transaction_to),
+            "status": row.status.value,
+            "stale_state": row.stale_state.value,
+            "confidence": row.confidence,
+            "reason": row.reason,
+            "actor": row.actor,
+            "source_event_id": row.source_event_id,
+            "created_at": self._iso(row.created_at),
+        }
+
+    @staticmethod
+    def _claim_evidence(row: ClaimEvidenceRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "claim_id": row.claim_id,
+            "source_id": row.source_id,
+            "evidence_excerpt": row.evidence_excerpt,
+            "evidence_hash": row.evidence_hash,
+            "source_anchor_id": row.source_anchor_id,
+            "support_weight": row.support_weight,
+        }
+
+    def _claim_relation(self, row: ClaimRelationRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "from_claim_id": row.from_claim_id,
+            "to_claim_id": row.to_claim_id,
+            "relation_type": row.relation_type.value,
+            "confidence": row.confidence,
+            "method": row.method.value,
+            "explanation": row.explanation,
+            "created_at": self._iso(row.created_at),
+        }
+
+    def _possible_conflict(self, row: PossibleConflictRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "left_claim_id": row.left_claim_id,
+            "right_claim_id": row.right_claim_id,
+            "status": row.status.value,
+            "deterministic_relationship": row.deterministic_relationship,
+            "deterministic_confidence": row.deterministic_confidence,
+            "reason": row.reason,
+            "model_result_json": row.model_result_json,
+            "provider_fingerprint": row.provider_fingerprint,
+            "prompt_version": row.prompt_version,
+            "evidence_hash": row.evidence_hash,
+            "created_at": self._iso(row.created_at),
+            "resolved_at": self._iso(row.resolved_at),
+            "resolved_by": row.resolved_by,
+        }
+
+    def _memory_health(self, row: MemoryHealthRow) -> dict[str, Any]:
+        return {
+            "memory_id": row.memory_id,
+            "temperature": row.temperature.value,
+            "health_score": row.health_score,
+            "components_json": row.components_json,
+            "explanation": row.explanation,
+            "retrieval_count": row.retrieval_count,
+            "last_retrieved_at": self._iso(row.last_retrieved_at),
+            "archived_at": self._iso(row.archived_at),
+            "evaluated_at": self._iso(row.evaluated_at),
+        }
+
+    def _retrieval_run(self, row: RetrievalRunRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "query": row.query,
+            "task": row.task,
+            "scope_json": row.scope_json,
+            "selected_memory_ids": row.selected_memory_ids,
+            "candidate_features": row.candidate_features,
+            "context_manifest": row.context_manifest,
+            "config_hash": row.config_hash,
+            "created_at": self._iso(row.created_at),
+        }
+
+    def _feedback(self, row: MemoryFeedbackRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "retrieval_run_id": row.retrieval_run_id,
+            "memory_id": row.memory_id,
+            "helpful": row.helpful.value,
+            "actor": row.actor,
+            "reason": row.reason,
+            "created_at": self._iso(row.created_at),
+        }
+
+    def _consolidation(self, row: ConsolidationCandidateRow) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "scope_type": row.scope_type.value,
+            "scope_key": row.scope_key,
+            "subject_entity_id": row.subject_entity_id,
+            "predicate": row.predicate,
+            "proposal_json": row.proposal_json,
+            "status": row.status,
+            "source_memory_ids": row.source_memory_ids,
+            "counterevidence_json": row.counterevidence_json,
+            "created_at": self._iso(row.created_at),
+        }
+
     def _audit(self, row: AuditEventRow) -> dict[str, Any]:
         return {
             "id": row.id,
@@ -350,6 +628,80 @@ class BackupService:
         if kind == "embedding":
             data["created_at"] = self._dt(data.get("created_at"))
             return EmbeddingRow(**data)
+        if kind == "entity":
+            data["scope_type"] = ScopeType(data["scope_type"])
+            data["entity_type"] = EntityType(data["entity_type"])
+            data["created_at"] = self._dt(data.get("created_at"))
+            data["updated_at"] = self._dt(data.get("updated_at"))
+            return EntityRow(**data)
+        if kind == "claim_identity":
+            data["scope_type"] = ScopeType(data["scope_type"])
+            data["created_at"] = self._dt(data.get("created_at"))
+            return ClaimIdentityRow(**data)
+        if kind == "entity_merge":
+            data["created_at"] = self._dt(data.get("created_at"))
+            return EntityMergeEventRow(**data)
+        if kind == "source_anchor":
+            data["freshness_state"] = FreshnessState(data["freshness_state"])
+            data["checked_at"] = self._dt(data.get("checked_at"))
+            data["created_at"] = self._dt(data.get("created_at"))
+            return SourceAnchorRow(**data)
+        if kind == "claim":
+            data["object_kind"] = ClaimObjectKind(data["object_kind"])
+            data["polarity"] = ClaimPolarity(data["polarity"])
+            data["modality"] = ClaimModality(data["modality"])
+            data["status"] = ClaimStatus(data["status"])
+            data["stale_state"] = ClaimStaleState(data["stale_state"])
+            for field in ("valid_from", "valid_to", "recorded_at"):
+                data[field] = self._dt(data.get(field))
+            return ClaimRow(**data)
+        if kind == "claim_version":
+            data["object_kind"] = ClaimObjectKind(data["object_kind"])
+            data["polarity"] = ClaimPolarity(data["polarity"])
+            data["modality"] = ClaimModality(data["modality"])
+            data["status"] = ClaimStatus(data["status"])
+            data["stale_state"] = ClaimStaleState(data["stale_state"])
+            for field in (
+                "valid_from",
+                "valid_to",
+                "transaction_from",
+                "transaction_to",
+                "created_at",
+            ):
+                data[field] = self._dt(data.get(field))
+            return ClaimVersionRow(**data)
+        if kind == "claim_evidence":
+            return ClaimEvidenceRow(**data)
+        if kind == "claim_relation":
+            data["relation_type"] = ClaimRelationType(data["relation_type"])
+            data["method"] = RelationMethod(data["method"])
+            data["created_at"] = self._dt(data.get("created_at"))
+            return ClaimRelationRow(**data)
+        if kind == "possible_conflict":
+            data["status"] = PossibleConflictStatus(data["status"])
+            data["created_at"] = self._dt(data.get("created_at"))
+            data["resolved_at"] = self._dt(data.get("resolved_at"))
+            return PossibleConflictRow(**data)
+        if kind == "memory_health":
+            data["temperature"] = MemoryTemperature(data["temperature"])
+            for field in (
+                "last_retrieved_at",
+                "archived_at",
+                "evaluated_at",
+            ):
+                data[field] = self._dt(data.get(field))
+            return MemoryHealthRow(**data)
+        if kind == "retrieval_run":
+            data["created_at"] = self._dt(data.get("created_at"))
+            return RetrievalRunRow(**data)
+        if kind == "feedback":
+            data["helpful"] = FeedbackValue(data["helpful"])
+            data["created_at"] = self._dt(data.get("created_at"))
+            return MemoryFeedbackRow(**data)
+        if kind == "consolidation":
+            data["scope_type"] = ScopeType(data["scope_type"])
+            data["created_at"] = self._dt(data.get("created_at"))
+            return ConsolidationCandidateRow(**data)
         if kind == "audit":
             data["timestamp"] = self._dt(data.get("timestamp"))
             return AuditEventRow(**data)

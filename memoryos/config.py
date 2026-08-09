@@ -47,6 +47,13 @@ class MemoryOSSettings(BaseSettings):
     extractor_base_url: str | None = None
     extractor_model: str | None = None
     extractor_api_key: str | None = None
+    provider_timeout_seconds: float = 20.0
+    provider_max_input_chars: int = 12000
+    relationship_model: str | None = None
+    reranker_model: str | None = None
+    consolidation_model: str | None = None
+    staleness_model: str | None = None
+    ann_enabled: bool = True
 
     @field_validator("host")
     @classmethod
@@ -83,6 +90,10 @@ class MemoryOSSettings(BaseSettings):
         return self.data_dir / "logs"
 
     @property
+    def ann_dir(self) -> Path:
+        return self.data_dir / "vector-indexes"
+
+    @property
     def runtime_path(self) -> Path:
         return self.data_dir / "runtime.json"
 
@@ -97,6 +108,7 @@ class MemoryOSSettings(BaseSettings):
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.backup_dir.mkdir(parents=True, exist_ok=True)
         self.log_dir.mkdir(parents=True, exist_ok=True)
+        self.ann_dir.mkdir(parents=True, exist_ok=True)
 
 
 def settings_for(data_dir: Path | str | None = None, **overrides: Any) -> MemoryOSSettings:

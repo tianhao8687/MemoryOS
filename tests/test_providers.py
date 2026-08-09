@@ -11,6 +11,7 @@ from memoryos.db.session import Database
 from memoryos.domain.schemas import SearchRequest
 from memoryos.engine import MemoryService
 from memoryos.errors import ProviderError
+from memoryos.providers.base import ProviderMetadata
 from memoryos.providers.heuristic import HeuristicExtractor
 from memoryos.providers.openai_compatible import OpenAICompatibleExtractor
 
@@ -27,16 +28,37 @@ class DeterministicEmbedding:
     name = "test"
     model = "two-dimensional"
 
+    @property
+    def metadata(self) -> ProviderMetadata:
+        return ProviderMetadata("test", self.model, False, 1000, ("embedding",))
+
     def embed(self, texts: list[str]) -> list[list[float]]:
         return [[1.0, 0.0] if "FastAPI" in text else [0.0, 1.0] for text in texts]
+
+    def embed_query(self, text: str) -> list[float]:
+        return self.embed([text])[0]
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return self.embed(texts)
 
 
 class FailingEmbedding:
     name = "test"
     model = "unavailable"
 
+    @property
+    def metadata(self) -> ProviderMetadata:
+        return ProviderMetadata("test", self.model, False, 1000, ("embedding",))
+
     def embed(self, texts: list[str]) -> list[list[float]]:
+        del texts
         raise ProviderError("embedding provider unavailable")
+
+    def embed_query(self, text: str) -> list[float]:
+        return self.embed([text])[0]
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return self.embed(texts)
 
 
 def test_heuristic_extractor_works_offline_and_only_returns_candidates() -> None:
@@ -80,7 +102,7 @@ def test_active_memory_is_indexed_and_hybrid_search_is_available(
     with database.session() as session:
         assert session.scalar(select(func.count()).select_from(EmbeddingRow)) == 1
     result = service.search(SearchRequest(query="FastAPI"))
-    assert result["mode"] == "hybrid"
+    assert result["mode"] == "hybrid-ann"
     assert result["total"] == 1
 
 

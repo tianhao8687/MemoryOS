@@ -3,33 +3,62 @@ import {
   AlertTriangle,
   Archive,
   Boxes,
+  Bug,
+  ChartNoAxesCombined,
+  CircleHelp,
   Clock3,
   Database,
   FileClock,
+  FileSearch,
   FolderGit2,
   GitBranch,
   LayoutDashboard,
+  HeartPulse,
   Menu,
   Plus,
   Search,
   Settings,
   ShieldCheck,
   Sparkles,
+  Waypoints,
   X,
 } from 'lucide-react'
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 
-const navigation = [
-  { to: '/', label: 'Overview', icon: LayoutDashboard },
-  { to: '/projects', label: 'Projects', icon: FolderGit2 },
-  { to: '/memories', label: 'Memories', icon: Archive },
-  { to: '/candidates', label: 'Candidates', icon: Sparkles },
-  { to: '/timeline', label: 'Timeline', icon: Clock3 },
-  { to: '/conflicts', label: 'Conflicts', icon: AlertTriangle },
-  { to: '/settings', label: 'Settings', icon: Settings },
-  { to: '/audit', label: 'Audit', icon: FileClock },
+const navigationGroups = [
+  {
+    label: 'Memory',
+    items: [
+      { to: '/', label: 'Overview', icon: LayoutDashboard },
+      { to: '/projects', label: 'Projects', icon: FolderGit2 },
+      { to: '/memories', label: 'Memories', icon: Archive },
+      { to: '/candidates', label: 'Candidates', icon: Sparkles },
+    ],
+  },
+  {
+    label: 'Intelligence',
+    items: [
+      { to: '/current-truth', label: 'Current Truth', icon: ShieldCheck },
+      { to: '/claim-graph', label: 'Claim Graph', icon: Waypoints },
+      { to: '/freshness', label: 'Git Freshness', icon: FileSearch },
+      { to: '/consolidation', label: 'Consolidation', icon: Boxes },
+      { to: '/memory-health', label: 'Memory Health', icon: HeartPulse },
+      { to: '/retrieval-debugger', label: 'Retrieval Debugger', icon: Bug },
+      { to: '/benchmarks', label: 'Benchmarks', icon: ChartNoAxesCombined },
+    ],
+  },
+  {
+    label: 'Control',
+    items: [
+      { to: '/timeline', label: 'Timeline', icon: Clock3 },
+      { to: '/conflicts', label: 'Conflicts', icon: AlertTriangle },
+      { to: '/possible-conflicts', label: 'Possible Conflicts', icon: CircleHelp },
+      { to: '/settings', label: 'Settings', icon: Settings },
+      { to: '/audit', label: 'Audit', icon: FileClock },
+    ],
+  },
 ]
 
 function AddMemoryDialog({
@@ -176,16 +205,21 @@ export function AppShell() {
       <aside className={`sidebar ${mobileOpen ? 'is-open' : ''}`} aria-label="Primary navigation">
         <div className="brand"><Database aria-hidden="true" /><strong>MemoryOS</strong></div>
         <nav>
-          {navigation.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} end={to === '/'} onClick={() => setMobileOpen(false)}>
-              <Icon aria-hidden="true" /><span>{label}</span>
-            </NavLink>
+          {navigationGroups.map((group) => (
+            <div className="nav-group" key={group.label}>
+              <span className="nav-group-label">{group.label}</span>
+              {group.items.map(({ to, label, icon: Icon }) => (
+                <NavLink key={to} to={to} end={to === '/'} onClick={() => setMobileOpen(false)}>
+                  <Icon aria-hidden="true" /><span>{label}</span>
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="sidebar-status">
           <span><Boxes aria-hidden="true" />Local store</span>
           <strong>{status.data ? 'OK' : '—'}</strong>
-          <small>v{status.data?.version ?? '1.0.0'}</small>
+          <small>v{status.data?.version ?? '2.1.0'}</small>
         </div>
       </aside>
       {mobileOpen ? <button className="scrim" onClick={() => setMobileOpen(false)} aria-label="Close navigation" /> : null}

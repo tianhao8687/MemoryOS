@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "memoryos"
-version = "1.0.0"
-description = "Local-first universal coding-agent memory layer"
+version = "2.1.0"
+description = "Local-first coding-agent memory intelligence layer"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
@@ -22,11 +22,15 @@ dependencies = [
   "python-multipart>=0.0.20,<1",
   "rich>=14,<15",
   "sqlalchemy>=2.0.41,<3",
+  "tree-sitter-language-pack>=1.14,<2",
   "typer>=0.16,<1",
   "uvicorn>=0.35,<1",
 ]
 
 [project.optional-dependencies]
+ann = [
+  "sqlite-vec>=0.1.6,<1",
+]
 dev = [
   "hatchling>=1.27,<2",
   "mypy>=1.16,<2",
@@ -72,6 +76,8 @@ testpaths = ["tests"]
 addopts = "-ra --strict-config --strict-markers"
 asyncio_mode = "auto"
 markers = [
-  "acceptance: mandatory A01-A14 acceptance scenario",
+  "acceptance: mandatory V1 compatibility acceptance scenario (A01-A14)",
+  "v2: mandatory A15-A32 Memory Intelligence acceptance scenario",
   "slow: packaging, performance, or browser test",
+  "v21: mandatory A33-A52 Reality Intelligence hardening scenario",
 ]

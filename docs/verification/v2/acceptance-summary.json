@@ -1,0 +1,186 @@
+{
+  "schema": "memoryos-v2-acceptance@1",
+  "generated_at": "2026-08-09T18:41:02.956361+00:00",
+  "result": "PASS",
+  "checks": [
+    {
+      "id": "A15",
+      "name": "Claim Normalization",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_claims_truth.py"
+      ]
+    },
+    {
+      "id": "A16",
+      "name": "Entity Resolution",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_claims_truth.py"
+      ]
+    },
+    {
+      "id": "A17",
+      "name": "Semantic Conflict",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_claims_truth.py"
+      ]
+    },
+    {
+      "id": "A18",
+      "name": "Truth State",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_claims_truth.py"
+      ]
+    },
+    {
+      "id": "A19",
+      "name": "Bitemporal",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_claims_truth.py"
+      ]
+    },
+    {
+      "id": "A20",
+      "name": "Git Fresh",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_freshness.py"
+      ]
+    },
+    {
+      "id": "A21",
+      "name": "Git Moved",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_freshness.py"
+      ]
+    },
+    {
+      "id": "A22",
+      "name": "Git Stale",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_freshness.py"
+      ]
+    },
+    {
+      "id": "A23",
+      "name": "Retrieval Trace",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_retrieval_context.py"
+      ]
+    },
+    {
+      "id": "A24",
+      "name": "RRF/Rerank Fallback",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_retrieval_context.py"
+      ]
+    },
+    {
+      "id": "A25",
+      "name": "Context Contest",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_retrieval_context.py"
+      ]
+    },
+    {
+      "id": "A26",
+      "name": "Consolidation",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_consolidation_feedback.py"
+      ]
+    },
+    {
+      "id": "A27",
+      "name": "Counterevidence",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_consolidation_feedback.py"
+      ]
+    },
+    {
+      "id": "A28",
+      "name": "Feedback",
+      "status": "PASS",
+      "evidence": [
+        "tests/test_v2_consolidation_feedback.py"
+      ]
+    },
+    {
+      "id": "A29",
+      "name": "MemoryBench",
+      "status": "PASS",
+      "evidence": [
+        "docs/verification/v2/memorybench-report.json"
+      ]
+    },
+    {
+      "id": "A30",
+      "name": "Real Model Truthfulness",
+      "status": "PASS",
+      "evidence": [
+        "docs/verification/v2/memorybench-report.json"
+      ]
+    },
+    {
+      "id": "A31",
+      "name": "V1 Regression",
+      "status": "PASS",
+      "evidence": [
+        "docs/verification/v2/v1-baseline.json",
+        "scripts/verify.py"
+      ]
+    },
+    {
+      "id": "A32",
+      "name": "Package Upgrade",
+      "status": "PASS",
+      "evidence": [
+        "docs/verification/package-smoke.json",
+        "scripts/production_smoke.py"
+      ]
+    }
+  ],
+  "quality": {
+    "memorybench_measured_gates": {
+      "extraction": true,
+      "retrieval": true,
+      "conflict": true,
+      "temporal": true,
+      "git_freshness": true,
+      "consolidation": true,
+      "context": true,
+      "performance_100k": true
+    },
+    "tree_sitter_languages": [
+      "python",
+      "typescript",
+      "javascript",
+      "rust"
+    ],
+    "vector_indexes": [
+      "exact-numpy",
+      "sqlite-vec-optional"
+    ],
+    "package_schema": "0003_reality_intelligence_hardening",
+    "package_mcp_tools": 12,
+    "package_tree_sitter": true
+  },
+  "external_blockers": [
+    {
+      "area": "real-model Agent A/B",
+      "status": "external_blocker",
+      "reason": "No configured coding-agent harness/model endpoint was available. Set an OpenAI-compatible agent runner and rerun the paired 30-task protocol.",
+      "effect_claim": "not_evaluated"
+    }
+  ]
+}

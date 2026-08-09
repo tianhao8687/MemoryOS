@@ -92,3 +92,65 @@ test('memory explain and logical forget remove an active result', async ({ page 
   await page.getByRole('button', { name: 'Forget memory' }).click()
   await expect(page.getByText('Windows path case mismatch')).toHaveCount(0)
 })
+
+test('intelligence workbench exposes truth, retrieval traces, and benchmark provenance', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop intelligence workflow')
+  await navigate(page, 'Current Truth')
+  await expect(page.getByRole('heading', { name: 'Current Truth' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Resolve truth' })).toBeVisible()
+
+  await navigate(page, 'Retrieval Debugger')
+  await page.getByLabel('Coding task').fill('Which confirmed architecture decision constrains the API?')
+  await page.getByRole('button', { name: 'Run trace' }).click()
+  await expect(page.getByRole('heading', { name: 'Query planner' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Compiled context' })).toBeVisible()
+
+  await navigate(page, 'Benchmarks')
+  await expect(page.getByRole('heading', { name: 'Benchmark Dashboard' })).toBeVisible()
+  await expect(page.getByText('R Retrieval')).toBeVisible()
+  await expect(page.getByText('Real-model Agent A/B: external blocker')).toBeVisible()
+  const results = await new AxeBuilder({ page }).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('reality hardening workbench exposes conflict audit and health governance', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop V2.1 workflow')
+  await navigate(page, 'Possible Conflicts')
+  await expect(page.getByRole('heading', { name: 'Possible Conflicts' })).toBeVisible()
+  await expect(page.getByText('Abstention is safe')).toBeVisible()
+
+  await navigate(page, 'Memory Health')
+  await expect(page.getByRole('heading', { name: 'Memory Health' })).toBeVisible()
+  await page.getByRole('button', { name: 'Evaluate health' }).click()
+  await expect(page.getByRole('table')).toBeVisible()
+  await expect(page.getByText('Only Cold or Archived memories can be distilled.')).toBeVisible()
+
+  await navigate(page, 'Settings')
+  await expect(page.getByRole('heading', { name: 'Vector index' })).toBeVisible()
+  await expect(page.getByText('sqlite vec runtime')).toBeVisible()
+  const results = await new AxeBuilder({ page }).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('mobile intelligence navigation stays within the viewport', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile intelligence layout assertion')
+  await navigate(page, 'Benchmarks')
+  await expect(page.getByRole('heading', { name: 'Benchmark Dashboard' })).toBeVisible()
+  const metrics = await page.evaluate(() => ({
+    innerWidth: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    bodyWidth: document.body.scrollWidth,
+  }))
+  expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.innerWidth)
+  expect(metrics.bodyWidth).toBeLessThanOrEqual(metrics.innerWidth)
+
+  await navigate(page, 'Memory Health')
+  await expect(page.getByRole('heading', { name: 'Memory Health' })).toBeVisible()
+  const healthMetrics = await page.evaluate(() => ({
+    innerWidth: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    bodyWidth: document.body.scrollWidth,
+  }))
+  expect(healthMetrics.documentWidth).toBeLessThanOrEqual(healthMetrics.innerWidth)
+  expect(healthMetrics.bodyWidth).toBeLessThanOrEqual(healthMetrics.innerWidth)
+})

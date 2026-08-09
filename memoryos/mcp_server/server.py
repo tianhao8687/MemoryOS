@@ -10,11 +10,16 @@ from memoryos.config import MemoryOSSettings, settings_for
 from memoryos.db import Database
 from memoryos.domain.schemas import (
     ConflictStrategy,
+    ConsolidateRequest,
     ContextRequest,
     CreatedBy,
+    CurrentTruthRequest,
+    FeedbackCreate,
+    FeedbackValue,
     MemoryCreate,
     MemoryStatus,
     MemoryType,
+    RefreshRequest,
     ScopeType,
     SearchRequest,
     SourceCreate,
@@ -159,6 +164,117 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
     def memory_explain(memory_id: str) -> dict[str, Any]:
         """Explain provenance, content hash, scope, creator, status, and replacement links."""
         return result(lambda: service.explain(memory_id))
+
+    @mcp.tool(name="memory_current_truth")
+    def memory_current_truth(
+        subject: str | None = None,
+        predicate: str | None = None,
+        query: str | None = None,
+        scope_type: ScopeType | None = None,
+        scope_key: str | None = None,
+        as_of_valid_time: str | None = None,
+        as_known_at: str | None = None,
+    ) -> dict[str, Any]:
+        """Query resolved, contested, stale, or unknown bitemporal project truth."""
+        return result(
+            lambda: service.current_truth(
+                CurrentTruthRequest.model_validate(
+                    {
+                        "subject": subject,
+                        "predicate": predicate,
+                        "query": query,
+                        "scope_type": scope_type,
+                        "scope_key": scope_key,
+                        "as_of_valid_time": as_of_valid_time,
+                        "as_known_at": as_known_at,
+                    }
+                )
+            )
+        )
+
+    @mcp.tool(name="memory_feedback")
+    def memory_feedback(
+        retrieval_run_id: str,
+        memory_id: str,
+        helpful: FeedbackValue,
+        actor: str = "agent",
+        reason: str | None = None,
+    ) -> dict[str, Any]:
+        """Record auditable helpful/unhelpful retrieval feedback without changing truth."""
+        return result(
+            lambda: service.feedback(
+                FeedbackCreate(
+                    retrieval_run_id=retrieval_run_id,
+                    memory_id=memory_id,
+                    helpful=helpful,
+                    actor=actor,
+                    reason=reason,
+                )
+            )
+        )
+
+    @mcp.tool(name="memory_consolidate")
+    def memory_consolidate(
+        scope_type: ScopeType,
+        scope_key: str,
+        dry_run: bool = True,
+        minimum_sources: int = 3,
+        minimum_span_days: int = 7,
+    ) -> dict[str, Any]:
+        """Generate traceable consolidation candidates; dry-run is the default."""
+        return result(
+            lambda: service.consolidate(
+                ConsolidateRequest(
+                    scope_type=scope_type,
+                    scope_key=scope_key,
+                    dry_run=dry_run,
+                    minimum_sources=minimum_sources,
+                    minimum_span_days=minimum_span_days,
+                )
+            )
+        )
+
+    @mcp.tool(name="memory_refresh")
+    def memory_refresh(
+        memory_id: str,
+        repository_path: str,
+        create_replacement_candidate: bool = False,
+    ) -> dict[str, Any]:
+        """Refresh Git anchor freshness and optionally create a replacement candidate."""
+        return result(
+            lambda: service.refresh_memory(
+                RefreshRequest(
+                    memory_id=memory_id,
+                    repository_path=repository_path,
+                    create_replacement_candidate=create_replacement_candidate,
+                )
+            )
+        )
+
+    @mcp.tool(name="memory_debug_context")
+    def memory_debug_context(
+        task: str,
+        repo: str,
+        branch: str | None = None,
+        workspace: str | None = None,
+        task_scope: str | None = None,
+        budget: int = 6000,
+        include_historical: bool = False,
+    ) -> dict[str, Any]:
+        """Return query plan, RRF channels, filters, manifest, and final context selection."""
+        return result(
+            lambda: service.debug_context(
+                ContextRequest(
+                    task=task,
+                    repository=repo,
+                    branch=branch,
+                    workspace=workspace,
+                    task_scope=task_scope,
+                    budget=budget,
+                    include_historical=include_historical,
+                )
+            )
+        )
 
     return mcp
 

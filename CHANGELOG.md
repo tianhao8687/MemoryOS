@@ -1,5 +1,41 @@
 # Changelog
 
+## 2.1.0 - 2026-08-10
+
+### Added
+
+- Immutable `ClaimIdentity`/`ClaimVersion` transaction history and true valid-time/known-at reconstruction.
+- Deterministic uncertainty router plus auditable Possible Conflict queue with bounded model eligibility, abstention safety, provider fingerprint, prompt version, and evidence hash.
+- Persistent sqlite-vec namespaces by provider/model/dimension, exact fallback, doctor/status/rebuild operations, and packaged sqlite-vec runtime.
+- Explainable Hot/Warm/Cold/Archived memory health, reversible archive, sole-current-truth protection, and candidate-only distillation.
+- Grounded abstractive consolidation with validated support/counter IDs and independent-source constraints; explicitly labeled offline extractive fallback.
+- Blind CodingMemoryBench hard negatives with runtime/gold isolation, baseline/V2/V2+model modes, perfect-score warnings, and 100k full retrieval/context latency evidence.
+- Current Truth transaction details, Possible Conflicts review, Memory Health controls, and vector diagnostics in the responsive React Workbench.
+- Explicit `0003_reality_intelligence_hardening` migration and backup format 3.
+
+### Verification
+
+- Added A33–A52 tests, evidence manifest, merged-main release smoke, and the `scripts/verify_v21.py` fail-fast entrypoint.
+- The 50-pair real coding-agent run remains an explicit external blocker because no model endpoint or credentials were supplied. Fixture results are harness-only and `effect_claim=none`.
+
+## 2.0.0 - 2026-08-10
+
+### Added
+
+- Claim/entity graph, evidence spans, semantic relations, scoped aliases, bitemporal truth, and `resolved/contested/stale/unknown` Current Truth.
+- Tree-sitter Source Anchors for Python/TypeScript/JavaScript/Rust with Git fresh/moved/suspect/stale state, lazy caching, and replacement-candidate refresh.
+- Retrieval 2.0 query planner, FTS/vector/graph/temporal union, RRF, MMR, per-result traces, exact NumPy `VectorIndex`, and optional `sqlite-vec` ANN.
+- Task-aware context compiler with coverage, utility/cost budgeting, stale policy, contested-side inclusion, and persisted manifests.
+- Consolidation candidates with counterevidence and lineage, auditable helpful/unhelpful feedback, and six schema-validated provider interfaces.
+- Five V2 MCP tools, V2 HTTP/CLI operations, and six Memory Intelligence Workbench pages while preserving all V1 interfaces.
+- MemoryBench V2 with frozen sample counts, baseline/V2 comparisons, 100k measured FTS5 P95, 30-task fixture A/B harness, bootstrap 95% CIs, JSON/HTML reports, and explicit real-model evidence labeling.
+- `0002_memory_intelligence`, V1 backup import, V2 backup versioning, and packaged V1 DB → V2 migration smoke.
+
+### Verification
+
+- Added A15–A32 tests and evidence manifest while retaining A01–A14 regression gates.
+- Real coding-agent A/B was not run because no real-model harness endpoint was configured. Fixture results are labeled harness-only and no real-model effect claim is made.
+
 ## 1.0.0 - 2026-08-09
 
 ### Added

@@ -51,6 +51,179 @@ export interface SearchResponse {
   mode: string
 }
 
+export type TruthState = 'resolved' | 'contested' | 'stale' | 'unknown'
+export type FreshnessState = 'fresh' | 'moved' | 'suspect' | 'stale' | 'unknown'
+
+export interface EntityRecord {
+  id: string
+  canonical_name: string
+  normalized_name: string
+  entity_type: string
+  aliases: string[]
+}
+
+export interface ClaimRecord {
+  id: string
+  version_id?: string
+  version_number?: number
+  identity_id?: string
+  memory_id: string
+  subject: EntityRecord | null
+  predicate: string
+  object_kind: string
+  object_value: unknown
+  polarity: string
+  modality: string
+  confidence: number
+  status: string
+  valid_from: string | null
+  valid_to: string | null
+  recorded_at: string
+  transaction_from?: string
+  transaction_to?: string | null
+  reason?: string
+  actor?: string
+  stale_state: string
+}
+
+export interface TruthGroup {
+  subject: EntityRecord
+  predicate: string
+  state: TruthState
+  accepted_claims: ClaimRecord[]
+  conflicting_claims: ClaimRecord[]
+  evidence: Array<Record<string, unknown>>
+  freshness: string[]
+  resolution_history: Array<Record<string, unknown>>
+}
+
+export interface CurrentTruthResponse {
+  state: TruthState
+  truths: TruthGroup[]
+  accepted_claims: ClaimRecord[]
+  conflicting_claims: ClaimRecord[]
+  evidence: Array<Record<string, unknown>>
+  freshness: string[]
+  resolution_history: Array<Record<string, unknown>>
+  as_of_valid_time: string
+  as_known_at: string
+}
+
+export interface ClaimGraphResponse {
+  state: TruthState
+  nodes: ClaimRecord[]
+  edges: Array<{
+    id: string
+    from: string
+    to: string
+    type: string
+    confidence: number
+    method: string
+    explanation: string
+  }>
+}
+
+export interface FreshnessRecord {
+  anchor_id: string
+  memory_id: string
+  memory_title: string
+  claim_id: string
+  path: string
+  symbol_fqn: string | null
+  freshness: FreshnessState
+  commit_sha: string
+  cached_head: string | null
+  checked_at: string | null
+}
+
+export interface ConsolidationRecord {
+  id: string
+  scope_type: ScopeType
+  scope_key: string
+  subject_entity_id: string
+  predicate: string
+  proposal: Record<string, unknown>
+  status: string
+  source_memory_ids: string[]
+  counterevidence: Array<Record<string, unknown>>
+  created_at: string
+}
+
+export interface ConsolidationProposal {
+  id: string | null
+  status: string
+  proposal: Record<string, unknown>
+  source_memory_ids: string[]
+  relations: Array<Record<string, unknown>>
+  counterevidence: Array<Record<string, unknown>>
+}
+
+export interface RetrievalManifestItem {
+  memory_id: string
+  claim_ids: string[]
+  included: boolean
+  inclusion_reason: string | null
+  exclusion_reason: string | null
+  utility: number
+  cost: number
+  truth_state: TruthState
+  freshness: FreshnessState
+  retrieval_trace: Record<string, unknown>
+}
+
+export interface MemoryBenchSuite {
+  suite: string
+  sample_size: number
+  evidence_type?: string
+  baseline?: Record<string, unknown>
+  v2?: Record<string, unknown>
+  fixture?: Record<string, unknown>
+  real_model?: Record<string, unknown>
+  gate?: { passed: boolean; rule: string }
+  truthfulness_gate?: { passed: boolean; reason: string }
+}
+
+export interface MemoryBenchReport {
+  schema: string
+  generated_at: string
+  seed: number
+  config_hash: string
+  git: { commit: string; dirty: boolean | null }
+  provider_policy: Record<string, unknown>
+  suites: Record<string, MemoryBenchSuite>
+  release_gates: {
+    measured_all_passed: boolean
+    real_model_agent_effect: string
+    release_readiness: string
+    note: string
+  }
+}
+
+export interface CodingMemoryBenchMode {
+  retrieval_recall_at_5: number
+  temporal_accuracy: number
+  conflict: { precision: number; recall: number; f1: number }
+  perfect_score_warning: string | null
+  real_model: boolean
+  model_status: string
+}
+
+export interface CodingMemoryBenchReport {
+  schema: string
+  generated_at: string
+  blind_protocol: {
+    runtime_payload_contains_gold: boolean
+    gold_loaded_only_by_scorer: boolean
+    immutable_input_hash: string
+    immutable_gold_hash: string
+  }
+  sample_sizes: Record<string, number>
+  modes: Record<string, CodingMemoryBenchMode>
+  release_gates: Record<string, boolean>
+  all_measured_gates_passed: boolean
+  truthfulness: string
+}
+
 export interface StatusResponse {
   version: string
   database: string
@@ -120,6 +293,15 @@ export interface ContextResponse {
   budget: number
   characters_used: number
   retrieval_mode: string
+  retrieval_run_id?: string
+  query_plan?: Record<string, unknown>
+  truth_state?: TruthState
+  manifest?: RetrievalManifestItem[]
+  debug?: {
+    config_hash: string
+    reranker: string
+    candidates: RetrievalManifestItem[]
+  }
   sections: Record<string, MemoryRecord[]>
   text: string
 }
@@ -133,4 +315,56 @@ export interface DoctorCheck {
 export interface DoctorResponse {
   overall: 'PASS' | 'WARN' | 'FAIL'
   checks: DoctorCheck[]
+}
+
+export type MemoryTemperature = 'hot' | 'warm' | 'cold' | 'archived'
+
+export interface MemoryHealthRecord {
+  memory_id: string
+  title: string
+  memory_status: MemoryStatus
+  temperature: MemoryTemperature
+  health_score: number
+  components: Record<string, number | string>
+  explanation: string
+  retrieval_count: number
+  last_retrieved_at: string | null
+  archived_at: string | null
+  evaluated_at: string
+}
+
+export interface PossibleConflictRecord {
+  id: string
+  left_claim_id: string
+  right_claim_id: string
+  status: 'possible' | 'confirmed' | 'dismissed' | 'abstained'
+  deterministic_relationship: string
+  deterministic_confidence: number
+  reason: string
+  model_result: {
+    relationship?: string
+    confidence?: number
+    explanation?: string
+    abstain?: boolean
+  }
+  provider_fingerprint: string | null
+  prompt_version: string | null
+  evidence_hash: string
+  created_at: string
+  resolved_at: string | null
+  resolved_by: string | null
+}
+
+export interface VectorIndexRecord {
+  namespace: string
+  backend: string
+  provider: string
+  model: string
+  model_fingerprint: string
+  dimensions: number
+  item_count: number
+  status: string
+  unavailable_reason: string | null
+  last_rebuild_at: string | null
+  updated_at: string
 }

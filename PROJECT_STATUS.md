@@ -2,68 +2,71 @@
 
 ## 当前结论
 
-- 版本：V1.0.0
-- 状态：**V1.0 Complete**
-- 最后全量验收：2026-08-09（Asia/Shanghai）
-- 唯一验收入口：`.\.venv\Scripts\python.exe scripts\verify.py`
-- 最后结果：`PASS`，14/14 命令级门禁 exit code 0
-- 强制场景：A01–A14 全部有可执行证据
+- 版本：V2.1.0
+- 状态：**V2.1 实现与预发布实测完成；A52 将在合并 main 后执行**
+- 日期：2026-08-10（Asia/Shanghai）
+- 干净 V2 基线：commit `b0cae26dfab0141876ceffa1fde97cc5e2b92591`，dirty=false，16/16 PASS
+- 最终验收入口：`.\.venv\Scripts\python.exe scripts\verify_v21.py`
+- 验收范围：V1 A01–A14、V2 A15–A32 回归，V2.1 A33–A52
 
-该状态满足总任务书的唯一完成条件：阶段 0–10 完成、A01–A14 通过、`scripts/verify.py` 返回 0，且文档与真实实现一致。
+MemoryOS V2.1 已完成当前环境内可实现和可测量的 Reality Intelligence hardening。真实 coding-agent endpoint 与凭据未提供，因此 A47 使用任务书允许的明确 `external_blocker` 路径：完成样本为 0，`effect_claim=none`。50-task fixture 仅证明 harness/metrics/CI plumbing，不是模型效果证据。
 
-## 阶段 0–10
+## V2.1 交付范围
 
-| 阶段 | 交付内容 | 状态 |
+| 领域 | 已交付内容 | 状态 |
 | --- | --- | --- |
-| 0 项目脚手架与执行基线 | Python/React monorepo、配置、忽略规则、统一 verify | Complete |
-| 1 数据库、迁移与领域模型 | SQLite WAL/FTS5/foreign keys/busy timeout、Alembic、约束 | Complete |
-| 2 Memory Core 与生命周期 | 五级 scope、六类 memory、六状态、TTL、逻辑忘却 | Complete |
-| 3 Provenance、冲突与时间线 | source/hash、conflict strategy、supersession、explain、timeline | Complete |
-| 4 检索与 Context Builder | FTS5/可选 hybrid、provider fallback、scope/time filter、去重/预算 | Complete |
-| 5 Git / Workspace Integration | repo root/branch/HEAD/remote、stable identity、branch scope key、不存源码 guard | Complete |
-| 6 MCP Server + CLI | 7 个 stdio tools、完整 CLI、三类客户端配置文档 | Complete |
-| 7 HTTP API + React 管理界面 | FastAPI、8 页 UI、candidate/conflict/memory/backup 工作流 | Complete |
-| 8 自动候选提取与 Provider Adapter | heuristic、OpenAI-compatible extractor/embedding、schema validation、redaction | Complete |
-| 9 安全、备份、恢复与可观测性 | loopback/token/origin、JSON log、doctor、版本化 ZIP/JSONL、损坏拒绝 | Complete |
-| 10 打包、全量验收与收尾 | Vite build、wheel、PyInstaller onedir、clean-path production smoke、文档 | Complete |
+| Migration | 0001/0002 显式 immutable operations；0003 回填版本，可 downgrade/replay | Complete |
+| Bitemporal Truth | ClaimIdentity + append-only ClaimVersion，valid/transaction 双时间与 reason/actor | Complete |
+| Conflict 2.0 | deterministic uncertain router、bounded model、Possible Conflict 审计/人工处理、abstain safety | Complete |
+| ANN | sqlite-vec 持久化 namespace、实时 upsert/search、doctor/status/rebuild、exact fallback | Complete |
+| CodingMemoryBench | input/gold 隔离、hard negatives、baseline/V2/V2+model、满分警告 | Complete |
+| Agent A/B | ≥50 paired harness 与全指标 fixture；真实 endpoint 缺失 blocker | External blocker |
+| Consolidation | 严格 support/counter 白名单、独立来源、provider/prompt、offline fallback、candidate-only | Complete |
+| Memory Health | Hot/Warm/Cold/Archived、解释分数、可逆 archive、唯一 truth 保护、candidate distillation | Complete |
+| Interfaces/UI | Current Truth 版本、Possible Conflicts、Memory Health、向量诊断、盲测 dashboard | Complete |
+| Release | wheel、Windows onedir、0001→0003 packaged smoke | Complete |
+| Main release | 合并后 clean-main build/smoke 与 A52 | Pending merge |
 
-## 最后验收快照
+## 预发布实测快照
 
 | 门禁 | 实测结果 |
 | --- | --- |
-| Backend import | `memoryos.__version__ == 1.0.0` |
-| Ruff lint / format | PASS / PASS |
-| Mypy strict | 35 source files，0 issues |
-| Pytest | 26 passed |
+| Backend import | `memoryos.__version__ == 2.1.0` |
+| Ruff / format / Mypy | PASS / PASS / 73 source files 0 issues |
+| Pytest | 62 passed；6 个上游/SQLite adapter warning |
 | TypeScript / ESLint | 0 errors / 0 warnings |
-| Vitest | 2 files，6 passed |
-| Vite production build | 1,737 modules，JS 321.32 kB（gzip 98.40 kB） |
-| Playwright | 6 applicable passed，4 intentional cross-project skips；desktop + mobile，console/page error 0 |
-| Accessibility | desktop overview axe violations 0 |
-| 10,000-record FTS-only | search median 22.083 ms / max 43.161 ms；context median 28.724 ms / max 44.874 ms |
-| Backend wheel | `memoryos-1.0.0-py3-none-any.whl`，44,838 bytes |
-| Windows package | `MemoryOS.exe`，15,299,465 bytes；完整 onedir 构建成功 |
-| Package smoke | PASS，clean path + UI + 7 MCP tools + CLI + restart persistence，6.619 s |
+| Vitest | 4 files，11 passed |
+| Vite production build | 1,745 modules；JS 363.41 kB（gzip 108.10 kB） |
+| Playwright | 9 applicable passed，7 intentional device-matrix skips |
+| Accessibility | overview、Intelligence 与 V2.1 health/settings axe violations 0 |
+| Blind benchmark | 100 retrieval + 100 temporal + 100 conflict；V2 Recall@5/temporal/conflict F1 = 1.0；perfect-score warning present |
+| 100K full pipeline | search P50/P95 89.794/104.113 ms；context P50/P95 130.140/143.847 ms |
+| Agent evidence | `external_blocker`，requested 50/completed 0，fixture harness-only |
+| Backend wheel | `memoryos-2.1.0-py3-none-any.whl`，134,586 bytes |
+| Windows executable | `MemoryOS.exe`，15,506,332 bytes |
+| Package smoke | PASS；clean path、0001→0003、12 MCP、两套 benchmark、sqlite-vec、Tree-sitter、HTTP/UI/CLI、restart，9.294 s |
 
-Playwright 的 4 个 skip 是测试矩阵中明确的不适用项：移动抽屉断言仅在 mobile 项目运行，三个会改写共享 fixture 的流程仅在 desktop 运行一次。所有适用用例均通过。
+Playwright 的 7 个 skip 是明确的设备矩阵不适用项：移动布局断言只在 mobile 运行，会修改共享 fixture 或执行桌面审计的流程只在 desktop 运行。所有适用用例均通过。
 
-## 可交付产物
+## 证据与产物
 
-- 源码：`memoryos/`、`web/`
-- 数据库迁移：`memoryos/db/migrations/versions/0001_initial.py`
-- 一键验收：`scripts/verify.py`
-- Python wheel：`build/wheel/memoryos-1.0.0-py3-none-any.whl`；SHA-256 `AAC13E05D77CBDB98238804DACC4D9D5C61C5F9A910B7507A512F2726EB35469`
-- Windows 发行目录：`release/MemoryOS/`
-- 可执行文件：`release/MemoryOS/MemoryOS.exe`；SHA-256 `FC31DC61FF0235B0D93A53E34B8F744AC1F275BAA41EEB713BF21F646A0B41D4`
-- 全门禁报告：`docs/verification/verify-summary.json`
-- 性能报告：`docs/verification/performance.json`
-- 发行包冒烟报告：`docs/verification/package-smoke.json`
-- UI 设计参考与 desktop/mobile 截图：`docs/design/`、`docs/verification/`
+- V2 clean baseline：`docs/verification/v2.1/v2-clean-baseline.json`
+- CodingMemoryBench：`docs/verification/v2.1/coding-memory-bench.{json,html}`
+- 100K full pipeline：`docs/verification/v2.1/full-pipeline-performance.json`
+- real-agent/blocker：`docs/verification/v2.1/agent-ab.json`
+- A33–A52：`docs/verification/v2.1/acceptance-summary.json`（merge 后生成最终版）
+- main smoke：`docs/verification/v2.1/main-release-smoke.json`（merge 后生成）
+- package smoke：`docs/verification/package-smoke.json`
+- wheel：`build/wheel/memoryos-2.1.0-py3-none-any.whl`
+  - SHA-256 `8B0B0002AF7249555897F8FB999C8A9396CD871775CE4C5150A21197D6ACA6E7`
+- Windows：`release/MemoryOS/MemoryOS.exe`
+  - SHA-256 `2DCD7F630A81A17A4A7EB8F29E99D78757327F4CFAD4B4CFCB096B742DBE898C`
 
-## 已知非阻断警告
+## 已知边界
 
-- Pytest 显示一条来自 FastAPI/Starlette TestClient 适配层的上游弃用警告；26 项测试全部通过。
-- PyInstaller 分析报告可选 `tzdata`、`pysqlite2`、`MySQLdb` hidden imports 不存在。MemoryOS 使用 Python 内置 SQLite，打包后迁移、FTS5、MCP、HTTP 和重启冒烟均通过。
-- 冻结 MCP 子进程启动时会输出一条 `pydantic-settings` 的 `IncompleteFieldDefinitionWarning`；协议初始化、7 个工具和写读操作均通过。
+- 唯一外部阻塞项是缺少真实 coding-agent endpoint/model/credentials；不做效果声明。
+- Pytest 的 FastAPI/Starlette TestClient 与 Python 3.12 sqlite datetime adapter 发出弃用 warning；所有测试通过。
+- PyInstaller 报告未安装可选 `tzdata`、`pysqlite2`、`MySQLdb`；MemoryOS 使用内置 SQLite，实际冻结包迁移与功能 smoke 已通过。
+- 冻结 MCP 子进程有一条 `pydantic-settings` forward-reference warning；协议初始化、12 个工具和跨进程读写均通过。
 
-产品边界（非 V1 缺口）记录在 `SECURITY.md`：单机单用户、无应用层静态加密、读 API 依赖 loopback/OS 边界、无云同步，且未自动操作 Cursor/Claude Code UI。
+产品边界仍是单机单用户、loopback-only、无云同步、无应用层静态加密、无全仓源码收藏。详见 `SECURITY.md`。

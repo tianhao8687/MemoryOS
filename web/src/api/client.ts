@@ -1,13 +1,24 @@
 import type {
   AuditEvent,
+  CodingMemoryBenchReport,
   ConflictRecord,
+  ClaimGraphResponse,
+  ConsolidationProposal,
+  ConsolidationRecord,
   ContextResponse,
+  CurrentTruthResponse,
   DoctorResponse,
   ExplainResponse,
   MemoryRecord,
+  MemoryBenchReport,
+  MemoryHealthRecord,
+  FreshnessRecord,
   Repository,
   SearchResponse,
   StatusResponse,
+  MemoryTemperature,
+  PossibleConflictRecord,
+  VectorIndexRecord,
 } from '../types'
 
 export class ApiError extends Error {
@@ -59,6 +70,34 @@ function queryString(values: Record<string, string | number | boolean | null | u
 export const api = {
   status: () => request<StatusResponse>('/api/status'),
   doctor: () => request<DoctorResponse>('/api/doctor'),
+  vectorIndex: () => request<VectorIndexRecord[]>('/api/vector-index'),
+  rebuildVectorIndex: () =>
+    request<{ ok: true; status: string; namespaces: VectorIndexRecord[] }>(
+      '/api/vector-index/rebuild',
+      { method: 'POST' },
+    ),
+  memoryHealth: (temperature?: MemoryTemperature | '') =>
+    request<MemoryHealthRecord[]>(
+      `/api/memory-health?${queryString({ temperature: temperature || null })}`,
+    ),
+  evaluateMemoryHealth: () =>
+    request<{ ok: true; evaluated: number; counts: Record<string, number> }>(
+      '/api/memory-health/evaluate',
+      { method: 'POST' },
+    ),
+  archiveMemory: (id: string) =>
+    request<{ ok: true; health: MemoryHealthRecord }>(`/api/memory-health/${id}/archive`, {
+      method: 'POST',
+    }),
+  restoreMemory: (id: string) =>
+    request<{ ok: true; health: MemoryHealthRecord }>(`/api/memory-health/${id}/restore`, {
+      method: 'POST',
+    }),
+  distillMemories: (memoryIds: string[], title?: string) =>
+    request<{ ok: true; candidate: MemoryRecord; supporting_memory_ids: string[] }>(
+      '/api/memory-health/distill',
+      { method: 'POST', body: JSON.stringify({ memory_ids: memoryIds, title: title || null }) },
+    ),
   repositories: () => request<Repository[]>('/api/repositories'),
   detectRepository: (path: string) =>
     request<Repository>('/api/repositories/detect', {
@@ -98,7 +137,56 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ repository, branch, task, budget: 6000 }),
     }),
+  currentTruth: (payload: Record<string, unknown>) =>
+    request<CurrentTruthResponse>('/api/current-truth', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  claimGraph: (payload: Record<string, unknown>) =>
+    request<ClaimGraphResponse>('/api/claim-graph', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  debugContext: (repository: string, branch: string, task: string, budget: number) =>
+    request<ContextResponse>('/api/debug/context', {
+      method: 'POST',
+      body: JSON.stringify({ repository, branch, task, budget }),
+    }),
+  freshness: () => request<FreshnessRecord[]>('/api/freshness'),
+  refresh: (memoryId: string, repositoryPath: string, createReplacementCandidate: boolean) =>
+    request<{ ok: true; refresh: Record<string, unknown> }>('/api/refresh', {
+      method: 'POST',
+      body: JSON.stringify({
+        memory_id: memoryId,
+        repository_path: repositoryPath,
+        create_replacement_candidate: createReplacementCandidate,
+      }),
+    }),
+  consolidations: () => request<ConsolidationRecord[]>('/api/consolidations'),
+  consolidate: (scopeKey: string, dryRun: boolean) =>
+    request<{ ok: true; count: number; proposals: ConsolidationProposal[] }>('/api/consolidate', {
+      method: 'POST',
+      body: JSON.stringify({
+        scope_type: 'repository',
+        scope_key: scopeKey,
+        dry_run: dryRun,
+        minimum_sources: 3,
+        minimum_span_days: 7,
+      }),
+    }),
+  memorybench: () => request<MemoryBenchReport>('/api/benchmarks/memorybench-v2'),
+  codingMemoryBench: () =>
+    request<CodingMemoryBenchReport>('/api/benchmarks/coding-memory-bench-v2.1'),
   conflicts: () => request<ConflictRecord[]>('/api/conflicts'),
+  possibleConflicts: () => request<PossibleConflictRecord[]>('/api/possible-conflicts'),
+  resolvePossibleConflict: (id: string, confirmed: boolean, rationale?: string) =>
+    request<{ ok: true; conflict: PossibleConflictRecord }>(
+      `/api/possible-conflicts/${id}/resolve`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ confirmed, rationale: rationale || null }),
+      },
+    ),
   resolveConflict: (id: string, strategy: string, rationale: string) =>
     request<{ ok: true; memory: MemoryRecord }>(`/api/conflicts/${id}/resolve`, {
       method: 'POST',
