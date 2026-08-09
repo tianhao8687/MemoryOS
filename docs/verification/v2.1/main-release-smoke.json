@@ -1,11 +1,11 @@
 {
   "schema": "memoryos-v2.1-main-release-smoke@1",
-  "generated_at": "2026-08-09T18:48:28.887894+00:00",
+  "generated_at": "2026-08-09T18:52:39.739958+00:00",
   "result": "PASS",
   "branch": "main",
-  "commit": "eaf10ba700455513f4eb4a392f4c042a6b4ea125",
+  "commit": "9f2e2e7909c547b4a6b19d3e7a1ef40031d5ebe6",
   "git_dirty_before_run": false,
-  "executable_sha256": "a4e17ec4adad3b57d760346c1bc1d25297a458349c4a7964de7ff4743c935c6c",
+  "executable_sha256": "b9330bdf6956f3a0bd9f41a80229dbd7fa561e9b430764a788c58c31b205f5fd",
   "package": {
     "result": "PASS",
     "distribution": "C:\\Users\\Admin\\Documents\\ChatGPT\\记忆模型\\release\\MemoryOS",
@@ -21,7 +21,7 @@
       "database": "ok"
     },
     "mcp_tools": 12,
-    "memory_id": "e5bad583-73d5-4bdf-853f-1e7b53701dba",
+    "memory_id": "8fedb2e9-077b-427e-a912-6b50c641d5df",
     "legacy_memory_id": "00000000-0000-0000-0000-000000000001",
     "v1_to_v2_migration": true,
     "v1_to_v21_migration": true,
@@ -33,7 +33,7 @@
     "restart_persistence": true,
     "ui_health": true,
     "cli_status": true,
-    "elapsed_seconds": 9.357,
+    "elapsed_seconds": 9.346,
     "server_output_lines": 34
   }
 }

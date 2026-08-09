@@ -13,7 +13,7 @@
     "database": "ok"
   },
   "mcp_tools": 12,
-  "memory_id": "d59d28bd-4e9c-4fa3-973a-19dc5b350c0e",
+  "memory_id": "b72f3bdf-e941-4720-b050-9a11a89c9362",
   "legacy_memory_id": "00000000-0000-0000-0000-000000000001",
   "v1_to_v2_migration": true,
   "v1_to_v21_migration": true,
@@ -25,6 +25,6 @@
   "restart_persistence": true,
   "ui_health": true,
   "cli_status": true,
-  "elapsed_seconds": 9.264,
+  "elapsed_seconds": 9.295,
   "server_output_lines": 34
 }

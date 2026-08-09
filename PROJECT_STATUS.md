@@ -8,6 +8,7 @@
 - 干净 V2 基线：commit `b0cae26dfab0141876ceffa1fde97cc5e2b92591`，dirty=false，16/16 PASS
 - V2.1 合并提交：`eaf10ba700455513f4eb4a392f4c042a6b4ea125`
 - 最终全链验证基线：commit `b630496a91fb4188fbbd154aa33d1a4ccfd91da5`，dirty=false，19/19 release gates PASS
+- 最终 A52 clean-main 基线：commit `9f2e2e7909c547b4a6b19d3e7a1ef40031d5ebe6`，dirty=false，package smoke PASS
 - 最终验收入口：`.\.venv\Scripts\python.exe scripts\verify_v21.py`
 - 验收范围：V1 A01–A14、V2 A15–A32 回归，V2.1 A33–A52
 
@@ -46,7 +47,7 @@ MemoryOS V2.1 已完成当前环境内可实现和可测量的 Reality Intellige
 | Agent evidence | `external_blocker`，requested 50/completed 0，fixture harness-only |
 | Backend wheel | `memoryos-2.1.0-py3-none-any.whl`，135,473 bytes |
 | Windows executable | `MemoryOS.exe`，15,506,332 bytes |
-| Package smoke | PASS；clean path、0001→0003、12 MCP、两套 benchmark、sqlite-vec、Tree-sitter、HTTP/UI/CLI、restart，9.264 s |
+| Package smoke | PASS；clean path、0001→0003、12 MCP、两套 benchmark、sqlite-vec、Tree-sitter、HTTP/UI/CLI、restart，9.295 s |
 | A33–A52 | 20/20 PASS；A47 按任务书允许路径记录真实外部 blocker，未声明模型效果 |
 
 Playwright 的 7 个 skip 是明确的设备矩阵不适用项：移动布局断言只在 mobile 运行，会修改共享 fixture 或执行桌面审计的流程只在 desktop 运行。所有适用用例均通过。
