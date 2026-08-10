@@ -12,6 +12,7 @@ from memoryos.db.models import (
     SourceRow,
 )
 from memoryos.domain.schemas import ContextRequest, QueryIntent, SearchRequest
+from memoryos.health import MemoryHealthService
 from memoryos.retrieval.context import SECTION_ORDER, _section
 from memoryos.retrieval_v2 import RetrievalPipeline
 
@@ -58,6 +59,7 @@ class TaskAwareContextCompiler:
             branch=request.branch,
             workspace=request.workspace,
             task_scope=request.task_scope,
+            record_retrieval=False,
         )
         candidates = list(result["items"])
         intent = QueryIntent(result["query_plan"]["intent"])
@@ -87,13 +89,18 @@ class TaskAwareContextCompiler:
                 f"- [{identity}] {prefix}{memory['title']}: {memory['content']} "
                 f"(source: {source_ref})"
             )
+            section = _section(memory)
             prepared.append(
                 {
                     "item": item,
                     "memory_id": identity,
                     "utility": utility,
-                    "cost": len(line) + 1,
+                    # Conservatively charge the section heading for every item.
+                    # This slightly under-fills a budget when several items share a
+                    # section, but prevents the rendered text from silently exceeding it.
+                    "cost": len(line) + len(section) + 3,
                     "line": line,
+                    "section": section,
                     "category": str(memory["category"]).lower(),
                     "claim_groups": metadata[identity]["claim_groups"],
                     "source_ref": source_ref,
@@ -103,20 +110,63 @@ class TaskAwareContextCompiler:
             key=lambda value: float(value["utility"]) / max(1, int(value["cost"])),
             reverse=True,
         )
+        contested_by_group: dict[str, set[str]] = defaultdict(set)
+        groups_by_memory: dict[str, set[str]] = defaultdict(set)
+        contested_candidates: dict[str, dict[str, Any]] = {}
+        for candidate in prepared:
+            if candidate["item"]["truth_state"] != "contested":
+                continue
+            identity = str(candidate["memory_id"])
+            contested_candidates[identity] = candidate
+            claim_groups = candidate["claim_groups"] or [f"memory:{identity}"]
+            for group in claim_groups:
+                contested_by_group[group].add(identity)
+                groups_by_memory[identity].add(group)
+        contested_components: dict[str, list[dict[str, Any]]] = {}
+        visited: set[str] = set()
+        for identity in contested_candidates:
+            if identity in visited:
+                continue
+            pending = [identity]
+            component_ids: set[str] = set()
+            while pending:
+                current = pending.pop()
+                if current in component_ids:
+                    continue
+                component_ids.add(current)
+                for group in groups_by_memory[current]:
+                    pending.extend(contested_by_group[group] - component_ids)
+            visited.update(component_ids)
+            component = [
+                candidate for candidate in prepared if str(candidate["memory_id"]) in component_ids
+            ]
+            for component_id in component_ids:
+                contested_components[component_id] = component
         selected: list[dict[str, Any]] = []
         selected_ids: set[str] = set()
         used = len("Project Memory Context\n")
 
-        def include(candidate: dict[str, Any], reason: str, *, force: bool = False) -> bool:
+        def include(candidate: dict[str, Any], reason: str) -> bool:
             nonlocal used
             identity = str(candidate["memory_id"])
             if identity in selected_ids:
                 return True
-            cost = int(candidate["cost"])
-            if not force and used + cost > request.budget:
+            bundle = contested_components.get(identity, [candidate])
+            additions = [
+                bundled for bundled in bundle if str(bundled["memory_id"]) not in selected_ids
+            ]
+            cost = sum(int(bundled["cost"]) for bundled in additions)
+            if used + cost > request.budget:
                 return False
-            selected.append({**candidate, "inclusion_reason": reason})
-            selected_ids.add(identity)
+            for bundled in additions:
+                bundled_id = str(bundled["memory_id"])
+                inclusion_reason = (
+                    reason
+                    if bundled_id == identity
+                    else f"contested group completeness: {identity}"
+                )
+                selected.append({**bundled, "inclusion_reason": inclusion_reason})
+                selected_ids.add(bundled_id)
             used += cost
             return True
 
@@ -124,15 +174,6 @@ class TaskAwareContextCompiler:
             match = next((item for item in prepared if item["category"] == category), None)
             if match is not None:
                 include(match, f"required coverage: {category}")
-        contested_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
-        for candidate in prepared:
-            if candidate["item"]["truth_state"] == "contested":
-                for group in candidate["claim_groups"]:
-                    contested_groups[group].append(candidate)
-        for group, group_candidates in contested_groups.items():
-            if any(str(item["memory_id"]) in selected_ids for item in group_candidates):
-                for item in group_candidates:
-                    include(item, f"contested group: {group}", force=True)
         for candidate in prepared:
             include(candidate, "highest utility per context cost")
 
@@ -191,12 +232,17 @@ class TaskAwareContextCompiler:
             if run is not None:
                 run.context_manifest = manifest
                 run.selected_memory_ids = [str(item["memory_id"]) for item in selected]
+            MemoryHealthService.record_retrieval(
+                session,
+                [str(item["memory_id"]) for item in selected],
+            )
         return {
             "task": request.task,
             "repository": request.repository,
             "branch": request.branch,
             "budget": request.budget,
-            "characters_used": min(used, request.budget),
+            "characters_used": len(text),
+            "budget_exceeded": len(text) > request.budget,
             "retrieval_mode": result["pipeline_mode"],
             "retrieval_run_id": result["retrieval_run_id"],
             "query_plan": result["query_plan"],
@@ -243,11 +289,10 @@ class TaskAwareContextCompiler:
         for name in SECTION_ORDER:
             if name == "HISTORICAL / SUPERSEDED" and not include_historical:
                 continue
-            formatted.append(f"\n{name}")
             items = sections[name]
             if not items:
-                formatted.append("- None relevant")
                 continue
+            formatted.append(f"\n{name}")
             for item in items:
                 prefix = "CONTESTED: " if item["truth_state"] == "contested" else ""
                 if item["freshness"] == "suspect":

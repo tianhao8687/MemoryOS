@@ -52,13 +52,42 @@ def normalize_remote(url: str) -> str:
         user_host, path = value.split(":", 1)
         host = user_host.split("@", 1)[1].lower()
         return f"ssh://{host}/{path.removesuffix('.git').strip('/').lower()}"
-    parsed = urlsplit(value)
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return value.replace("\\", "/").removesuffix(".git").rstrip("/").lower()
     if parsed.scheme and parsed.netloc:
-        host = parsed.hostname.lower() if parsed.hostname else parsed.netloc.lower()
-        port = f":{parsed.port}" if parsed.port else ""
+        try:
+            host = parsed.hostname.lower() if parsed.hostname else parsed.netloc.lower()
+            port = f":{parsed.port}" if parsed.port else ""
+        except ValueError:
+            return value.replace("\\", "/").removesuffix(".git").rstrip("/").lower()
         path = parsed.path.removesuffix(".git").rstrip("/").lower()
         return urlunsplit((parsed.scheme.lower(), f"{host}{port}", path, "", ""))
     return value.replace("\\", "/").removesuffix(".git").rstrip("/").lower()
+
+
+def sanitize_remote(url: str) -> str:
+    """Remove credentials and URL parameters before persisting a Git remote."""
+    value = url.strip()
+    if re.match(r"^[\w.-]+@[\w.-]+:", value):
+        user_host, path = value.split(":", 1)
+        host = user_host.split("@", 1)[1]
+        return f"ssh://{host}/{path.lstrip('/')}"
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return "[invalid-remote]"
+    if parsed.scheme and parsed.netloc:
+        try:
+            host = parsed.hostname or ""
+            port_number = parsed.port
+        except ValueError:
+            return "[invalid-remote]"
+        formatted_host = f"[{host}]" if ":" in host and not host.startswith("[") else host
+        port = f":{port_number}" if port_number else ""
+        return urlunsplit((parsed.scheme, f"{formatted_host}{port}", parsed.path, "", ""))
+    return value
 
 
 def stable_repository_key(root: Path, remote_url: str | None) -> str:
@@ -83,15 +112,16 @@ def discover_git_context(path: Path | str = ".") -> GitContext:
     branch = _git(root, "branch", "--show-current") or "DETACHED"
     head = _git(root, "rev-parse", "HEAD")
     try:
-        remote = _git(root, "remote", "get-url", "origin") or None
+        raw_remote = _git(root, "remote", "get-url", "origin") or None
     except NotFoundError:
-        remote = None
+        raw_remote = None
+    remote = sanitize_remote(raw_remote) if raw_remote else None
     return GitContext(
         root=root,
         branch=branch,
         head=head,
         remote_url=remote,
-        stable_key=stable_repository_key(root, remote),
+        stable_key=stable_repository_key(root, raw_remote),
     )
 
 

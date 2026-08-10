@@ -42,13 +42,19 @@ def independent_source_span_days(rows: list[EpisodeClaim]) -> tuple[int, float]:
 def classify_cluster(
     rows: list[EpisodeClaim], *, minimum_sources: int = 3, minimum_span_days: int = 7
 ) -> str:
-    source_count, span_days = independent_source_span_days(rows)
-    if source_count < minimum_sources or span_days < minimum_span_days or not rows:
+    if not rows:
         return "none"
-    objects = Counter(item.object_identity for item in rows)
-    dominant, _ = objects.most_common(1)[0]
-    supporting_sources = {item.source_ref for item in rows if item.object_identity == dominant}
-    if len(supporting_sources) < minimum_sources:
+    assertions = Counter((item.object_identity, item.polarity) for item in rows)
+    (dominant, dominant_polarity), _ = assertions.most_common(1)[0]
+    supporting = [
+        item
+        for item in rows
+        if item.object_identity == dominant and item.polarity == dominant_polarity
+    ]
+    source_count, span_days = independent_source_span_days(supporting)
+    if source_count < minimum_sources or span_days < minimum_span_days:
         return "none"
-    counterevidence = any(item.object_identity != dominant for item in rows)
+    counterevidence = any(
+        item.object_identity != dominant or item.polarity != dominant_polarity for item in rows
+    )
     return "contested" if counterevidence else "candidate"

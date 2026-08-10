@@ -5,6 +5,7 @@ import sys
 from ipaddress import ip_address
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from platformdirs import user_data_path
 from pydantic import Field, field_validator
@@ -29,26 +30,19 @@ class MemoryOSSettings(BaseSettings):
 
     data_dir: Path = Field(default_factory=default_data_dir)
     host: str = "127.0.0.1"
-    port: int = 8765
+    port: int = Field(default=8765, ge=1, le=65535)
     log_level: str = "INFO"
-    busy_timeout_ms: int = 5000
-    source_excerpt_limit: int = 2000
-    allowed_origins: list[str] = Field(
-        default_factory=lambda: [
-            "http://127.0.0.1",
-            "http://localhost",
-            "http://127.0.0.1:8765",
-            "http://localhost:8765",
-        ]
-    )
+    busy_timeout_ms: int = Field(default=5000, ge=1, le=300_000)
+    source_excerpt_limit: int = Field(default=2000, ge=100, le=100_000)
+    allowed_origins: list[str] = Field(default_factory=list)
     embedding_base_url: str | None = None
     embedding_model: str | None = None
     embedding_api_key: str | None = None
     extractor_base_url: str | None = None
     extractor_model: str | None = None
     extractor_api_key: str | None = None
-    provider_timeout_seconds: float = 20.0
-    provider_max_input_chars: int = 12000
+    provider_timeout_seconds: float = Field(default=20.0, gt=0, le=300)
+    provider_max_input_chars: int = Field(default=12000, ge=1, le=1_000_000)
     relationship_model: str | None = None
     reranker_model: str | None = None
     consolidation_model: str | None = None
@@ -67,6 +61,39 @@ class MemoryOSSettings(BaseSettings):
         if not loopback:
             raise ValueError("only loopback bind addresses are permitted")
         return value
+
+    @field_validator("allowed_origins")
+    @classmethod
+    def require_explicit_loopback_origins(cls, values: list[str]) -> list[str]:
+        for value in values:
+            parsed = urlsplit(value)
+            hostname = parsed.hostname or ""
+            try:
+                loopback = hostname.lower() == "localhost" or ip_address(hostname).is_loopback
+                port = parsed.port
+            except ValueError:
+                loopback = False
+                port = None
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not loopback
+                or port is None
+                or parsed.username
+                or parsed.password
+                or parsed.path
+                or parsed.query
+                or parsed.fragment
+            ):
+                raise ValueError("allowed origins must be explicit loopback URLs with a port")
+        return values
+
+    @field_validator("log_level")
+    @classmethod
+    def require_known_log_level(cls, value: str) -> str:
+        normalized = value.upper()
+        if normalized not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+            raise ValueError("log level must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
+        return normalized
 
     @field_validator("data_dir", mode="before")
     @classmethod

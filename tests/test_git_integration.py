@@ -6,9 +6,9 @@ from pathlib import Path
 
 from sqlalchemy import func, select
 
-from memoryos.db.models import MemoryRow
+from memoryos.db.models import MemoryRow, RepositoryRow
 from memoryos.db.session import Database
-from memoryos.integrations.git import discover_git_context, upsert_repository
+from memoryos.integrations.git import discover_git_context, sanitize_remote, upsert_repository
 
 
 def _run(path: Path, *args: str) -> None:
@@ -50,3 +50,30 @@ def test_repository_identity_survives_path_move_and_does_not_hoard_source(
     assert second_row["branch_scope_key"] == f"{second_context.stable_key}:main"
     with database.session() as session:
         assert session.scalar(select(func.count()).select_from(MemoryRow)) == 0
+
+
+def test_repository_remote_credentials_are_not_persisted(
+    tmp_path: Path, database: Database
+) -> None:
+    repository = tmp_path / "credential-remote"
+    _repository(
+        repository,
+        "https://oauth-user:super-secret@example.invalid/team/memoryos.git?token=leak#fragment",
+    )
+
+    context = discover_git_context(repository)
+    persisted = upsert_repository(database, context)
+
+    assert context.remote_url == "https://example.invalid/team/memoryos.git"
+    assert persisted["remote_url"] == context.remote_url
+    with database.session() as session:
+        row = session.scalar(select(RepositoryRow))
+        assert row is not None
+        assert "super-secret" not in str(row.remote_url)
+        assert "token=leak" not in str(row.remote_url)
+
+
+def test_malformed_repository_remote_is_never_echoed() -> None:
+    malformed = "https://oauth-user:super-secret@example.invalid:bad/team/memoryos.git"
+
+    assert sanitize_remote(malformed) == "[invalid-remote]"

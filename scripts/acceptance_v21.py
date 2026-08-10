@@ -4,12 +4,33 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 V21_DIR = ROOT / "docs" / "verification" / "v2.1"
+REQUIRED_VERIFICATION_STEPS = (
+    "Backend import",
+    "Ruff",
+    "Ruff format",
+    "Mypy",
+    "Backend pytest",
+    "V2 regression MemoryBench",
+    "Blind CodingMemoryBench V2.1",
+    "Paired real-agent protocol or explicit blocker",
+    "100K full retrieval/context pipeline",
+    "Frontend typecheck",
+    "Frontend lint",
+    "Frontend unit tests",
+    "Frontend production build",
+    "Playwright E2E",
+    "Backend wheel",
+    "Windows PyInstaller",
+    "Packaged V1-to-V2.1 production smoke",
+    "Merged-main release smoke",
+)
 
 
 def _read(path: Path) -> dict[str, Any]:
@@ -29,6 +50,42 @@ def _check(
         "detail": detail,
         "evidence": evidence,
     }
+
+
+def _git_head() -> str:
+    completed = subprocess.run(
+        ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if completed.returncode:
+        raise RuntimeError(completed.stderr.strip() or "git rev-parse failed")
+    return completed.stdout.strip()
+
+
+def _runtime_verified(verification: dict[str, Any], current_commit: str) -> bool:
+    if (
+        verification.get("schema") != "memoryos-v2.1-verification@1"
+        or verification.get("result") not in {"RUNNING", "PASS"}
+        or verification.get("branch") != "main"
+        or verification.get("git_dirty_before_run") is not False
+        or verification.get("started_commit") != current_commit
+    ):
+        return False
+    steps = verification.get("steps")
+    if not isinstance(steps, list) or len(steps) != len(REQUIRED_VERIFICATION_STEPS):
+        return False
+    for expected_label, step in zip(REQUIRED_VERIFICATION_STEPS, steps, strict=True):
+        if (
+            not isinstance(step, dict)
+            or step.get("label") != expected_label
+            or step.get("exit_code") != 0
+        ):
+            return False
+    return True
 
 
 def main() -> int:
@@ -53,6 +110,11 @@ def main() -> int:
         type=Path,
         default=V21_DIR / "main-release-smoke.json",
     )
+    parser.add_argument(
+        "--verification-report",
+        type=Path,
+        default=V21_DIR / "verify-summary.json",
+    )
     parser.add_argument("--output", type=Path, default=V21_DIR / "acceptance-summary.json")
     args = parser.parse_args()
 
@@ -62,6 +124,9 @@ def main() -> int:
     agent = _read(args.agent_report)
     package = _read(args.package_report)
     main_smoke = _read(args.main_smoke_report)
+    verification = _read(args.verification_report)
+    current_commit = _git_head()
+    verified_runtime = _runtime_verified(verification, current_commit)
     modes = benchmark["modes"]
     release = benchmark["release_gates"]
     fixture = agent.get("fixture", {})
@@ -86,7 +151,11 @@ def main() -> int:
         and package.get("sqlite_vec_bundled") is True
         and package.get("first_health", {}).get("version") == "2.1.0"
     )
-    tests = ["tests/test_v21_hardening.py", "tests/test_backup_restore.py"]
+    tests = [
+        "tests/test_v21_hardening.py",
+        "tests/test_backup_restore.py",
+        "tests/test_adversarial_hardening.py",
+    ]
     checks = [
         _check(
             "A33",
@@ -100,7 +169,7 @@ def main() -> int:
         _check(
             "A34",
             "Immutable migration replay",
-            package_v21,
+            package_v21 and verified_runtime,
             [*tests, "memoryos/db/migrations/versions/0003_reality_intelligence_hardening.py"],
             (
                 "Alembic upgrades real 0001 data through explicit 0002/0003 operations "
@@ -110,49 +179,49 @@ def main() -> int:
         _check(
             "A35",
             "Claim transaction history",
-            package_v21,
+            package_v21 and verified_runtime,
             tests,
             "ClaimVersion rows append candidate/accepted/forgotten transaction states.",
         ),
         _check(
             "A36",
             "Temporal blind accuracy",
-            float(modes["v2"]["temporal_accuracy"]) >= 0.98,
-            ["docs/verification/v2.1/coding-memory-bench.json"],
+            float(modes["v2"]["temporal_accuracy"]) >= 0.98 and verified_runtime,
+            ["docs/verification/v2.1/coding-memory-bench.json", *tests],
             f"V2 temporal accuracy={modes['v2']['temporal_accuracy']:.3f} (target >=0.98).",
         ),
         _check(
             "A37",
             "Uncertain-only model routing",
-            package_v21,
+            package_v21 and verified_runtime,
             tests,
             "Deterministic rules handle clear pairs; only uncertain pairs are model-eligible.",
         ),
         _check(
             "A38",
             "Blind conflict F1",
-            float(modes["v2"]["conflict"]["f1"]) >= 0.88,
-            ["docs/verification/v2.1/coding-memory-bench.json"],
+            float(modes["v2"]["conflict"]["f1"]) >= 0.88 and verified_runtime,
+            ["docs/verification/v2.1/coding-memory-bench.json", *tests],
             f"V2 conflict F1={modes['v2']['conflict']['f1']:.3f} (target >=0.88).",
         ),
         _check(
             "A39",
             "Abstention safety",
-            release.get("abstention_safe") is True,
+            release.get("abstention_safe") is True and verified_runtime,
             ["docs/verification/v2.1/coding-memory-bench.json", *tests],
             "Abstention/provider failure leaves accepted truth unchanged and remains auditable.",
         ),
         _check(
             "A40",
             "Persistent ANN live path",
-            package_v21,
+            package_v21 and verified_runtime,
             [*tests, "docs/verification/package-smoke.json"],
             "sqlite-vec is bundled and the provider/model/dimension namespace is persisted.",
         ),
         _check(
             "A41",
             "Exact fallback",
-            package_v21,
+            package_v21 and verified_runtime,
             tests,
             "Unavailable/disabled ANN explicitly reports exact-fallback and preserves results.",
         ),
@@ -160,7 +229,8 @@ def main() -> int:
             "A42",
             "100K full-pipeline search P95",
             int(performance["records"]) >= 100_000
-            and float(performance["search"]["p95_ms"]) < 150.0,
+            and float(performance["search"]["p95_ms"]) < 150.0
+            and verified_runtime,
             ["docs/verification/v2.1/full-pipeline-performance.json"],
             f"Search P95={performance['search']['p95_ms']} ms (target <150 ms).",
         ),
@@ -168,22 +238,24 @@ def main() -> int:
             "A43",
             "100K context P95",
             int(performance["records"]) >= 100_000
-            and float(performance["context"]["p95_ms"]) < 300.0,
+            and float(performance["context"]["p95_ms"]) < 300.0
+            and verified_runtime,
             ["docs/verification/v2.1/full-pipeline-performance.json"],
             f"Context P95={performance['context']['p95_ms']} ms (target <300 ms).",
         ),
         _check(
             "A44",
             "Blind hard-negative Recall@5",
-            float(modes["v2"]["retrieval_recall_at_5"]) >= 0.90,
-            ["docs/verification/v2.1/coding-memory-bench.json"],
+            float(modes["v2"]["retrieval_recall_at_5"]) >= 0.90 and verified_runtime,
+            ["docs/verification/v2.1/coding-memory-bench.json", *tests],
             f"V2 Recall@5={modes['v2']['retrieval_recall_at_5']:.3f} (target >=0.90).",
         ),
         _check(
             "A45",
             "Runtime gold isolation",
             benchmark["blind_protocol"].get("runtime_payload_contains_gold") is False
-            and benchmark["blind_protocol"].get("gold_loaded_only_by_scorer") is True,
+            and benchmark["blind_protocol"].get("gold_loaded_only_by_scorer") is True
+            and verified_runtime,
             ["docs/verification/v2.1/coding-memory-bench.json"],
             "Runtime inputs are hashed separately and contain no gold labels.",
         ),
@@ -191,14 +263,15 @@ def main() -> int:
             "A46",
             "Paired coding-agent harness",
             int(agent.get("requested_sample_size", 0)) >= 50
-            and int(fixture.get("sample_size", 0)) >= 50,
+            and int(fixture.get("sample_size", 0)) >= 50
+            and verified_runtime,
             ["docs/verification/v2.1/agent-ab.json", "scripts/agent_ab_v21.py"],
             "A paired >=50-task harness records success, misuse, compliance, cost, and latency.",
         ),
         _check(
             "A47",
             "Real-agent sample or explicit blocker",
-            real_agent_or_blocker,
+            real_agent_or_blocker and verified_runtime,
             ["docs/verification/v2.1/agent-ab.json"],
             (
                 "No endpoint was supplied; the report records an explicit external blocker "
@@ -210,14 +283,15 @@ def main() -> int:
             "Fixture truthfulness",
             fixture.get("real_model") is False
             and fixture.get("claim") == "harness_validation_only"
-            and agent.get("effect_claim") == "none",
+            and agent.get("effect_claim") == "none"
+            and verified_runtime,
             ["docs/verification/v2.1/agent-ab.json"],
             "Synthetic values are labeled harness-only and never presented as real-model evidence.",
         ),
         _check(
             "A49",
             "Grounded consolidation",
-            package_v21,
+            package_v21 and verified_runtime,
             tests,
             (
                 "Model abstraction must cite allowed support/counter memory IDs and "
@@ -227,7 +301,7 @@ def main() -> int:
         _check(
             "A50",
             "Candidate-first consolidation",
-            package_v21,
+            package_v21 and verified_runtime,
             tests,
             (
                 "Consolidation and distillation outputs remain candidates; no automatic "
@@ -237,7 +311,7 @@ def main() -> int:
         _check(
             "A51",
             "Memory health safety",
-            package_v21,
+            package_v21 and verified_runtime,
             tests,
             (
                 "Hot/Warm/Cold/Archived state is explainable/reversible and sole accepted "
@@ -250,7 +324,9 @@ def main() -> int:
             main_smoke.get("result") == "PASS"
             and main_smoke.get("branch") == "main"
             and main_smoke.get("git_dirty_before_run") is False
-            and main_smoke.get("package", {}).get("result") == "PASS",
+            and main_smoke.get("package", {}).get("result") == "PASS"
+            and main_smoke.get("commit") == current_commit
+            and verified_runtime,
             ["docs/verification/v2.1/main-release-smoke.json"],
             (
                 "A clean main checkout built and passed packaged "

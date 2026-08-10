@@ -18,10 +18,10 @@ MemoryOS V2.1 是单用户、单机、loopback-only 工具。它信任当前操�
 ### 网络与身份验证
 
 - `host` 配置只接受 `localhost`、`127.0.0.0/8` 或 `::1`；`0.0.0.0`、LAN IP 和任意主机名在设置校验时被拒绝。
-- HTTP 读端点不要求身份验证，因此依赖 loopback 和操作系统账号边界。
-- 所有 HTTP 写端点需要随机 48-byte URL-safe token。外部客户端使用 `Authorization: Bearer <token>`。
+- 纯只读、无状态 HTTP 端点依赖 loopback 和操作系统账号边界。会触发到期转换、检索审计或 health 计数的状态型读取（例如 memories search、context、current truth、status）也要求 token，避免匿名读取间接改变治理状态。
+- 所有 HTTP 写端点和状态型读取需要随机 48-byte URL-safe token。外部客户端使用 `Authorization: Bearer <token>`。
 - 管理 UI 从根页获得 `HttpOnly` + `SameSite=Strict` cookie，仅用于同源本机写操作。因为 V2 使用 localhost HTTP，cookie 没有 `Secure` 标志。
-- 写请求还校验 `Origin`；仅接受 localhost/loopback origin。CORS 是浏览器边界，不替代 token 校验。
+- 受保护请求还校验精确 `Origin`（scheme + host + port）；默认只生成当前绑定端口对应的 loopback origin。额外配置也必须是带显式端口的 loopback URL，不把无端口或任意 localhost 端口视为同源。CORS 是浏览器边界，不替代 token 校验。
 - MCP 使用 stdio，不打开网络端口；其权限等同于启动它的本机客户端进程。
 
 `auth.token` 创建后会尝试设为 `0600`。Windows 上最终隔离仍由数据目录的 NTFS ACL 决定；不应将 data directory 放在公共或多用户可写目录。
@@ -40,16 +40,18 @@ MemoryOS V2.1 是单用户、单机、loopback-only 工具。它信任当前操�
 
 - SQLite 开启 foreign keys、WAL、busy timeout 和 `synchronous=NORMAL`。
 - 备份 ZIP 只允许 `manifest.json` + `memoryos.db`；恢复前校验格式版本、SHA-256、SQLite `integrity_check` 和必需表。
-- 恢复默认先对当前数据库创建 safety backup。
-- JSONL 交换 ZIP 只允许 `manifest.json` + `data.jsonl`，并校验格式版本、payload hash、record type 和基本 schema。
+- 恢复默认先对当前数据库创建 safety backup。外来数据库先在隔离目录中迁移，并与当前版本现场生成的表、列、索引、约束、外键和 FTS 签名比对；只有通过后才原子替换在线库，激活失败会自动回滚。
+- ZIP 导入拒绝重复/额外条目，并在解压前检查压缩包、manifest、数据库/JSONL entry 与记录数量上限，避免无限制解压和内存分配。
+- JSONL 交换 ZIP 只允许 `manifest.json` + `data.jsonl`，并校验格式版本、payload hash、record type、非有限数、向量维度和数据库完整性；导入错误会回滚整个事务。
+- SQLite 恢复和 JSONL 导入都会使持久化 ANN 缓存失效，避免备份中的 embedding 与本机旧索引恰好同数量时产生静默错配；下次语义查询会从数据库重建。
 - 逻辑忘却和 archive 只追加状态版本，不删除 provenance 或 audit；archive 可恢复，历史仍可解释。
-- 归档保护会拒绝移除某一语义维度唯一的 accepted current truth；distillation 只能读取 Cold/Archived 输入且输出 candidate。
+- 归档保护只把当前 valid-time 有效、未 stale、未归档且仍 active 的 alternative 计作替代支持，因此未来事实不能用来移除当下唯一的 accepted current truth；distillation 只能读取 Cold/Archived 输入且输出 candidate。
 
 ### 供应商和出站数据
 
 FTS5 和 heuristic extractor 是默认离线路径。只有设置 `MEMORYOS_EMBEDDING_*` 或 `MEMORYOS_EXTRACTOR_*` 时才会调用外部 OpenAI-compatible endpoint。配置这些选项等于明确授权向该 provider 发送相关查询或提取文本；应自行评估 provider 的数据政策。
 
-Provider 返回非法 JSON 时请求失败且不写入数据库；embedding/ANN 不可用时检索会显式回退到 exact NumPy/FTS5。
+Extractor/relationship provider 返回非法 JSON 时请求失败且不写入候选或真值。Embedding 是 active memory 提交后的可选索引步骤：畸形、空、非有限或维度异常的向量会被拒绝，记忆写入仍成功并继续使用 FTS5；ANN 初始化、写入或查询中途失效时会显式回退到 exact NumPy/FTS5，不把故障伪装成空结果。
 
 Relationship judge 不能自由扫描数据库。确定性规则先分类，只有不确定 pair 会发送 bounded claim 和 evidence；完整 prompt 不进入日志。Possible Conflict 只保存最小判断结果、provider fingerprint、prompt version、evidence hash 和 resolution audit。模型失败或 abstain 不得修改 accepted truth。
 
@@ -57,14 +59,14 @@ CodingMemoryBench 的 runtime payload 与 gold labels 分开构造并分别哈�
 
 ## 源码最小化
 
-仓库发现仅执行元数据命令：仓库根、当前 branch/HEAD 和 origin URL。稳定身份由规范化 remote 的哈希生成；无 remote 时使用本地 marker。V2 Source Anchor 只在用户或调用方明确给出 `path`/`symbol_fqn` 后读取该文件，并仅保存 bounded excerpt、hash、symbol 与 commit 元数据；不会扫描、分块、embedding 或收藏整个仓库源码。
+仓库发现仅执行元数据命令：仓库根、当前 branch/HEAD 和 origin URL。持久化前会删除 remote 中的 userinfo、query 和 fragment，稳定身份由规范化 remote 的哈希生成；无 remote 时使用本地 marker。V2 Source Anchor 只在用户或调用方明确给出 `path`/`symbol_fqn` 后读取该文件，并仅保存 bounded excerpt、hash、symbol 与 commit 元数据；创建和刷新（包括导入的 anchor）都在解析 symlink 后重新验证路径仍在仓库内，不会扫描、分块、embedding 或收藏整个仓库源码。
 
 ## 已知边界
 
 - SQLite 文件、备份和 token 不做应用层静态加密；依赖 BitLocker/EFS 等操作系统加密和 NTFS ACL。
 - `sensitivity=sensitive` 是可审计标记，V2 不会据此建立独立密钥或行级权限。
 - 读 API 对本机进程开放；不适用于不信任的共享主机。
-- 导入档案有结构与哈希校验，但 V2 没有对压缩包大小做配额控制；不应导入不可信的超大 ZIP。
+- 导入配额是本地单用户产品的资源保护，不是恶意多租户隔离；仍不应导入来源不明的档案。
 - 该服务没有为网络或多用户部署设计；不应通过反向代理暴露。
 
 ## 运行检查

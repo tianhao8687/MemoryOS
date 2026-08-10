@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import defaultdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import or_, select
@@ -57,6 +57,10 @@ from memoryos.providers.base import RelationshipJudge
 
 def _now() -> datetime:
     return datetime.now(UTC)
+
+
+def _utc(value: datetime) -> datetime:
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
 
 
 class TruthMaintenanceService:
@@ -177,9 +181,9 @@ class TruthMaintenanceService:
         self, session: Session, candidate: MemoryRow
     ) -> list[MemoryRow]:
         candidate_claims = self.ensure_claims(session, candidate)
-        active_claims = list(
-            session.scalars(
-                select(ClaimRow)
+        active_pairs = list(
+            session.execute(
+                select(ClaimRow, MemoryRow)
                 .join(MemoryRow, MemoryRow.id == ClaimRow.memory_id)
                 .where(
                     MemoryRow.scope_type == candidate.scope_type,
@@ -190,6 +194,16 @@ class TruthMaintenanceService:
                 )
             )
         )
+        now = _now()
+        active_claims = [
+            claim
+            for claim, memory in active_pairs
+            if (claim.valid_to is None or now < _utc(claim.valid_to))
+            and (
+                memory.ttl_seconds is None
+                or _utc(memory.created_at) + timedelta(seconds=memory.ttl_seconds) > now
+            )
+        ]
         entities = {
             row.id: row
             for row in session.scalars(
@@ -530,6 +544,52 @@ class TruthMaintenanceService:
                     reason=f"Freshness evaluation changed to {stale_state.value}",
                 )
 
+    def apply_manual_conflict_resolution(
+        self,
+        session: Session,
+        *,
+        left_claim_id: str,
+        right_claim_id: str,
+        confirmed: bool,
+        actor: str,
+        rationale: str | None,
+    ) -> None:
+        """Project a reviewed possible-conflict decision into live claim truth."""
+        if not confirmed:
+            return
+        left = session.get(ClaimRow, left_claim_id)
+        right = session.get(ClaimRow, right_claim_id)
+        if left is None or right is None:
+            raise ValueError("possible conflict references a missing claim")
+        explanation = rationale or "Possible conflict manually confirmed"
+        self._add_relation(
+            session,
+            left,
+            right,
+            ClaimRelationType.CONTRADICTS,
+            method=RelationMethod.MANUAL,
+            explanation=explanation,
+        )
+        memories = {
+            memory.id: memory
+            for memory in (
+                session.get(MemoryRow, left.memory_id),
+                session.get(MemoryRow, right.memory_id),
+            )
+            if memory is not None
+        }
+        if any(memory.status is not MemoryStatus.ACTIVE for memory in memories.values()):
+            return
+        for claim, other in ((left, right), (right, left)):
+            if claim.status is ClaimStatus.ACCEPTED:
+                self.versions.transition(
+                    session,
+                    claim,
+                    status=ClaimStatus.CONTESTED,
+                    actor=actor,
+                    reason=f"Manual conflict confirmation against claim {other.id}: {explanation}",
+                )
+
     def current_truth(self, session: Session, request: CurrentTruthRequest) -> dict[str, Any]:
         valid_moment = request.as_of_valid_time or _now()
         known_moment = request.as_known_at or _now()
@@ -553,8 +613,7 @@ class TruthMaintenanceService:
         for version in rows:
             if version.status not in visible_statuses:
                 continue
-            health = session.get(MemoryHealthRow, version.memory_id)
-            if health is not None and health.temperature is MemoryTemperature.ARCHIVED:
+            if self._memory_archived_at(session, version.memory_id, known_moment):
                 continue
             identity = session.get(ClaimIdentityRow, version.identity_id)
             if identity is None:
@@ -670,6 +729,30 @@ class TruthMaintenanceService:
             "as_of_valid_time": valid_moment.isoformat(),
             "as_known_at": known_moment.isoformat(),
         }
+
+    @staticmethod
+    def _memory_archived_at(session: Session, memory_id: str, known_moment: datetime) -> bool:
+        events = list(
+            session.execute(
+                select(AuditEventRow.action, AuditEventRow.timestamp)
+                .where(
+                    AuditEventRow.entity_type == "memory",
+                    AuditEventRow.entity_id == memory_id,
+                    AuditEventRow.action.in_(["health_archive", "health_restore"]),
+                )
+                .order_by(AuditEventRow.timestamp)
+            )
+        )
+        if events:
+            known_utc = _utc(known_moment)
+            visible_actions = [
+                action for action, timestamp in events if _utc(timestamp) <= known_utc
+            ]
+            return bool(visible_actions and visible_actions[-1] == "health_archive")
+        health = session.get(MemoryHealthRow, memory_id)
+        if health is None or health.temperature is not MemoryTemperature.ARCHIVED:
+            return False
+        return health.archived_at is None or _utc(health.archived_at) <= _utc(known_moment)
 
     def serialize_version(
         self,

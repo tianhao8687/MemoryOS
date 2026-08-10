@@ -50,24 +50,29 @@ class OptionalSqliteAnnIndex:
         if not self.available or self._connection is None:
             return 0
         written = 0
-        with self._connection:
-            for item_id, vector in vectors.items():
-                if len(vector) != self.dimensions:
-                    continue
-                self._connection.execute(
-                    "INSERT INTO ann_item_ids(item_id) VALUES (?) ON CONFLICT(item_id) DO NOTHING",
-                    (item_id,),
-                )
-                rowid = self._connection.execute(
-                    "SELECT rowid FROM ann_item_ids WHERE item_id = ?", (item_id,)
-                ).fetchone()
-                if rowid is None:
-                    continue
-                self._connection.execute(
-                    "INSERT OR REPLACE INTO ann_vectors(rowid, embedding) VALUES (?, ?)",
-                    (int(rowid[0]), self._serialized(vector)),
-                )
-                written += 1
+        try:
+            with self._connection:
+                for item_id, vector in vectors.items():
+                    if len(vector) != self.dimensions:
+                        continue
+                    self._connection.execute(
+                        "INSERT INTO ann_item_ids(item_id) VALUES (?) "
+                        "ON CONFLICT(item_id) DO NOTHING",
+                        (item_id,),
+                    )
+                    rowid = self._connection.execute(
+                        "SELECT rowid FROM ann_item_ids WHERE item_id = ?", (item_id,)
+                    ).fetchone()
+                    if rowid is None:
+                        continue
+                    self._connection.execute(
+                        "INSERT OR REPLACE INTO ann_vectors(rowid, embedding) VALUES (?, ?)",
+                        (int(rowid[0]), self._serialized(vector)),
+                    )
+                    written += 1
+        except (RuntimeError, TypeError, sqlite3.Error) as exc:
+            self._mark_unavailable(str(exc))
+            return 0
         return written
 
     def search(self, query: list[float], *, limit: int) -> list[tuple[str, float]]:
@@ -86,8 +91,8 @@ class OptionalSqliteAnnIndex:
                 "WHERE vectors.embedding MATCH ? AND k = ? ORDER BY vectors.distance",
                 (self._serialized(query), limit),
             ).fetchall()
-        except sqlite3.Error as exc:
-            self.unavailable_reason = str(exc)
+        except (RuntimeError, TypeError, sqlite3.Error) as exc:
+            self._mark_unavailable(str(exc))
             return []
         return [(str(item_id), 1.0 / (1.0 + float(distance))) for item_id, distance in rows]
 
@@ -97,7 +102,7 @@ class OptionalSqliteAnnIndex:
         try:
             return int(self._connection.execute("SELECT count(*) FROM ann_item_ids").fetchone()[0])
         except sqlite3.Error as exc:
-            self.unavailable_reason = str(exc)
+            self._mark_unavailable(str(exc))
             return 0
 
     def clear(self) -> bool:
@@ -109,10 +114,19 @@ class OptionalSqliteAnnIndex:
                 self._connection.execute("DELETE FROM ann_item_ids")
             return True
         except sqlite3.Error as exc:
-            self.unavailable_reason = str(exc)
+            self._mark_unavailable(str(exc))
             return False
 
     def close(self) -> None:
+        if self._connection is not None:
+            self._connection.close()
+            self._connection = None
+        self.available = False
+        self.unavailable_reason = self.unavailable_reason or "index connection is closed"
+
+    def _mark_unavailable(self, reason: str) -> None:
+        self.unavailable_reason = reason
+        self.available = False
         if self._connection is not None:
             self._connection.close()
             self._connection = None

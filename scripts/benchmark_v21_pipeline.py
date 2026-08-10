@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import platform
 import statistics
 import tempfile
@@ -10,6 +11,8 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+from sqlalchemy import insert
 
 from memoryos.config import settings_for
 from memoryos.context import TaskAwareContextCompiler
@@ -21,8 +24,12 @@ from memoryos.retrieval_v2 import RetrievalPipeline
 
 
 def _percentile(values: list[float], quantile: float) -> float:
+    if not values:
+        raise ValueError("percentile requires at least one value")
+    if not 0.0 <= quantile <= 1.0:
+        raise ValueError("quantile must be between 0 and 1")
     ordered = sorted(values)
-    position = min(len(ordered) - 1, int((len(ordered) - 1) * quantile))
+    position = max(0, min(len(ordered) - 1, math.ceil(len(ordered) * quantile) - 1))
     return ordered[position]
 
 
@@ -61,7 +68,7 @@ def _insert_records(database: Database, records: int) -> None:
                         "metadata_json": {"fixture": "v2.1-full-pipeline"},
                     }
                 )
-            connection.execute(MemoryRow.__table__.insert(), batch)
+            connection.execute(insert(MemoryRow), batch)
 
 
 def run(records: int, rounds: int) -> dict[str, Any]:
@@ -105,7 +112,7 @@ def run(records: int, rounds: int) -> dict[str, Any]:
                 context_ms.append(elapsed)
             if not context["manifest"]:
                 raise RuntimeError("full-pipeline context compilation returned no manifest")
-        report = {
+        report: dict[str, Any] = {
             "schema": "memoryos-v2.1-full-pipeline-performance@1",
             "generated_at": datetime.now(UTC).isoformat(),
             "records": records,
@@ -125,6 +132,9 @@ def run(records: int, rounds: int) -> dict[str, Any]:
                 "platform": platform.platform(),
                 "python": platform.python_version(),
                 "pipeline": "RetrievalPipeline + TaskAwareContextCompiler",
+                "retrieval_profile": "fts-only",
+                "embedding_provider": False,
+                "claim_graph_fixture": False,
             },
         }
         report["passed"] = bool(

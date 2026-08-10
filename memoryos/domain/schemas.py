@@ -287,6 +287,12 @@ class MemoryUpdate(BaseModel):
     sensitivity: Sensitivity | None = None
     metadata: dict[str, Any] | None = None
 
+    @model_validator(mode="after")
+    def validate_validity(self) -> MemoryUpdate:
+        if self.valid_from and self.valid_to and self.valid_to <= self.valid_from:
+            raise ValueError("valid_to must be later than valid_from")
+        return self
+
 
 class SearchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -300,7 +306,7 @@ class SearchRequest(BaseModel):
     as_of_valid_time: datetime | None = None
     as_known_at: datetime | None = None
     limit: int = Field(default=50, ge=1, le=500)
-    offset: int = Field(default=0, ge=0)
+    offset: int = Field(default=0, ge=0, le=500)
 
 
 class ContextRequest(BaseModel):

@@ -3,12 +3,12 @@ from __future__ import annotations
 import hashlib
 import math
 import re
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import numpy as np
 from sqlalchemy import func, or_, select, text
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, noload
 
 from memoryos.db.models import AnnIndexStateRow, EmbeddingRow, MemoryHealthRow, MemoryRow
 from memoryos.db.session import Database
@@ -26,6 +26,11 @@ def _fts_query(query: str) -> str:
     return " OR ".join(f'"{token.replace(chr(34), chr(34) * 2)}"' for token in tokens[:24])
 
 
+def _strict_fts_query(query: str) -> str:
+    tokens = TOKEN_RE.findall(query.lower())
+    return " AND ".join(f'"{token.replace(chr(34), chr(34) * 2)}"' for token in tokens[:24])
+
+
 def _scope_weight(scope_type: str) -> float:
     return {"task": 1.0, "branch": 0.92, "repository": 0.84, "workspace": 0.72, "user": 0.62}.get(
         scope_type, 0.5
@@ -34,6 +39,10 @@ def _scope_weight(scope_type: str) -> float:
 
 def _utc(value: datetime) -> datetime:
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
+def _sqlite_datetime(value: datetime) -> str:
+    return _utc(value).replace(tzinfo=None).isoformat(sep=" ", timespec="microseconds")
 
 
 class RetrievalEngine:
@@ -55,9 +64,14 @@ class RetrievalEngine:
                 return False
             document = f"{memory.title}\n{memory.content}"
             if hasattr(self.embedding_provider, "embed_documents"):
-                vector = self.embedding_provider.embed_documents([document])[0]
+                vectors = self.embedding_provider.embed_documents([document])
             else:
-                vector = self.embedding_provider.embed([document])[0]
+                vectors = self.embedding_provider.embed([document])
+            if len(vectors) != 1 or not vectors[0]:
+                raise ProviderError("embedding provider returned an invalid vector batch")
+            vector = vectors[0]
+            if len(vector) > 65_536 or not all(math.isfinite(float(value)) for value in vector):
+                raise ProviderError("embedding provider returned an invalid vector")
             existing = session.scalar(
                 select(EmbeddingRow).where(EmbeddingRow.memory_id == memory_id)
             )
@@ -94,6 +108,7 @@ class RetrievalEngine:
         allowed_scopes: set[tuple[str, str | None]] | None = None,
     ) -> dict[str, Any]:
         with self.database.session() as session:
+            valid_moment = request.as_of_valid_time or datetime.now(UTC)
             fts_ids: list[str] = []
             lexical: dict[str, float] = {}
             semantic: dict[str, float] = {}
@@ -101,18 +116,112 @@ class RetrievalEngine:
             query = _fts_query(request.query)
             candidate_limit = max(200, request.limit * 8)
             if query:
-                fts_rows = session.execute(
-                    text(
-                        """
-                        SELECT memory_id, bm25(memory_fts, 0.0, 5.0, 2.5, 1.0, 2.0, 1.0) AS rank
+                memory_filters: list[str] = []
+                fts_parameters: dict[str, Any] = {
+                    "query": query,
+                    "candidate_limit": candidate_limit,
+                    "valid_moment": _sqlite_datetime(valid_moment),
+                }
+                if request.scope_type is not None:
+                    memory_filters.append("m.scope_type = :scope_type")
+                    fts_parameters["scope_type"] = request.scope_type.value
+                if request.scope_key is not None:
+                    memory_filters.append("m.scope_key = :scope_key")
+                    fts_parameters["scope_key"] = request.scope_key
+                if request.memory_type is not None:
+                    memory_filters.append("m.memory_type = :memory_type")
+                    fts_parameters["memory_type"] = request.memory_type.value
+                if request.status is not None:
+                    memory_filters.append("m.status = :memory_status")
+                    fts_parameters["memory_status"] = request.status.value
+                elif not request.include_history:
+                    memory_filters.extend(
+                        [
+                            "m.status = 'active'",
+                            "(h.memory_id IS NULL OR h.temperature != 'archived')",
+                        ]
+                    )
+                memory_filters.extend(
+                    [
+                        "(m.valid_from IS NULL OR m.valid_from <= :valid_moment)",
+                        "(m.valid_to IS NULL OR :valid_moment < m.valid_to)",
+                        "(m.ttl_seconds IS NULL OR "
+                        "julianday(m.created_at) + "
+                        "(CAST(m.ttl_seconds AS REAL) / 86400.0) > "
+                        "julianday(:valid_moment))",
+                    ]
+                )
+                if request.as_known_at is not None:
+                    memory_filters.append("m.created_at <= :known_moment")
+                    fts_parameters["known_moment"] = _sqlite_datetime(request.as_known_at)
+                if allowed_scopes is not None:
+                    if not allowed_scopes:
+                        return {"items": [], "total": 0, "mode": mode}
+                    scope_filters = []
+                    ordered_scopes = sorted(
+                        allowed_scopes, key=lambda item: (item[0], item[1] or "")
+                    )
+                    for index, (scope_type, scope_key) in enumerate(ordered_scopes):
+                        type_parameter = f"allowed_scope_type_{index}"
+                        fts_parameters[type_parameter] = scope_type
+                        if scope_key is None:
+                            scope_filters.append(f"m.scope_type = :{type_parameter}")
+                        else:
+                            key_parameter = f"allowed_scope_key_{index}"
+                            fts_parameters[key_parameter] = scope_key
+                            scope_filters.append(
+                                f"(m.scope_type = :{type_parameter} "
+                                f"AND m.scope_key = :{key_parameter})"
+                            )
+                    memory_filters.append(f"({' OR '.join(scope_filters)})")
+                # The interpolated fragments are selected exclusively by code above;
+                # every external value remains a bound parameter.
+                fts_sql = f"""
+                    SELECT ranked.memory_id, ranked.rank
+                    FROM (
+                        SELECT memory_fts.memory_id, rank
                         FROM memory_fts
                         WHERE memory_fts MATCH :query
+                          AND rank MATCH 'bm25(0.0, 5.0, 2.5, 1.0, 2.0, 1.0)'
                         ORDER BY rank
-                        LIMIT :candidate_limit
-                        """
-                    ),
-                    {"query": query, "candidate_limit": candidate_limit},
-                ).all()
+                        LIMIT :scan_limit
+                    ) AS ranked
+                    JOIN memories AS m ON m.id = ranked.memory_id
+                    LEFT JOIN memory_health AS h ON h.memory_id = m.id
+                    WHERE {" AND ".join(memory_filters)}
+                    ORDER BY ranked.rank
+                    LIMIT :candidate_limit
+                    """  # noqa: S608
+                count_scanned_sql = """
+                    SELECT count(*)
+                    FROM (
+                        SELECT 1
+                        FROM memory_fts
+                        WHERE memory_fts MATCH :query
+                        LIMIT :scan_limit
+                    )
+                """
+
+                def fetch_fts_rows(fts_query: str, minimum_results: int) -> list[Any]:
+                    parameters = {**fts_parameters, "query": fts_query}
+                    scan_limit = candidate_limit
+                    while True:
+                        parameters["scan_limit"] = scan_limit
+                        rows = session.execute(text(fts_sql), parameters).all()
+                        if len(rows) >= minimum_results:
+                            return list(rows)
+                        scanned_count = int(
+                            session.execute(text(count_scanned_sql), parameters).scalar_one()
+                        )
+                        if scanned_count < scan_limit or scan_limit >= 2_147_483_647:
+                            return list(rows)
+                        scan_limit = min(scan_limit * 2, 2_147_483_647)
+
+                strict_query = _strict_fts_query(request.query)
+                required_results = min(candidate_limit, request.offset + request.limit)
+                fts_rows = fetch_fts_rows(strict_query, required_results)
+                if strict_query != query and len(fts_rows) < required_results:
+                    fts_rows = fetch_fts_rows(query, candidate_limit)
                 fts_ids = [str(row.memory_id) for row in fts_rows]
                 lexical = {
                     str(row.memory_id): 1.0 / (1.0 + abs(float(row.rank))) for row in fts_rows
@@ -121,11 +230,21 @@ class RetrievalEngine:
             provider_failed = False
             if self.embedding_provider is not None and request.query.strip():
                 try:
-                    embedded_query = (
-                        self.embedding_provider.embed_query(request.query)
-                        if hasattr(self.embedding_provider, "embed_query")
-                        else self.embedding_provider.embed([request.query])[0]
-                    )
+                    if hasattr(self.embedding_provider, "embed_query"):
+                        embedded_query = self.embedding_provider.embed_query(request.query)
+                    else:
+                        query_vectors = self.embedding_provider.embed([request.query])
+                        if len(query_vectors) != 1:
+                            raise ProviderError(
+                                "embedding provider returned an invalid query vector batch"
+                            )
+                        embedded_query = query_vectors[0]
+                    if (
+                        not embedded_query
+                        or len(embedded_query) > 65_536
+                        or not all(math.isfinite(float(value)) for value in embedded_query)
+                    ):
+                        raise ProviderError("embedding provider returned an invalid query vector")
                     semantic, vector_mode = self._semantic_search(
                         session,
                         embedded_query,
@@ -147,7 +266,7 @@ class RetrievalEngine:
                 if not candidate_pool:
                     return {"items": [], "total": 0, "mode": mode}
 
-            statement = select(MemoryRow)
+            statement = select(MemoryRow).options(noload(MemoryRow.sources))
             if candidate_pool is not None:
                 statement = statement.where(MemoryRow.id.in_(candidate_pool))
             if request.scope_type is not None:
@@ -177,12 +296,19 @@ class RetrievalEngine:
                     if (row.scope_type.value, row.scope_key) in allowed_scopes
                     or (row.scope_type.value, None) in allowed_scopes
                 ]
-            valid_moment = request.as_of_valid_time or datetime.now(UTC)
             valid_rows = [
                 row
                 for row in memory_rows
                 if (row.valid_from is None or _utc(row.valid_from) <= _utc(valid_moment))
                 and (row.valid_to is None or _utc(valid_moment) < _utc(row.valid_to))
+                and (
+                    row.ttl_seconds is None
+                    or _utc(row.created_at) + timedelta(seconds=row.ttl_seconds)
+                    > _utc(valid_moment)
+                )
+                and (
+                    request.as_known_at is None or _utc(row.created_at) <= _utc(request.as_known_at)
+                )
             ]
             now = datetime.now(UTC)
 
@@ -239,7 +365,8 @@ class RetrievalEngine:
                 )
                 or 0
             )
-            if index.count() != expected:
+            indexed_count = index.count()
+            if index.available and indexed_count != expected:
                 self._rebuild_namespace(
                     session,
                     index=index,
@@ -248,17 +375,19 @@ class RetrievalEngine:
                     model=model,
                     dimensions=dimensions,
                 )
-            scores = dict(index.search(query, limit=min(limit, max(1, expected))))
-            self._save_ann_state(
-                session,
-                namespace=namespace,
-                index=index,
-                provider=provider,
-                model=model,
-                dimensions=dimensions,
-                item_count=index.count(),
-            )
-            return scores, "ann"
+            if index.available:
+                scores = dict(index.search(query, limit=min(limit, max(1, expected))))
+                if index.available:
+                    self._save_ann_state(
+                        session,
+                        namespace=namespace,
+                        index=index,
+                        provider=provider,
+                        model=model,
+                        dimensions=dimensions,
+                        item_count=index.count(),
+                    )
+                    return scores, "ann"
 
         embeddings = list(
             session.scalars(

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter, defaultdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import func, select
@@ -20,6 +20,7 @@ from memoryos.domain.schemas import (
     ClaimStaleState,
     ClaimStatus,
     FeedbackValue,
+    MemoryStatus,
     MemoryTemperature,
 )
 from memoryos.errors import InvalidTransitionError, NotFoundError
@@ -182,8 +183,17 @@ class MemoryHealthService:
     @staticmethod
     def record_retrieval(session: Any, memory_ids: list[str]) -> None:
         now = datetime.now(UTC)
-        for memory_id in memory_ids:
-            row = session.get(MemoryHealthRow, memory_id)
+        unique_ids = list(dict.fromkeys(memory_ids))
+        if not unique_ids:
+            return
+        existing = {
+            row.memory_id: row
+            for row in session.scalars(
+                select(MemoryHealthRow).where(MemoryHealthRow.memory_id.in_(unique_ids))
+            )
+        }
+        for memory_id in unique_ids:
+            row = existing.get(memory_id)
             if row is None:
                 row = MemoryHealthRow(
                     memory_id=memory_id,
@@ -202,6 +212,7 @@ class MemoryHealthService:
 
     @staticmethod
     def _assert_truth_safe(session: Any, memory_id: str) -> None:
+        now = datetime.now(UTC)
         accepted = list(
             session.scalars(
                 select(ClaimVersionRow).where(
@@ -212,10 +223,12 @@ class MemoryHealthService:
             )
         )
         for version in accepted:
-            alternatives = int(
-                session.scalar(
-                    select(func.count())
-                    .select_from(ClaimVersionRow)
+            if not MemoryHealthService._version_is_current(version, now):
+                continue
+            alternatives = list(
+                session.execute(
+                    select(ClaimVersionRow, MemoryRow)
+                    .join(MemoryRow, MemoryRow.id == ClaimVersionRow.memory_id)
                     .outerjoin(
                         MemoryHealthRow,
                         MemoryHealthRow.memory_id == ClaimVersionRow.memory_id,
@@ -225,19 +238,43 @@ class MemoryHealthService:
                         ClaimVersionRow.transaction_to.is_(None),
                         ClaimVersionRow.status == ClaimStatus.ACCEPTED,
                         ClaimVersionRow.memory_id != memory_id,
+                        MemoryRow.status == MemoryStatus.ACTIVE,
                         (
                             (MemoryHealthRow.memory_id.is_(None))
                             | (MemoryHealthRow.temperature != MemoryTemperature.ARCHIVED)
                         ),
                     )
-                )
-                or 0
+                ).all()
             )
-            if alternatives == 0:
+            usable_alternative = any(
+                MemoryHealthService._version_is_current(candidate, now)
+                and MemoryHealthService._memory_is_current(memory, now)
+                for candidate, memory in alternatives
+            )
+            if not usable_alternative:
                 raise InvalidTransitionError(
                     "cannot archive the sole accepted current-truth support",
                     details={"memory_id": memory_id, "identity_id": version.identity_id},
                 )
+
+    @staticmethod
+    def _version_is_current(version: ClaimVersionRow, moment: datetime) -> bool:
+        return (
+            version.stale_state is not ClaimStaleState.STALE
+            and (version.valid_from is None or _utc(version.valid_from) <= moment)
+            and (version.valid_to is None or moment < _utc(version.valid_to))
+        )
+
+    @staticmethod
+    def _memory_is_current(memory: MemoryRow, moment: datetime) -> bool:
+        return (
+            (memory.valid_from is None or _utc(memory.valid_from) <= moment)
+            and (memory.valid_to is None or moment < _utc(memory.valid_to))
+            and (
+                memory.ttl_seconds is None
+                or _utc(memory.created_at) + timedelta(seconds=memory.ttl_seconds) > moment
+            )
+        )
 
     @staticmethod
     def _components(

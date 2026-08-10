@@ -37,7 +37,7 @@ from memoryos.domain.schemas import (
 from memoryos.engine import MemoryService
 from memoryos.errors import AuthenticationError, MemoryOSError, OriginRejectedError
 from memoryos.evaluation.report import load_coding_memory_bench_report, load_memorybench_report
-from memoryos.integrations.git import discover_git_context, upsert_repository
+from memoryos.integrations.git import discover_git_context, sanitize_remote, upsert_repository
 from memoryos.providers.base import CandidateExtractor
 from memoryos.providers.heuristic import HeuristicExtractor
 from memoryos.providers.openai_compatible import OpenAICompatibleExtractor
@@ -86,17 +86,25 @@ class SourceAnchorRequest(BaseModel):
     line_end: int | None = Field(default=None, ge=1)
 
 
+def _configured_origins(settings: MemoryOSSettings) -> set[str]:
+    origins = set(settings.allowed_origins)
+    for host in {settings.host, "127.0.0.1", "localhost", "::1"}:
+        formatted = f"[{host}]" if ":" in host and not host.startswith("[") else host
+        origins.add(f"http://{formatted}:{settings.port}")
+    return origins
+
+
 def _origin_allowed(origin: str | None, settings: MemoryOSSettings) -> bool:
     if origin is None:
         return True
-    if origin in settings.allowed_origins:
-        return True
-    parsed = urlsplit(origin)
-    return parsed.scheme in {"http", "https"} and parsed.hostname in {
-        "127.0.0.1",
-        "localhost",
-        "::1",
-    }
+    try:
+        parsed = urlsplit(origin)
+    except ValueError:
+        return False
+    if parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment:
+        return False
+    normalized = f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else ""
+    return normalized in _configured_origins(settings)
 
 
 def create_app(settings: MemoryOSSettings) -> FastAPI:
@@ -112,6 +120,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         yield
+        service.close()
         database.close()
 
     app = FastAPI(
@@ -126,7 +135,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     app.state.backup = backup
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.allowed_origins,
+        allow_origins=sorted(_configured_origins(settings)),
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"],
@@ -144,7 +153,9 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
             candidate = authorization[7:].strip()
         candidate = candidate or request.cookies.get("memoryos_session")
         if not token_manager.verify(candidate):
-            raise AuthenticationError("a valid local bearer token is required for write operations")
+            raise AuthenticationError(
+                "a valid local bearer token is required for protected or stateful operations"
+            )
 
     @app.exception_handler(MemoryOSError)
     async def memoryos_error_handler(_request: Request, exc: MemoryOSError) -> JSONResponse:
@@ -176,7 +187,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     def health() -> dict[str, Any]:
         return {"ok": True, "version": "2.1.0", "database": database.integrity_check()}
 
-    @app.get("/api/status")
+    @app.get("/api/status", dependencies=[Depends(require_write_access)])
     def get_status() -> dict[str, Any]:
         return service.status()
 
@@ -230,7 +241,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
             ),
         }
 
-    @app.get("/api/memories")
+    @app.get("/api/memories", dependencies=[Depends(require_write_access)])
     def list_memories(
         q: str = "",
         scope_type: ScopeType | None = None,
@@ -239,7 +250,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
         memory_status: Annotated[MemoryStatus | None, Query(alias="status")] = None,
         include_history: bool = False,
         limit: Annotated[int, Query(ge=1, le=500)] = 50,
-        offset: Annotated[int, Query(ge=0)] = 0,
+        offset: Annotated[int, Query(ge=0, le=500)] = 0,
     ) -> dict[str, Any]:
         return service.search(
             SearchRequest(
@@ -258,7 +269,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     def propose_memory(payload: MemoryCreate) -> dict[str, Any]:
         return {"ok": True, "memory": service.propose(payload, actor="http")}
 
-    @app.get("/api/memories/{memory_id}")
+    @app.get("/api/memories/{memory_id}", dependencies=[Depends(require_write_access)])
     def get_memory(memory_id: str) -> dict[str, Any]:
         return service.get(memory_id)
 
@@ -291,11 +302,11 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     def memory_history(memory_id: str) -> list[dict[str, Any]]:
         return service.history(memory_id=memory_id)
 
-    @app.post("/api/context")
+    @app.post("/api/context", dependencies=[Depends(require_write_access)])
     def memory_context(payload: ContextRequest) -> dict[str, Any]:
         return service.context(payload)
 
-    @app.post("/api/current-truth")
+    @app.post("/api/current-truth", dependencies=[Depends(require_write_access)])
     def current_truth(payload: CurrentTruthRequest) -> dict[str, Any]:
         return service.current_truth(payload)
 
@@ -303,7 +314,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
     def claim_graph(payload: CurrentTruthRequest) -> dict[str, Any]:
         return service.claim_graph(payload)
 
-    @app.post("/api/debug/context")
+    @app.post("/api/debug/context", dependencies=[Depends(require_write_access)])
     def debug_context(payload: ContextRequest) -> dict[str, Any]:
         return service.debug_context(payload)
 
@@ -355,7 +366,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
             ),
         }
 
-    @app.get("/api/conflicts")
+    @app.get("/api/conflicts", dependencies=[Depends(require_write_access)])
     def get_conflicts(limit: int = Query(default=100, ge=1, le=500)) -> list[dict[str, Any]]:
         return service.conflicts(limit=limit)
 
@@ -457,7 +468,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
                     "stable_key": row.stable_key,
                     "name": row.name,
                     "path": row.path,
-                    "remote_url": row.remote_url,
+                    "remote_url": sanitize_remote(row.remote_url) if row.remote_url else None,
                     "default_branch": row.default_branch,
                 }
                 for row in rows
