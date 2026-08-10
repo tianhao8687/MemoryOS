@@ -11,6 +11,7 @@
 - 最终 A52 clean-main 基线：commit `9f2e2e7909c547b4a6b19d3e7a1ef40031d5ebe6`，dirty=false，package smoke PASS
 - 最终验收入口：`.\.venv\Scripts\python.exe scripts\verify_v21.py`
 - 验收范围：V1 A01–A14、V2 A15–A32 回归，V2.1 A33–A52
+- V2.2 开发状态（2026-08-11）：仓库级三组真实 workload 框架已实现；固定 MarkupSafe 历史提交的 1-task/3-condition 公共 smoke 协议有效、隐藏测试全过、MemoryOS 产生真实 retrieval run。任务发布时间、跨项目来源仓库、agent commit 补丁、宿主 Git 控制面及 `real_coding_agent` 证据门禁均已机器校验；全仓后端回归 142 passed，确定性 fixture 仍明确 `effect_claim=none`
 
 MemoryOS V2.1 已完成当前环境内可实现和可测量的 Reality Intelligence hardening。真实 coding-agent endpoint 与凭据未提供，因此 A47 使用任务书允许的明确 `external_blocker` 路径：完成样本为 0，`effect_claim=none`。50-task fixture 仅证明 harness/metrics/CI plumbing，不是模型效果证据。
 
@@ -23,7 +24,7 @@ MemoryOS V2.1 已完成当前环境内可实现和可测量的 Reality Intellige
 | Conflict 2.0 | deterministic uncertain router、bounded model、Possible Conflict 审计/人工处理、abstain safety | Complete |
 | ANN | sqlite-vec 持久化 namespace、实时 upsert/search、doctor/status/rebuild、exact fallback | Complete |
 | CodingMemoryBench | input/gold 隔离、hard negatives、baseline/V2/V2+model、满分警告 | Complete |
-| Agent A/B | ≥50 paired harness 与全指标 fixture；真实 endpoint 缺失 blocker | External blocker |
+| Agent A/B | V2.1 ≥50 paired fixture；V2.2 已具备真实仓库/三组/MCP sidecar/隐藏测试框架，真实模型与 50+ confirmatory 样本仍待外部 runtime | External blocker |
 | Consolidation | 严格 support/counter 白名单、独立来源、provider/prompt、offline fallback、candidate-only | Complete |
 | Memory Health | Hot/Warm/Cold/Archived、解释分数、可逆 archive、唯一 truth 保护、candidate distillation | Complete |
 | Interfaces/UI | Current Truth 版本、Possible Conflicts、Memory Health、向量诊断、盲测 dashboard | Complete |
@@ -62,6 +63,7 @@ Playwright 的 7 个 skip 是明确的设备矩阵不适用项：移动布局断
 - main smoke：`docs/verification/v2.1/main-release-smoke.json`
 - 19-gate 总验证：`docs/verification/v2.1/verify-summary.json`
 - package smoke：`docs/verification/package-smoke.json`
+- V2.2 MarkupSafe 公共三组回放：`docs/verification/v2.2/markupsafe-public-smoke/{report,run-metadata}.json`
 - wheel：`build/wheel/memoryos-2.1.0-py3-none-any.whl`
   - SHA-256 `C0280EC2A2AC5B79EA54C1CD6E2AE361E2255B3C97113C706A963867E1323033`
 - Windows：`release/MemoryOS/MemoryOS.exe`
@@ -69,7 +71,7 @@ Playwright 的 7 个 skip 是明确的设备矩阵不适用项：移动布局断
 
 ## 已知边界
 
-- 唯一外部阻塞项是缺少真实 coding-agent endpoint/model/credentials；不做效果声明。
+- 唯一外部阻塞项仍是缺少可放入隔离容器的真实 coding-agent runtime、model endpoint/allowlisted gateway 与凭据；公共仓库 smoke 只验证基础设施，不做效果声明。
 - Pytest 的 FastAPI/Starlette TestClient 与 Python 3.12 sqlite datetime adapter 发出弃用 warning；所有测试通过。
 - PyInstaller 报告未安装可选 `tzdata`、`pysqlite2`、`MySQLdb`；MemoryOS 使用内置 SQLite，实际冻结包迁移与功能 smoke 已通过。
 - 冻结 MCP 子进程有一条 `pydantic-settings` forward-reference warning；协议初始化、12 个工具和跨进程读写均通过。

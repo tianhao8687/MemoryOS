@@ -63,6 +63,14 @@ CodingMemoryBench 的 runtime payload 与 gold labels 分开构造并分别哈�
 
 ## 已知边界
 
+### V2.2 real-workload 回放边界
+
+V2.2 回放只在宿主机执行 Git 元数据、净化 checkout 和补丁应用；第三方仓库命令与隐藏测试不得在宿主机运行。代理容器和 MCP sidecar 使用非 root 用户、只读 rootfs、`cap-drop ALL`、`no-new-privileges` 及 CPU/内存/PID 限制。隐藏测试固定 `--network none`；future solution object、隐藏 overlay、memory seed/SQLite 都不挂载给代理。确认性模式禁止代理拥有不受限互联网出口，以免从远端取回 solution。
+
+代理只挂载一个宿主预创建的结构化结果文件，不挂载日志目录；stdout/stderr 由宿主在挂载边界外限长保存。代理返回后，宿主 Git 操作前会校验 `.git` 是真实目录、config/hooks/info 未变化、无 object alternates、链接或特殊文件；随后禁用 system/global Git config、hooks、external diff 与 textconv，并从固定 base commit 捕获补丁。因此代理自行 commit 不会逃逸评分，篡改 Git clean filter 或 hook 也不会在宿主机执行。运行时必须显式区分 `deterministic_fixture` 与 `real_coding_agent`；前者无论样本量都不能产生效果声明。
+
+`build/real-workload/run-state/` 可能包含原始日志、补丁或记忆，不属于可发布证据；公开前只使用经过脱敏检查的 `docs/verification/v2.2/<run-id>/` 报告。确定性 fixture 只验证基础设施，不是模型效果证据。
+
 - SQLite 文件、备份和 token 不做应用层静态加密；依赖 BitLocker/EFS 等操作系统加密和 NTFS ACL。
 - `sensitivity=sensitive` 是可审计标记，V2 不会据此建立独立密钥或行级权限。
 - 读 API 对本机进程开放；不适用于不信任的共享主机。

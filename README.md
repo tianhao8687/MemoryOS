@@ -101,6 +101,12 @@ Tree-sitter language pack 是 V2 core dependency。若要启用可选 SQLite ANN
 
 真实模型与 fixture 严格分开：50-task fixture 只验证 paired harness、指标和 bootstrap 95% CI。由于当前环境未配置真实 coding-agent endpoint，real-model Agent A/B 被如实记录为 `external_blocker`、`effect_claim=none`；项目不声称真实模型准确率或效果提升。
 
+### V2.2 真实仓库回放框架
+
+开发分支新增仓库级三组回放：`no_memory / flat_memory / memoryos` 使用相同历史提交、相同提示和相同代理镜像；MemoryOS 组必须产生真实 MCP 审计与 `RetrievalRunRow`。代理只看到 base 及祖先，记忆数据库位于独立 sidecar，隐藏测试在 `--network none` 的固定镜像中运行。公开 smoke 使用 MarkupSafe 的固定历史提交、任务发布时间和许可证来源，但内置代理明确标为 `deterministic_fixture`；只有 `real_coding_agent` 才可能通过确认性门禁，因此该报告始终 `effect_claim=none`。
+
+协议、威胁模型、确认性门槛和运行命令见 [V2.2 real-workload evaluation](docs/REAL_WORKLOAD_EVALUATION_V2_2.md)。
+
 首次运行浏览器测试前安装 Chromium：
 
 ```powershell
@@ -132,3 +138,4 @@ MemoryOS 不做全仓源码收藏或云同步。Source Anchor 只读取被明确
 - [变更日志](CHANGELOG.md)
 - [MemoryBench](benchmarks/memorybench_v2/README.md)
 - [V2.1 Reality Intelligence](docs/REALITY_INTELLIGENCE_V2_1.md)
+- [V2.2 real-workload evaluation](docs/REAL_WORKLOAD_EVALUATION_V2_2.md)

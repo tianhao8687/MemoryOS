@@ -1,0 +1,30 @@
+diff --git a/benchmark_hidden_test.py b/benchmark_hidden_test.py
+new file mode 100644
+--- /dev/null
++++ b/benchmark_hidden_test.py
+@@ -0,0 +1,25 @@
++from __future__ import annotations
++
++import ast
++from pathlib import Path
++
++
++source = Path("src/markupsafe/__init__.py").read_text(encoding="utf-8")
++tree = ast.parse(source)
++getattr_function = next(
++    node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "__getattr__"
++)
++warning_calls = [
++    node
++    for node in ast.walk(getattr_function)
++    if isinstance(node, ast.Call)
++    and isinstance(node.func, ast.Attribute)
++    and node.func.attr == "warn"
++]
++assert len(warning_calls) == 1
++call = warning_calls[0]
++assert len(call.args) >= 2
++assert isinstance(call.args[1], ast.Name)
++assert call.args[1].id == "DeprecationWarning"
++changes = Path("CHANGES.rst").read_text(encoding="utf-8")
++assert "``__version__`` raises ``DeprecationWarning`` instead of ``UserWarning``." in changes
