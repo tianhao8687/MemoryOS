@@ -1,11 +1,11 @@
 {
   "schema": "memoryos-v2.1-verification@1",
-  "generated_at": "2026-08-09T18:51:47.788720+00:00",
+  "generated_at": "2026-08-10T14:46:10.621238+00:00",
   "result": "PASS",
   "python": "3.12.13",
   "platform": "win32",
   "branch": "main",
-  "started_commit": "b630496a91fb4188fbbd154aa33d1a4ccfd91da5",
+  "started_commit": "f73ffe3a002cc800d6fce78c811c45d5efbc27be",
   "git_dirty_before_run": false,
   "steps": [
     {
@@ -32,7 +32,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 0.074
+      "elapsed_seconds": 0.685
     },
     {
       "label": "Ruff format",
@@ -48,7 +48,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 0.072
+      "elapsed_seconds": 0.091
     },
     {
       "label": "Mypy",
@@ -60,7 +60,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 0.453
+      "elapsed_seconds": 1.263
     },
     {
       "label": "Backend pytest",
@@ -72,7 +72,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 11.846
+      "elapsed_seconds": 20.376
     },
     {
       "label": "V2 regression MemoryBench",
@@ -84,7 +84,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 2.418
+      "elapsed_seconds": 2.606
     },
     {
       "label": "Blind CodingMemoryBench V2.1",
@@ -96,7 +96,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 0.788
+      "elapsed_seconds": 0.932
     },
     {
       "label": "Paired real-agent protocol or explicit blocker",
@@ -110,7 +110,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 1.075
+      "elapsed_seconds": 1.17
     },
     {
       "label": "100K full retrieval/context pipeline",
@@ -126,7 +126,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 14.762
+      "elapsed_seconds": 13.68
     },
     {
       "label": "Frontend typecheck",
@@ -136,7 +136,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
       "exit_code": 0,
-      "elapsed_seconds": 2.614
+      "elapsed_seconds": 7.703
     },
     {
       "label": "Frontend lint",
@@ -146,7 +146,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
       "exit_code": 0,
-      "elapsed_seconds": 4.132
+      "elapsed_seconds": 24.689
     },
     {
       "label": "Frontend unit tests",
@@ -156,7 +156,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
       "exit_code": 0,
-      "elapsed_seconds": 3.04
+      "elapsed_seconds": 27.34
     },
     {
       "label": "Frontend production build",
@@ -166,7 +166,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
       "exit_code": 0,
-      "elapsed_seconds": 4.921
+      "elapsed_seconds": 11.55
     },
     {
       "label": "Playwright E2E",
@@ -176,7 +176,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\web",
       "exit_code": 0,
-      "elapsed_seconds": 22.175
+      "elapsed_seconds": 25.862
     },
     {
       "label": "Backend wheel",
@@ -193,7 +193,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 0.771
+      "elapsed_seconds": 1.013
     },
     {
       "label": "Windows PyInstaller",
@@ -203,7 +203,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 29.062
+      "elapsed_seconds": 59.776
     },
     {
       "label": "Packaged V1-to-V2.1 production smoke",
@@ -217,7 +217,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 10.182
+      "elapsed_seconds": 12.036
     },
     {
       "label": "Merged-main release smoke",
@@ -231,7 +231,7 @@
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 10.332
+      "elapsed_seconds": 11.213
     },
     {
       "label": "A33-A52 evidence manifest",
@@ -248,12 +248,14 @@
         "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\build\\verification-v2.1\\package-smoke.json",
         "--main-smoke-report",
         "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\build\\verification-v2.1\\v2.1\\main-release-smoke.json",
+        "--verification-report",
+        "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\build\\verification-v2.1\\verify-progress.json",
         "--output",
         "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b\\build\\verification-v2.1\\v2.1\\acceptance-summary.json"
       ],
       "cwd": "C:\\Users\\Admin\\Documents\\ChatGPT\\\u8bb0\u5fc6\u6a21\u578b",
       "exit_code": 0,
-      "elapsed_seconds": 0.094
+      "elapsed_seconds": 0.143
     }
   ]
 }
