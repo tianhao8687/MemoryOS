@@ -132,11 +132,21 @@ def main() -> None:
     scratch.mkdir(parents=True, exist_ok=True)
     output = args.output.resolve()
     progress_output = scratch / "verify-progress.json"
-    pnpm, frontend_environment = _pnpm()
-    python = sys.executable
     steps: list[dict[str, Any]] = []
     started_commit = _git("rev-parse", "HEAD")
+    branch = _git("branch", "--show-current")
     dirty_before_run = bool(_git("status", "--porcelain"))
+    if branch != "main" or dirty_before_run:
+        _write_report(
+            progress_output,
+            "FAIL",
+            steps,
+            started_commit=started_commit,
+            dirty_before_run=dirty_before_run,
+        )
+        raise SystemExit("V2.1 release verification requires a clean main checkout")
+    pnpm, frontend_environment = _pnpm()
+    python = sys.executable
     common = {
         # Keep progress outside the tracked release-evidence directory. The
         # merged-main gate intentionally requires a clean worktree; publishing
@@ -302,6 +312,8 @@ def main() -> None:
             str(package_report),
             "--main-smoke-report",
             str(main_report),
+            "--verification-report",
+            str(progress_output),
             "--output",
             str(scratch / "v2.1" / "acceptance-summary.json"),
         ],

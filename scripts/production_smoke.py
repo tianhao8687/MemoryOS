@@ -280,10 +280,16 @@ async def _mcp_write(executable: Path, data_dir: Path) -> tuple[str, int]:
 
 def _assert_http_state(
     base_url: str,
+    token: str,
     memory_id: str | None = None,
     legacy_id: str | None = None,
 ) -> None:
-    with httpx.Client(base_url=base_url, timeout=5, trust_env=False) as client:
+    with httpx.Client(
+        base_url=base_url,
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=5,
+        trust_env=False,
+    ) as client:
         root = client.get("/")
         if root.status_code != 200 or '<div id="root"></div>' not in root.text:
             raise RuntimeError("bundled management UI is unavailable")
@@ -346,8 +352,14 @@ def main() -> None:
         first = _start(executable, data_dir, port)
         try:
             first_health = _wait_for_health(first, base_url)
-            _assert_http_state(base_url, legacy_id=legacy_id)
-            with httpx.Client(base_url=base_url, timeout=5, trust_env=False) as client:
+            token = (data_dir / "auth.token").read_text(encoding="utf-8").strip()
+            _assert_http_state(base_url, token, legacy_id=legacy_id)
+            with httpx.Client(
+                base_url=base_url,
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=5,
+                trust_env=False,
+            ) as client:
                 first_status = client.get("/api/status").json()
             if first_status.get("schema_version") != "0003_reality_intelligence_hardening":
                 raise RuntimeError("packaged app did not migrate the V1 database to V2.1")
@@ -374,13 +386,13 @@ def main() -> None:
             )
             if refreshed.get("freshness") != "fresh":
                 raise RuntimeError("packaged source anchor did not refresh as fresh")
-            _assert_http_state(base_url, memory_id, legacy_id)
+            _assert_http_state(base_url, token, memory_id, legacy_id)
         finally:
             first_output = _stop(first)
         second = _start(executable, data_dir, port)
         try:
             second_health = _wait_for_health(second, base_url)
-            _assert_http_state(base_url, memory_id, legacy_id)
+            _assert_http_state(base_url, token, memory_id, legacy_id)
         finally:
             second_output = _stop(second)
         cli = subprocess.run(

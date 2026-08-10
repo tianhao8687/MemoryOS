@@ -110,8 +110,12 @@ class SourceAnchorService:
             )
             for evidence in evidence_rows:
                 evidence.source_anchor_id = anchor.id
-            for claim in session.scalars(select(ClaimRow).where(ClaimRow.id.in_(claim_ids))):
-                claim.stale_state = ClaimStaleState.FRESH
+            self.truth.mark_memory_stale(
+                session,
+                memory_id,
+                ClaimStaleState.FRESH,
+                actor="manual:source-anchor",
+            )
             session.add(
                 AuditEventRow(
                     action="source_anchor_create",

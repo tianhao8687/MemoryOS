@@ -128,6 +128,9 @@ class MemoryService:
         self.feedback_service = FeedbackService(database)
         self.health_service = MemoryHealthService(database)
 
+    def close(self) -> None:
+        self.retrieval.close()
+
     def _index_memory_safely(self, memory_id: str) -> None:
         try:
             self.retrieval.index_memory(memory_id)
@@ -297,6 +300,12 @@ class MemoryService:
                 changes["metadata_json"] = changes.pop("metadata")
             for field, value in changes.items():
                 setattr(memory, field, value)
+            if (
+                memory.valid_from is not None
+                and memory.valid_to is not None
+                and _utc(memory.valid_to) <= _utc(memory.valid_from)
+            ):
+                raise ValueError("valid_to must be later than valid_from")
             if {"title", "content", "category", "subject", "key"}.intersection(changes):
                 source = SourceRow(
                     source_type=SourceType.MANUAL,
@@ -790,6 +799,8 @@ class MemoryService:
             row = session.get(PossibleConflictRow, conflict_id)
             if row is None:
                 raise NotFoundError("possible conflict was not found")
+            if row.resolved_at is not None:
+                raise InvalidTransitionError("possible conflict was already manually resolved")
             row.status = (
                 PossibleConflictStatus.CONFIRMED if confirmed else PossibleConflictStatus.DISMISSED
             )
@@ -801,6 +812,14 @@ class MemoryService:
                 "rationale": rationale,
             }
             row.model_result_json = result
+            self.truth.apply_manual_conflict_resolution(
+                session,
+                left_claim_id=row.left_claim_id,
+                right_claim_id=row.right_claim_id,
+                confirmed=confirmed,
+                actor=actor,
+                rationale=rationale,
+            )
             session.add(
                 AuditEventRow(
                     action="possible_conflict_resolved",

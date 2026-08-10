@@ -22,7 +22,13 @@ from memoryos.db.models import (
     SourceRow,
 )
 from memoryos.db.session import Database
-from memoryos.domain.schemas import ConsolidateRequest, MemoryStatus, MemoryType
+from memoryos.domain.schemas import (
+    ClaimStaleState,
+    ClaimStatus,
+    ConsolidateRequest,
+    MemoryStatus,
+    MemoryType,
+)
 from memoryos.errors import ProviderError
 from memoryos.providers.base import ConsolidationJudge
 
@@ -49,6 +55,8 @@ class ConsolidationService:
                     MemoryRow.scope_key == request.scope_key,
                     MemoryRow.memory_type == MemoryType.EPISODIC,
                     MemoryRow.status == MemoryStatus.ACTIVE,
+                    ClaimRow.status.in_([ClaimStatus.ACCEPTED, ClaimStatus.CONTESTED]),
+                    ClaimRow.stale_state != ClaimStaleState.STALE,
                 )
             ).all()
             episodes = [
@@ -68,18 +76,20 @@ class ConsolidationService:
             ]
             proposals = []
             for (subject_entity_id, predicate), group in cluster_episodes(episodes).items():
-                source_count, span_days = independent_source_span_days(group)
-                if source_count < request.minimum_sources or span_days < request.minimum_span_days:
-                    continue
-                objects = Counter(item.object_identity for item in group)
-                dominant, dominant_count = objects.most_common(1)[0]
-                supporting = [item for item in group if item.object_identity == dominant]
+                assertions = Counter((item.object_identity, item.polarity) for item in group)
+                (dominant, dominant_polarity), _ = assertions.most_common(1)[0]
+                supporting = [
+                    item
+                    for item in group
+                    if item.object_identity == dominant and item.polarity == dominant_polarity
+                ]
                 counterevidence = [
                     item
                     for item in group
-                    if item.object_identity != dominant or item.polarity != supporting[0].polarity
+                    if item.object_identity != dominant or item.polarity != dominant_polarity
                 ]
-                if len({item.source_ref for item in supporting}) < request.minimum_sources:
+                source_count, span_days = independent_source_span_days(supporting)
+                if source_count < request.minimum_sources or span_days < request.minimum_span_days:
                     continue
                 status = "contested" if counterevidence else "candidate"
                 source_memory_ids = list(dict.fromkeys(item.memory_id for item in supporting))
@@ -87,12 +97,13 @@ class ConsolidationService:
                     "subject_entity_id": subject_entity_id,
                     "predicate": predicate,
                     "object": dominant,
+                    "polarity": dominant_polarity,
                     "confidence": round(
                         sum(item.confidence for item in supporting) / len(supporting), 6
                     ),
                     "independent_sources": source_count,
                     "span_days": round(span_days, 3),
-                    "supporting_episodes": dominant_count,
+                    "supporting_episodes": len(supporting),
                     "activation": "human_confirmation_required",
                     "abstraction_mode": "offline-extractive-fallback",
                     "supporting_memory_ids": source_memory_ids,
@@ -100,7 +111,11 @@ class ConsolidationService:
                         dict.fromkeys(item.memory_id for item in counterevidence)
                     ),
                 }
-                judged = self._judge_cluster(group, request.minimum_sources)
+                judged = self._judge_cluster(
+                    group,
+                    request.minimum_sources,
+                    request.minimum_span_days,
+                )
                 if judged is not None:
                     status = judged["status"]
                     source_memory_ids = judged["supporting_memory_ids"]
@@ -160,6 +175,7 @@ class ConsolidationService:
         self,
         group: list[EpisodeClaim],
         minimum_sources: int,
+        minimum_span_days: int,
     ) -> dict[str, Any] | None:
         if self.judge is None:
             return None
@@ -187,9 +203,21 @@ class ConsolidationService:
         ) & set(raw_counters):
             return None
         supporting = list(dict.fromkeys(raw_supporting))
-        counters = list(dict.fromkeys(raw_counters))
-        source_by_memory = {item.memory_id: item.source_ref for item in group}
-        if len({source_by_memory[item] for item in supporting}) < minimum_sources:
+        supporting_rows = [item for item in group if item.memory_id in supporting]
+        dominant_assertion, _ = Counter(
+            (item.object_identity, item.polarity) for item in group
+        ).most_common(1)[0]
+        supporting_assertions = {(item.object_identity, item.polarity) for item in supporting_rows}
+        if supporting_assertions != {dominant_assertion}:
+            return None
+        automatic_counters = [
+            item.memory_id
+            for item in group
+            if (item.object_identity, item.polarity) != dominant_assertion
+        ]
+        counters = list(dict.fromkeys([*raw_counters, *automatic_counters]))
+        source_count, span_days = independent_source_span_days(supporting_rows)
+        if source_count < minimum_sources or span_days < minimum_span_days:
             return None
         metadata = self.judge.metadata
         fingerprint = hashlib.sha256(

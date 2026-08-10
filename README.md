@@ -114,10 +114,10 @@ Set-Location ..
 ## 数据和隐私边界
 
 - `memoryos.db`：SQLite WAL/FTS5 主事实库。
-- `auth.token`：本地写 API token。
+- `auth.token`：本地写操作及会记录检索/到期状态的 API token。
 - `runtime.json`：最近一次服务地址。
 - `logs/memoryos.log`：脱敏轮转日志。
-- `backups/`：格式 3 版本化备份，包含 claim versions、possible conflicts 与 health；V2.1 可导入旧格式，旧客户端不会静默读取新格式。
+- `backups/`：格式 3 版本化备份，包含 claim versions、possible conflicts 与 health；V2.1 可导入旧格式，导入前校验 entry/哈希/大小/记录数/完整 schema，隔离迁移通过后才原子替换；恢复与导入后 ANN 缓存会安全重建。
 
 MemoryOS 不做全仓源码收藏或云同步。Source Anchor 只读取被明确引用的相关文件，保存 bounded excerpt/hash/symbol metadata；Git compare 只检查 anchor commit 到 HEAD 的相关路径。默认 provider 关闭，不记录完整 prompt。
 

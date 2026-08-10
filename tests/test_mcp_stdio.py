@@ -90,7 +90,8 @@ async def test_real_stdio_cross_client_persistence(tmp_path: Path) -> None:
     settings = settings_for(data_dir)
     token = TokenManager(settings.token_path).get_or_create()
     with TestClient(create_app(settings)) as client:
-        response = client.get("/api/memories", params={"q": "FastAPI"})
+        headers = {"Authorization": f"Bearer {token}"}
+        response = client.get("/api/memories", params={"q": "FastAPI"}, headers=headers)
         assert response.json()["total"] == 1
         assert client.get(f"/api/memories/{memory_id}/explain").status_code == 200
         assert token

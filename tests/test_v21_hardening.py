@@ -74,7 +74,7 @@ def test_a34_immutable_migration_replays_v2_data(database: Database) -> None:
         )
         config.attributes["connection"] = connection
         command.downgrade(config, "0001_initial")
-    now = datetime.now(UTC)
+    now = datetime.now(UTC).replace(tzinfo=None).isoformat(sep=" ")
     with database.engine.begin() as connection:
         connection.exec_driver_sql(
             "INSERT INTO memories (id,scope_type,scope_key,memory_type,category,title,content,"

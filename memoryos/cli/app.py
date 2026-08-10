@@ -441,8 +441,9 @@ def backup(context: typer.Context, output: Annotated[Path | None, typer.Option()
 
 @app.command()
 def restore(context: typer.Context, archive: Path) -> None:
-    database, _, backup_service = _runtime(context).components()
+    database, service, backup_service = _runtime(context).components()
     try:
+        service.close()
         safety = backup_service.restore(archive)
         console.print(f"Restore complete; safety backup: {safety}")
     finally:

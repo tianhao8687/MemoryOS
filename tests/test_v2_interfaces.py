@@ -45,6 +45,7 @@ def test_v2_http_truth_debug_feedback_and_consolidation_contracts(tmp_path: Path
                 "subject": "project.backend_framework",
                 "predicate": "uses",
             },
+            headers=headers,
         )
         assert truth.status_code == 200
         assert truth.json()["state"] == "resolved"
@@ -55,12 +56,14 @@ def test_v2_http_truth_debug_feedback_and_consolidation_contracts(tmp_path: Path
                 "subject": "project.backend_framework",
                 "predicate": "uses",
             },
+            headers=headers,
         ).json()
         assert graph["nodes"][0]["memory_id"] == memory["id"]
 
         context = client.post(
             "/api/debug/context",
             json={"task": "current backend framework", "repository": "api-v2-repo"},
+            headers=headers,
         ).json()
         assert context["manifest"]
         assert context["retrieval_run_id"]

@@ -32,6 +32,30 @@ def test_non_loopback_bind_address_is_rejected(tmp_path: Path) -> None:
         settings.host = "0.0.0.0"  # noqa: S104
 
 
+def test_unsafe_or_portless_allowed_origins_are_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ValidationError, match="explicit loopback"):
+        settings_for(tmp_path, allowed_origins=["https://example.invalid:443"])
+    with pytest.raises(ValidationError, match="explicit loopback"):
+        settings_for(tmp_path, allowed_origins=["http://127.0.0.1"])
+    with pytest.raises(ValidationError, match="explicit loopback"):
+        settings_for(tmp_path, allowed_origins=["http://127.0.0.1:8765/"])
+    configured = settings_for(tmp_path, allowed_origins=["http://localhost:4321"])
+    assert configured.allowed_origins == ["http://localhost:4321"]
+
+
+def test_runtime_resource_settings_are_bounded(tmp_path: Path) -> None:
+    for overrides in (
+        {"port": 0},
+        {"busy_timeout_ms": -1},
+        {"source_excerpt_limit": -1},
+        {"provider_timeout_seconds": 0},
+        {"provider_max_input_chars": -1},
+        {"log_level": "verbose"},
+    ):
+        with pytest.raises(ValidationError):
+            settings_for(tmp_path, **overrides)
+
+
 def test_structured_logging_redacts_secrets(tmp_path: Path) -> None:
     settings = settings_for(tmp_path / "logging-data")
     configure_logging(settings)
@@ -100,7 +124,14 @@ def test_write_auth_origin_and_api_lifecycle(tmp_path: Path) -> None:
         assert confirmed.status_code == 200
         assert confirmed.json()["memory"]["status"] == "active"
         assert client.get(f"/api/memories/{memory_id}/explain").json()["sources"]
-        assert client.get("/api/memories", params={"q": "FastAPI"}).json()["total"] == 1
+        assert (
+            client.get(
+                "/api/memories",
+                params={"q": "FastAPI"},
+                headers={"Authorization": f"Bearer {token}"},
+            ).json()["total"]
+            == 1
+        )
         assert client.get("/api/health").json()["ok"] is True
 
 
@@ -141,7 +172,12 @@ def test_configured_extractor_failure_returns_502_without_candidates(
         )
         assert response.status_code == 502
         assert response.json()["error"]["code"] == "PROVIDER_FAILURE"
-        assert client.get("/api/memories").json()["total"] == 0
+        assert (
+            client.get("/api/memories", headers={"Authorization": f"Bearer {token}"}).json()[
+                "total"
+            ]
+            == 0
+        )
 
 
 def test_api_conflict_resolution_and_backup(tmp_path: Path) -> None:
@@ -175,7 +211,7 @@ def test_api_conflict_resolution_and_backup(tmp_path: Path) -> None:
         )
         assert unresolved.status_code == 409
         assert unresolved.json()["error"]["code"] == "CONFLICT_DETECTED"
-        assert len(client.get("/api/conflicts").json()) == 1
+        assert len(client.get("/api/conflicts", headers=headers).json()) == 1
 
         resolved = client.post(
             f"/api/conflicts/{candidate['id']}/resolve",
@@ -184,7 +220,10 @@ def test_api_conflict_resolution_and_backup(tmp_path: Path) -> None:
         )
         assert resolved.status_code == 200
         assert resolved.json()["memory"]["status"] == "active"
-        assert client.get(f"/api/memories/{current['id']}").json()["status"] == "superseded"
+        assert (
+            client.get(f"/api/memories/{current['id']}", headers=headers).json()["status"]
+            == "superseded"
+        )
 
         backup = client.post("/api/backup", headers=headers)
         assert backup.status_code == 200

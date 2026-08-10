@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from typing import Any, Literal
 
 import httpx
@@ -217,8 +218,23 @@ class OpenAICompatibleEmbeddingProvider:
             )
             response.raise_for_status()
             data = response.json()["data"]
+            if not isinstance(data, list) or len(data) != len(clipped):
+                raise ValueError("embedding response count does not match the request")
             ordered = sorted(data, key=lambda item: int(item["index"]))
-            return [[float(value) for value in item["embedding"]] for item in ordered]
+            if [int(item["index"]) for item in ordered] != list(range(len(clipped))):
+                raise ValueError("embedding response indexes are incomplete or duplicated")
+            vectors = [[float(value) for value in item["embedding"]] for item in ordered]
+            dimensions = {len(vector) for vector in vectors}
+            if (
+                not vectors
+                or dimensions == {0}
+                or len(dimensions) != 1
+                or next(iter(dimensions)) > 65_536
+            ):
+                raise ValueError("embedding response vectors have invalid dimensions")
+            if not all(math.isfinite(value) for vector in vectors for value in vector):
+                raise ValueError("embedding response contains non-finite values")
+            return vectors
         except (httpx.HTTPError, KeyError, TypeError, ValueError) as exc:
             self.stats.failures += 1
             raise ProviderError("embedding provider failed; FTS5 remains available") from exc

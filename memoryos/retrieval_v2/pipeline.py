@@ -3,9 +3,11 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import defaultdict
+from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 
 from sqlalchemy import func, or_, select
+from sqlalchemy.orm import noload
 
 from memoryos.db.models import (
     ClaimEvidenceRow,
@@ -32,6 +34,7 @@ from memoryos.retrieval.search import RetrievalEngine
 from memoryos.retrieval_v2.diversity import mmr_select
 from memoryos.retrieval_v2.fusion import reciprocal_rank_fusion
 from memoryos.retrieval_v2.planner import QueryPlan, plan_query
+from memoryos.temporal.intervals import as_of, is_known_at
 
 
 class Reranker(Protocol):
@@ -78,6 +81,7 @@ class RetrievalPipeline:
         branch: str | None = None,
         workspace: str | None = None,
         task_scope: str | None = None,
+        record_retrieval: bool = True,
     ) -> dict[str, Any]:
         plan = plan_query(
             request.query,
@@ -89,7 +93,10 @@ class RetrievalPipeline:
             as_known_at=request.as_known_at,
         )
         baseline_request = request.model_copy(
-            update={"limit": min(300, max(80, request.limit * 2)), "offset": 0}
+            update={
+                "limit": min(1000, max(80, request.offset + request.limit)),
+                "offset": 0,
+            }
         )
         baseline = self.baseline.search(baseline_request, allowed_scopes=allowed_scopes)
         by_id = {str(item["memory"]["id"]): item for item in baseline["items"]}
@@ -111,7 +118,13 @@ class RetrievalPipeline:
             graph_ids, temporal_ids = self._claim_candidates(session, plan)
             extra_ids = (set(graph_ids) | set(temporal_ids)) - set(by_id)
             if extra_ids:
-                extras = list(session.scalars(select(MemoryRow).where(MemoryRow.id.in_(extra_ids))))
+                extras = list(
+                    session.scalars(
+                        select(MemoryRow)
+                        .options(noload(MemoryRow.sources))
+                        .where(MemoryRow.id.in_(extra_ids))
+                    )
+                )
                 for row in extras:
                     if not self._memory_allowed(row, request, allowed_scopes):
                         continue
@@ -218,13 +231,14 @@ class RetrievalPipeline:
                     reranker_mode = self.reranker.name
                 except ProviderError:
                     reranker_mode = "provider-fallback"
-            total = len(candidates)
+            total = max(int(baseline["total"]), len(candidates))
             diverse = mmr_select(candidates, limit=min(total, request.offset + request.limit))
             selected = diverse[request.offset : request.offset + request.limit]
-            MemoryHealthService.record_retrieval(
-                session,
-                [str(item["memory"]["id"]) for item in selected],
-            )
+            if record_retrieval:
+                MemoryHealthService.record_retrieval(
+                    session,
+                    [str(item["memory"]["id"]) for item in selected],
+                )
             run = RetrievalRunRow(
                 query=request.query,
                 task=task,
@@ -268,7 +282,25 @@ class RetrievalPipeline:
             return False
         if request.status is not None and row.status != request.status:
             return False
-        return request.include_history or row.status.value == "active"
+        if not request.include_history and row.status.value != "active":
+            return False
+        valid_moment = request.as_of_valid_time or datetime.now(UTC)
+        if not as_of(row.valid_from, row.valid_to, valid_moment):
+            return False
+        valid_moment_utc = (
+            valid_moment.replace(tzinfo=UTC)
+            if valid_moment.tzinfo is None
+            else valid_moment.astimezone(UTC)
+        )
+        created_at = row.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=UTC)
+        if (
+            row.ttl_seconds is not None
+            and created_at + timedelta(seconds=row.ttl_seconds) <= valid_moment_utc
+        ):
+            return False
+        return request.as_known_at is None or is_known_at(row.created_at, request.as_known_at)
 
     @staticmethod
     def _claim_candidates(session: Any, plan: QueryPlan) -> tuple[list[str], list[str]]:

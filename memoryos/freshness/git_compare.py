@@ -66,6 +66,17 @@ def _normalized(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
 
+def _repository_file(root: Path, relative_path: str) -> Path | None:
+    try:
+        resolved_root = root.resolve()
+        candidate = (resolved_root / relative_path).resolve()
+    except OSError:
+        return None
+    if resolved_root not in candidate.parents:
+        return None
+    return candidate
+
+
 def _renamed_path(context: GitContext, anchor: SourceAnchorRow) -> str | None:
     diff = _git(
         context.root,
@@ -99,6 +110,15 @@ def compare_anchor(anchor: SourceAnchorRow, repository_path: Path | str) -> Fres
             context.head,
             "Repository stable key does not match the anchor.",
         )
+    current_path = anchor.path
+    absolute = _repository_file(context.root, current_path)
+    if absolute is None:
+        return FreshnessResult(
+            FreshnessState.UNKNOWN,
+            current_path,
+            context.head,
+            "Anchored path resolves outside the selected repository.",
+        )
     if context.head == anchor.cached_head and anchor.checked_at is not None:
         return FreshnessResult(
             anchor.freshness_state,
@@ -106,13 +126,18 @@ def compare_anchor(anchor: SourceAnchorRow, repository_path: Path | str) -> Fres
             context.head,
             "Cached freshness result for the current HEAD.",
         )
-    current_path = anchor.path
-    absolute = context.root / current_path
     if not absolute.is_file():
         moved = _renamed_path(context, anchor)
         if moved:
             current_path = moved
-            absolute = context.root / moved
+            absolute = _repository_file(context.root, moved)
+        if absolute is None:
+            return FreshnessResult(
+                FreshnessState.UNKNOWN,
+                current_path,
+                context.head,
+                "Relocated anchor path resolves outside the selected repository.",
+            )
         if not absolute.is_file():
             return FreshnessResult(
                 FreshnessState.STALE,
