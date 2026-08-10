@@ -62,6 +62,7 @@ def test_checked_in_public_smoke_evidence_is_truthful_and_self_consistent() -> N
     metadata = json.loads((evidence_root / "run-metadata.json").read_text(encoding="utf-8"))
     manifest = load_real_workload_manifest(SMOKE_ROOT / "manifest.json")
 
+    assert report["artifact_encoding"] == "utf-8; newline=LF"
     assert report["status"] == "completed"
     assert report["protocol_valid"] is True
     assert report["mode"] == "dry_run"
@@ -69,7 +70,9 @@ def test_checked_in_public_smoke_evidence_is_truthful_and_self_consistent() -> N
     assert report["runtime"]["evidence_type"] == "deterministic_fixture"
     assert metadata["runtime"]["evidence_type"] == "deterministic_fixture"
     assert report["manifest"]["digest"] == manifest.digest() == metadata["manifest_digest"]
-    assert hashlib.sha256(report_path.read_bytes()).hexdigest() == metadata["report_sha256"]
+    canonical_report = report_path.read_bytes().replace(b"\r\n", b"\n")
+    assert b"\r" not in canonical_report
+    assert hashlib.sha256(canonical_report).hexdigest() == metadata["report_sha256"]
     records = {record["condition"]: record for record in report["records"]}
     assert all(record["hidden_test_success"] for record in records.values())
     assert records["no_memory"]["memory_tool_calls"] == 0

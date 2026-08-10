@@ -1,4 +1,5 @@
 {
+  "artifact_encoding": "utf-8; newline=LF",
   "aggregates": {
     "flat_memory": {
       "cross_project_leaks": 0,

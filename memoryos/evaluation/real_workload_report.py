@@ -129,6 +129,7 @@ class RealWorkloadReportBuilder:
             else "none"
         )
         return {
+            "artifact_encoding": "utf-8; newline=LF",
             "schema_version": "2.2",
             "status": "completed" if protocol_valid else "completed_invalid",
             "run_id": run_id,
@@ -318,6 +319,7 @@ def write_real_workload_report(path: Path, report: dict[str, Any]) -> None:
     path.write_text(
         json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 

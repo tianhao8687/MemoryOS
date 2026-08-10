@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 from memoryos.evaluation.real_workload_agent import AgentEvidenceType, AgentRuntimeSpec
 from memoryos.evaluation.real_workload_models import ExperimentCondition, RealWorkloadManifest
@@ -8,6 +9,7 @@ from memoryos.evaluation.real_workload_report import (
     ConditionRunRecord,
     RealWorkloadReportBuilder,
     RunMode,
+    write_real_workload_report,
 )
 
 HIDDEN_IMAGE = "python@sha256:" + "c" * 64
@@ -120,6 +122,16 @@ def test_dry_run_reports_paired_results_but_makes_no_effect_claim() -> None:
     assert comparison["paired_n"] == 2
     assert comparison["metrics"]["functional_success"]["difference"] == 1.0
     assert report["aggregates"]["memoryos"]["retrieval_runs"] == 2
+
+
+def test_report_writer_uses_stable_lf_bytes(tmp_path: Path) -> None:
+    destination = tmp_path / "report.json"
+
+    write_real_workload_report(destination, {"value": "first\nsecond"})
+
+    payload = destination.read_bytes()
+    assert payload.endswith(b"\n")
+    assert b"\r" not in payload
 
 
 def test_confirmatory_protocol_requires_and_accepts_diverse_complete_sample() -> None:
