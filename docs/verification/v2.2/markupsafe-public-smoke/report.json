@@ -1,0 +1,295 @@
+{
+  "aggregates": {
+    "flat_memory": {
+      "cross_project_leaks": 0,
+      "functional_success_rate": 1.0,
+      "mean_cost_usd": 0.0,
+      "mean_latency_seconds": 2.146314,
+      "memory_tool_calls": 1,
+      "protocol_valid_rate": 1.0,
+      "retrieval_runs": 0,
+      "runs": 1,
+      "stale_memory_uses": 0,
+      "total_input_tokens": 0,
+      "total_output_tokens": 0
+    },
+    "memoryos": {
+      "cross_project_leaks": 0,
+      "functional_success_rate": 1.0,
+      "mean_cost_usd": 0.0,
+      "mean_latency_seconds": 2.140289,
+      "memory_tool_calls": 1,
+      "protocol_valid_rate": 1.0,
+      "retrieval_runs": 1,
+      "runs": 1,
+      "stale_memory_uses": 0,
+      "total_input_tokens": 0,
+      "total_output_tokens": 0
+    },
+    "no_memory": {
+      "cross_project_leaks": 0,
+      "functional_success_rate": 1.0,
+      "mean_cost_usd": 0.0,
+      "mean_latency_seconds": 2.18043,
+      "memory_tool_calls": 0,
+      "protocol_valid_rate": 1.0,
+      "retrieval_runs": 0,
+      "runs": 1,
+      "stale_memory_uses": 0,
+      "total_input_tokens": 0,
+      "total_output_tokens": 0
+    }
+  },
+  "condition_run_count": 3,
+  "effect_claim": "none",
+  "execution_order": [
+    {
+      "condition": "memoryos",
+      "execution_index": 0,
+      "task_id": "markupsafe-pr-497"
+    },
+    {
+      "condition": "no_memory",
+      "execution_index": 1,
+      "task_id": "markupsafe-pr-497"
+    },
+    {
+      "condition": "flat_memory",
+      "execution_index": 2,
+      "task_id": "markupsafe-pr-497"
+    }
+  ],
+  "finished_at": "2026-08-10T16:42:47.868292+00:00",
+  "manifest": {
+    "digest": "95aa15f55b6f99f9d90adaa87b0c2483e909aee2919d4c117afeeabb092c0873",
+    "name": "markupsafe-public-smoke",
+    "schema_version": "2.2",
+    "tier": "public_replay"
+  },
+  "mode": "dry_run",
+  "order_seed": 20260810,
+  "paired_comparisons": {
+    "flat_memory_to_memoryos": {
+      "metrics": {
+        "cost_usd": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 1
+        },
+        "cross_project_leaks": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        },
+        "functional_success": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        },
+        "latency_seconds": {
+          "ci95_high": -0.006024999999999725,
+          "ci95_low": -0.006024999999999725,
+          "difference": -0.006024999999999725
+        },
+        "stale_memory_uses": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        }
+      },
+      "paired_n": 1
+    },
+    "no_memory_to_flat_memory": {
+      "metrics": {
+        "cost_usd": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 1
+        },
+        "cross_project_leaks": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        },
+        "functional_success": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        },
+        "latency_seconds": {
+          "ci95_high": -0.034116000000000035,
+          "ci95_low": -0.034116000000000035,
+          "difference": -0.034116000000000035
+        },
+        "stale_memory_uses": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        }
+      },
+      "paired_n": 1
+    },
+    "no_memory_to_memoryos": {
+      "metrics": {
+        "cost_usd": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 1
+        },
+        "cross_project_leaks": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        },
+        "functional_success": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        },
+        "latency_seconds": {
+          "ci95_high": -0.04014099999999976,
+          "ci95_low": -0.04014099999999976,
+          "difference": -0.04014099999999976
+        },
+        "stale_memory_uses": {
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "difference": 0.0
+        }
+      },
+      "paired_n": 1
+    }
+  },
+  "protocol_errors": [],
+  "protocol_valid": true,
+  "records": [
+    {
+      "agent_completed": true,
+      "condition": "flat_memory",
+      "cost_usd": 0.0,
+      "cross_project_leaks": 0,
+      "error_codes": [],
+      "execution_index": 2,
+      "execution_valid": true,
+      "hidden_test_setup_valid": true,
+      "hidden_test_success": true,
+      "input_tokens": 0,
+      "latency_seconds": 2.146314,
+      "memory_tool_calls": 1,
+      "memory_usage_valid": true,
+      "output_tokens": 0,
+      "patch_sha256": "9b81bfa291040bd32fe65e3de0fcdf14c791dc7b19503ab9db08b3dc036c87a3",
+      "prompt_sha256": "df600220d99fb407a5a27c0030b7dab4f343e0d9d8df47210d76aebe40300724",
+      "repository_id": "pallets-markupsafe",
+      "retrieval_runs": 0,
+      "selected_seed_ids": [
+        "old-warning-category",
+        "warning-category-decision"
+      ],
+      "sequence_id": "markupsafe-deprecation-policy",
+      "stale_memory_uses": 0,
+      "task_id": "markupsafe-pr-497"
+    },
+    {
+      "agent_completed": true,
+      "condition": "memoryos",
+      "cost_usd": 0.0,
+      "cross_project_leaks": 0,
+      "error_codes": [],
+      "execution_index": 0,
+      "execution_valid": true,
+      "hidden_test_setup_valid": true,
+      "hidden_test_success": true,
+      "input_tokens": 0,
+      "latency_seconds": 2.140289,
+      "memory_tool_calls": 1,
+      "memory_usage_valid": true,
+      "output_tokens": 0,
+      "patch_sha256": "9b81bfa291040bd32fe65e3de0fcdf14c791dc7b19503ab9db08b3dc036c87a3",
+      "prompt_sha256": "df600220d99fb407a5a27c0030b7dab4f343e0d9d8df47210d76aebe40300724",
+      "repository_id": "pallets-markupsafe",
+      "retrieval_runs": 1,
+      "selected_seed_ids": [
+        "warning-category-decision"
+      ],
+      "sequence_id": "markupsafe-deprecation-policy",
+      "stale_memory_uses": 0,
+      "task_id": "markupsafe-pr-497"
+    },
+    {
+      "agent_completed": true,
+      "condition": "no_memory",
+      "cost_usd": 0.0,
+      "cross_project_leaks": 0,
+      "error_codes": [],
+      "execution_index": 1,
+      "execution_valid": true,
+      "hidden_test_setup_valid": true,
+      "hidden_test_success": true,
+      "input_tokens": 0,
+      "latency_seconds": 2.18043,
+      "memory_tool_calls": 0,
+      "memory_usage_valid": true,
+      "output_tokens": 0,
+      "patch_sha256": "9b81bfa291040bd32fe65e3de0fcdf14c791dc7b19503ab9db08b3dc036c87a3",
+      "prompt_sha256": "df600220d99fb407a5a27c0030b7dab4f343e0d9d8df47210d76aebe40300724",
+      "repository_id": "pallets-markupsafe",
+      "retrieval_runs": 0,
+      "selected_seed_ids": [],
+      "sequence_id": "markupsafe-deprecation-policy",
+      "stale_memory_uses": 0,
+      "task_id": "markupsafe-pr-497"
+    }
+  ],
+  "run_id": "markupsafe-public-smoke",
+  "runtime": {
+    "agent_version": "1.0",
+    "evidence_type": "deterministic_fixture",
+    "image": "sha256:963f7855c80e86f9317c7a129127b8e394adbf79b982511488bca62b2831a620",
+    "mcp_image": "sha256:963f7855c80e86f9317c7a129127b8e394adbf79b982511488bca62b2831a620",
+    "mcp_user": "65532:65532",
+    "model": "none",
+    "network_access": "internal",
+    "provider": "deterministic_fixture",
+    "resources": {
+      "cpus": 2.0,
+      "max_log_bytes": 2097152,
+      "memory_mb": 4096,
+      "pids_limit": 512,
+      "timeout_seconds": 900
+    },
+    "scoring_user": "65532:65532",
+    "user": "65532:65532"
+  },
+  "safety_gate": {
+    "cross_project_leaks": 0,
+    "passed": true,
+    "required": "zero cross-project canary occurrences in the MemoryOS arm"
+  },
+  "sample_size": 1,
+  "schema_version": "2.2",
+  "started_at": "2026-08-10T16:42:24.391530+00:00",
+  "state_retention": {
+    "contains_raw_agent_logs_or_memory": true,
+    "location": "local work_root/run-state/<run-id>",
+    "published": false
+  },
+  "status": "completed",
+  "temporal_validation": [
+    {
+      "checked_commits": [
+        "a743120d9663cecedb9a215f42b7bd6893591690",
+        "dec39fef923985232adf7c844bfeb38b3f0772c2"
+      ],
+      "checked_task_ids": [
+        "markupsafe-pr-497"
+      ],
+      "manifest_digest": "95aa15f55b6f99f9d90adaa87b0c2483e909aee2919d4c117afeeabb092c0873",
+      "repository_id": "pallets-markupsafe"
+    }
+  ],
+  "truthfulness": "Dry runs validate execution and scoring only; they make no effect claim."
+}

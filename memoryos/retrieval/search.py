@@ -310,7 +310,9 @@ class RetrievalEngine:
                     request.as_known_at is None or _utc(row.created_at) <= _utc(request.as_known_at)
                 )
             ]
-            now = datetime.now(UTC)
+            # Historical evaluation must rank recency relative to the requested valid-time
+            # snapshot, rather than leaking the wall-clock date into an otherwise fixed replay.
+            now = _utc(valid_moment)
 
             def score(row: MemoryRow) -> float:
                 age_days = max(0.0, (now - _utc(row.created_at)).total_seconds() / 86400)

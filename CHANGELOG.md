@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- V2.2 repository-level real-workload manifests with public/private/fixture tiers, license and source provenance, temporal Git validation, solution-leak rejection, and digest-pinned hidden tests.
+- Three-condition `no_memory / flat_memory / memoryos` execution with sanitized base-only repositories, isolated MCP sidecars, real Retrieval 2.0 usage gates, bounded non-root agent containers, fresh scoring checkouts, networkless hidden tests, and canary leakage scans.
+- Paired success/safety/cost/latency bootstrap reports with strict dry-run truthfulness and confirmatory diversity, accounting, image, prompt-parity, and egress gates.
+- A deterministic container fixture and pinned MarkupSafe public-history smoke dataset for infrastructure validation only.
+- Explicit task publication timestamps, memory-only cross-project repository validation, and a hard `real_coding_agent` evidence-type gate for confirmatory claims.
+
+### Changed
+
+- Historical search/context no longer mutates current expiration state, and recency ranking is evaluated relative to the requested valid-time snapshot.
+- Agent patches are captured from the pinned base even after agent commits; post-agent host Git rejects control-plane tampering and runs with hooks and external configuration disabled.
+- Agent adapters receive only a pre-created structured-result file, while bounded stdout/stderr remain outside the agent mount; POSIX writable binds enforce non-root UID compatibility.
+
 ## 2.1.0 - 2026-08-10
 
 ### Added

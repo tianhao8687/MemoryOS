@@ -1,0 +1,88 @@
+{
+  "schema_version": "2.2",
+  "name": "markupsafe-public-smoke",
+  "tier": "public_replay",
+  "generated_at": "2026-08-11T00:00:00Z",
+  "repositories": [
+    {
+      "id": "pallets-markupsafe",
+      "clone_url": "https://github.com/pallets/markupsafe.git",
+      "source_url": "https://github.com/pallets/markupsafe",
+      "license_spdx": "BSD-3-Clause",
+      "license_url": "https://github.com/pallets/markupsafe/blob/a743120d9663cecedb9a215f42b7bd6893591690/LICENSE.txt"
+    }
+  ],
+  "memories": [
+    {
+      "id": "warning-category-decision",
+      "repository_id": "pallets-markupsafe",
+      "memory_type": "project",
+      "category": "decision",
+      "title": "Deprecated attributes use DeprecationWarning",
+      "content": "Confirmed review decision: deprecated compatibility attributes should use DeprecationWarning rather than the default UserWarning category.",
+      "captured_at": "2025-05-29T02:42:30Z",
+      "valid_from": "2025-05-29T02:42:10Z",
+      "source_commit": "a743120d9663cecedb9a215f42b7bd6893591690",
+      "source_ref": "https://github.com/pallets/markupsafe/pull/497",
+      "expectation": "helpful",
+      "confidence": 0.95,
+      "importance": 0.9
+    },
+    {
+      "id": "old-warning-category",
+      "repository_id": "pallets-markupsafe",
+      "memory_type": "project",
+      "category": "decision",
+      "title": "Historical default warning category",
+      "content": "Historical note: leave the default UserWarning category unchanged. USE-USERWARNING-STALE",
+      "captured_at": "2025-05-29T02:36:00Z",
+      "valid_from": "2025-05-29T02:35:00Z",
+      "valid_to": "2025-05-29T02:40:00Z",
+      "source_commit": "a743120d9663cecedb9a215f42b7bd6893591690",
+      "source_ref": "src/markupsafe/__init__.py",
+      "expectation": "stale",
+      "canary": "USE-USERWARNING-STALE",
+      "confidence": 0.8,
+      "importance": 0.7
+    }
+  ],
+  "tasks": [
+    {
+      "id": "markupsafe-pr-497",
+      "repository_id": "pallets-markupsafe",
+      "sequence_id": "markupsafe-deprecation-policy",
+      "sequence_index": 1,
+      "base_commit": "a743120d9663cecedb9a215f42b7bd6893591690",
+      "solution_commit": "dec39fef923985232adf7c844bfeb38b3f0772c2",
+      "cutoff": "2025-05-29T02:43:00Z",
+      "source_url": "https://github.com/pallets/markupsafe/pull/497",
+      "source_published_at": "2025-05-29T02:42:10Z",
+      "prompt": "Change the deprecated __version__ attribute warning category to DeprecationWarning and document the change in CHANGES.rst.",
+      "memory_seed_ids": [
+        "warning-category-decision",
+        "old-warning-category"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": [
+          "python",
+          "benchmark_hidden_test.py"
+        ],
+        "hidden_patch": "markupsafe_deprecation_hidden.patch",
+        "hidden_patch_sha256": "7c758401013c6ed61843cf037c5d65d71710b2337f7ec5d0b023dfbb3260ea3d",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": [
+        "python",
+        "deprecation",
+        "documentation"
+      ]
+    }
+  ]
+}

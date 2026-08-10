@@ -1,0 +1,43 @@
+{
+  "manifest_digest": "95aa15f55b6f99f9d90adaa87b0c2483e909aee2919d4c117afeeabb092c0873",
+  "order_seed": 20260810,
+  "report_sha256": "d3c05d348b426e2b27523e811ee37e01484797150487a61e011b1995f194a2b2",
+  "run_id": "markupsafe-public-smoke",
+  "runtime": {
+    "agent_version": "1.0",
+    "command": [
+      "python",
+      "-m",
+      "memoryos.evaluation.fixture_agent",
+      "--strategy",
+      "markupsafe-deprecation",
+      "--workspace",
+      "{workspace}",
+      "--prompt",
+      "{prompt_file}",
+      "--mcp-config",
+      "{mcp_config}",
+      "--result",
+      "{result_file}"
+    ],
+    "cpus": 2.0,
+    "environment_variables": [],
+    "evidence_type": "deterministic_fixture",
+    "image": "sha256:963f7855c80e86f9317c7a129127b8e394adbf79b982511488bca62b2831a620",
+    "max_log_bytes": 2097152,
+    "mcp_image": "sha256:963f7855c80e86f9317c7a129127b8e394adbf79b982511488bca62b2831a620",
+    "mcp_python_command": "python",
+    "mcp_user": "65532:65532",
+    "memory_mb": 4096,
+    "model": "none",
+    "network_access": "internal",
+    "pids_limit": 512,
+    "provider": "deterministic_fixture",
+    "scoring_user": "65532:65532",
+    "timeout_seconds": 900,
+    "user": "65532:65532"
+  },
+  "task_ids": [
+    "markupsafe-pr-497"
+  ]
+}

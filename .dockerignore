@@ -1,0 +1,14 @@
+.git
+.venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+build
+dist
+release
+web
+docs/verification
+*.db
+*.db-shm
+*.db-wal
+*.log

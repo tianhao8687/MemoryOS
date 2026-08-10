@@ -477,8 +477,9 @@ class MemoryService:
             return self._serialize_memory(self._get(session, memory_id))
 
     def search(self, request: SearchRequest) -> dict[str, Any]:
-        with self.database.session() as session:
-            self._expire_due(session)
+        if request.as_of_valid_time is None and request.as_known_at is None:
+            with self.database.session() as session:
+                self._expire_due(session)
         return self.retrieval_v2.search(request)
 
     def vector_status(self) -> list[dict[str, Any]]:
@@ -561,8 +562,9 @@ class MemoryService:
         return {"candidate": proposal, "supporting_memory_ids": unique_ids}
 
     def context(self, request: ContextRequest) -> dict[str, Any]:
-        with self.database.session() as session:
-            self._expire_due(session)
+        if request.as_of_valid_time is None and request.as_known_at is None:
+            with self.database.session() as session:
+                self._expire_due(session)
         return self.context_builder.build(request)
 
     def current_truth(self, request: CurrentTruthRequest) -> dict[str, Any]:
