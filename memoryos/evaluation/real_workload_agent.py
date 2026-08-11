@@ -11,7 +11,7 @@ from enum import StrEnum
 from pathlib import Path, PurePosixPath
 from typing import Any, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from memoryos.evaluation.real_workload_containers import (
     ContainerCommandResult,
@@ -47,6 +47,8 @@ _FORBIDDEN_EXECUTABLES = {
 _MCP_TMPFS = "/tmp:rw,noexec,nosuid,size=128m"  # noqa: S108 - container-only tmpfs
 _AGENT_TMPFS = "/tmp:rw,noexec,nosuid,size=512m"  # noqa: S108 - container-only tmpfs
 _CONTAINER_BIND = "0.0.0.0"  # noqa: S104 - unexposed, isolated Docker network only
+_CREDENTIAL_ROOT = PurePosixPath("/run/credentials")
+_MAX_CREDENTIAL_BYTES = 2 * 1024 * 1024
 
 
 class NetworkAccess(StrEnum):
@@ -57,6 +59,34 @@ class NetworkAccess(StrEnum):
 class AgentEvidenceType(StrEnum):
     DETERMINISTIC_FIXTURE = "deterministic_fixture"
     REAL_CODING_AGENT = "real_coding_agent"
+
+
+class CredentialMountSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_environment: str
+    destination: str
+
+    @field_validator("source_environment")
+    @classmethod
+    def validate_source_environment(cls, value: str) -> str:
+        if not _ENV_NAME.fullmatch(value):
+            raise ValueError("credential source must be a portable environment variable name")
+        return value
+
+    @field_validator("destination")
+    @classmethod
+    def validate_destination(cls, value: str) -> str:
+        path = PurePosixPath(value)
+        if not path.is_absolute() or ".." in path.parts:
+            raise ValueError("credential destination must be an absolute container path")
+        try:
+            relative = path.relative_to(_CREDENTIAL_ROOT)
+        except ValueError as exc:
+            raise ValueError("credential destination must be under /run/credentials") from exc
+        if not relative.parts:
+            raise ValueError("credential destination must name a file under /run/credentials")
+        return path.as_posix()
 
 
 class AgentRuntimeSpec(BaseModel):
@@ -70,7 +100,9 @@ class AgentRuntimeSpec(BaseModel):
     agent_version: str = Field(min_length=1, max_length=120)
     evidence_type: AgentEvidenceType
     environment_variables: list[str] = Field(default_factory=list, max_length=100)
+    credential_mounts: list[CredentialMountSpec] = Field(default_factory=list, max_length=10)
     network_access: NetworkAccess = NetworkAccess.INTERNAL
+    allow_unconfined_seccomp_for_nested_sandbox: bool = False
     user: str = Field(default_factory=default_container_user)
     mcp_user: str = Field(default_factory=default_container_user)
     scoring_user: str = Field(default_factory=default_container_user)
@@ -117,6 +149,29 @@ class AgentRuntimeSpec(BaseModel):
         if len(set(value)) != len(value) or any(not _ENV_NAME.fullmatch(item) for item in value):
             raise ValueError("environment variable names must be unique portable identifiers")
         return value
+
+    @model_validator(mode="after")
+    def validate_credential_mounts(self) -> AgentRuntimeSpec:
+        sources = [item.source_environment for item in self.credential_mounts]
+        destinations = [item.destination for item in self.credential_mounts]
+        if len(set(sources)) != len(sources):
+            raise ValueError("credential source environment variables must be unique")
+        if len(set(destinations)) != len(destinations):
+            raise ValueError("credential destinations must be unique")
+        overlap = sorted(set(sources) & set(self.environment_variables))
+        if overlap:
+            raise ValueError(
+                "credential path variables must not be injected into the agent environment: "
+                + ", ".join(overlap)
+            )
+        if (
+            self.allow_unconfined_seccomp_for_nested_sandbox
+            and self.evidence_type is not AgentEvidenceType.REAL_CODING_AGENT
+        ):
+            raise ValueError(
+                "unconfined seccomp is reserved for real agents with their own nested sandbox"
+            )
+        return self
 
     @field_validator("user", "mcp_user", "scoring_user")
     @classmethod
@@ -203,15 +258,18 @@ class DockerAgentExecutor:
         prompt_path: Path,
         output_dir: Path,
     ) -> AgentExecutionEvidence:
-        missing_environment = [
-            name for name in spec.environment_variables if name not in os.environ
+        required_environment = [
+            *spec.environment_variables,
+            *(item.source_environment for item in spec.credential_mounts),
         ]
+        missing_environment = [name for name in required_environment if name not in os.environ]
         if missing_environment:
             raise AgentExecutionError(
                 "required host environment variables are missing: " + ", ".join(missing_environment)
             )
         prompt = prompt_path.resolve(strict=True)
         config = memory.config_path.resolve(strict=True)
+        credential_mounts = self._resolve_credential_mounts(spec, workspace)
         output = output_dir.resolve()
         try:
             output.relative_to(workspace.path.resolve())
@@ -251,6 +309,7 @@ class DockerAgentExecutor:
                 result_path,
                 network_name,
                 agent_name,
+                credential_mounts,
             )
             container = self.engine.run_attached(
                 arguments,
@@ -343,6 +402,7 @@ class DockerAgentExecutor:
         result_path: Path,
         network_name: str,
         container_name: str,
+        credential_mounts: list[tuple[Path, str]],
     ) -> list[str]:
         mapping = {
             "workspace": "/workspace",
@@ -389,7 +449,45 @@ class DockerAgentExecutor:
         ]
         for name in spec.environment_variables:
             arguments.extend(["--env", name])
+        if spec.allow_unconfined_seccomp_for_nested_sandbox:
+            arguments.extend(["--security-opt", "seccomp=unconfined"])
+        for source, destination in credential_mounts:
+            arguments.extend(["--mount", bind_mount(source, destination, read_only=True)])
         return [*arguments, spec.image, *command]
+
+    @staticmethod
+    def _resolve_credential_mounts(
+        spec: AgentRuntimeSpec,
+        workspace: MaterializedWorkspace,
+    ) -> list[tuple[Path, str]]:
+        workspace_root = workspace.path.resolve(strict=True)
+        resolved: list[tuple[Path, str]] = []
+        for mount in spec.credential_mounts:
+            configured_source = Path(os.environ[mount.source_environment])
+            if not configured_source.is_absolute():
+                raise AgentExecutionError(
+                    f"credential path from {mount.source_environment} must be absolute"
+                )
+            if configured_source.is_symlink():
+                raise AgentExecutionError("credential mounts must be regular non-link files")
+            try:
+                source = configured_source.resolve(strict=True)
+            except OSError as exc:
+                raise AgentExecutionError(
+                    f"credential path from {mount.source_environment} is unavailable"
+                ) from exc
+            if not source.is_file():
+                raise AgentExecutionError("credential mounts must be regular non-link files")
+            if source.stat().st_size > _MAX_CREDENTIAL_BYTES:
+                raise AgentExecutionError("credential mount exceeds the 2 MiB limit")
+            try:
+                source.relative_to(workspace_root)
+            except ValueError:
+                pass
+            else:
+                raise AgentExecutionError("credential source must be outside the agent workspace")
+            resolved.append((source, mount.destination))
+        return resolved
 
 
 def _load_agent_output(path: Path) -> AgentOutput:
@@ -412,6 +510,7 @@ __all__ = [
     "AgentExecutionEvidence",
     "AgentOutput",
     "AgentRuntimeSpec",
+    "CredentialMountSpec",
     "DockerAgentExecutor",
     "NetworkAccess",
 ]

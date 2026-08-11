@@ -45,11 +45,25 @@ prevents a result from being labeled “MemoryOS-enabled” when the agent ignor
 ## Isolation and leakage controls
 
 - The agent runs as a non-root user in a read-only-root container with all Linux capabilities
-  dropped, `no-new-privileges`, CPU/memory/PID limits, bounded logs, and only four mounts: the
-  sanitized workspace, shared prompt, MCP config file, and one pre-created structured-result file.
-  Harness stdout/stderr are outside the agent mount, so the agent cannot replace them with links or
-  special files. On POSIX, writable disposable binds must match the host UID; a root-run harness
-  safely transfers only those generated paths to the declared non-root UID:GID.
+  dropped, `no-new-privileges`, CPU/memory/PID limits, and bounded logs. It receives four benchmark
+  mounts: the sanitized workspace, shared prompt, MCP config file, and one pre-created structured
+  result file. A real-agent runtime may additionally declare small read-only credential files under
+  `/run/credentials`; their host paths come from named environment variables, are resolved only at
+  execution, must be regular non-link files outside the workspace, and are not injected into the
+  container environment. Harness stdout/stderr are outside the agent mount, so the agent cannot
+  replace them with links or special files. On POSIX, writable disposable binds must match the host
+  UID; a root-run harness safely transfers only those generated paths to the declared non-root
+  UID:GID.
+- The bundled Codex adapter uses a fresh tmpfs `CODEX_HOME`, rejects a repository-root `.codex`
+  entry, enables only the isolated `benchmark_memory.memory_context` MCP tool, and approves only a
+  pending call whose server, tool, schema, and safe argument shape match the benchmark protocol.
+  Exact prompt-derived arguments are checked separately; a safe but non-exact call is allowed to
+  finish for auditability but invalidates the sample.
+- Codex's nested Linux sandbox currently requires an explicit real-agent-only outer
+  `seccomp=unconfined` opt-in. The outer container still runs non-root with a read-only root,
+  dropped capabilities, `no-new-privileges`, and resource limits. This exception is acceptable for
+  the pinned pilot below, but must be replaced by a tested custom seccomp profile before arbitrary
+  public repositories are admitted.
 - Memory runs use a separate MCP sidecar. The agent sees only an isolated-network URL; it cannot
   read the flat seed JSON or MemoryOS SQLite database directly.
 - Hidden patches are stored outside the agent workspace, verified by SHA-256, and applied only to a
@@ -106,13 +120,33 @@ Validate the bundled public-history infrastructure smoke with the deterministic 
 
 The fixture image is addressed by its local image ID and declares
 `evidence_type=deterministic_fixture`, so it cannot pass confirmatory mode through either gate.
-For a real coding agent, supply a runtime JSON with registry-qualified agent and MCP image digests,
-an argv command containing `{workspace}`, `{prompt_file}`, `{mcp_config}`, and `{result_file}`, and
-environment variable names (not secret values). Loading a runtime file does not require those
-variables; execution fails before creating a Docker network if any are missing. Runtime evidence
-records the non-root agent, MCP, and scorer UID:GID plus resource limits. On POSIX, generated
-runtime defaults match the non-root host UID:GID so disposable bind mounts remain writable. The
-adapter must write this JSON object:
+The bundled real Codex adapter can run the pinned one-task public pilot. Build the fixture image
+first because it also supplies the MemoryOS MCP sidecar, point the runtime at an existing Codex
+authentication file without copying it into the repository, then run all three conditions:
+
+```powershell
+$env:MEMORYOS_CODEX_AUTH_FILE = (Resolve-Path "$env:USERPROFILE\.codex\auth.json").Path
+.\.venv\Scripts\python.exe scripts\build_real_workload_fixture_image.py
+.\.venv\Scripts\python.exe scripts\build_real_workload_codex_image.py `
+  --reasoning-effort high
+.\.venv\Scripts\python.exe scripts\real_workload_bench.py `
+  --manifest benchmarks\real_workload\public_smoke\real_agent_manifest.json `
+  --runtime build\real-workload\codex-runtime.json `
+  --hidden-root benchmarks\real_workload\public_smoke\hidden `
+  --output-root build\real-workload\evidence `
+  --mode dry_run `
+  --tasks 1 `
+  --run-id markupsafe-codex-real-paired
+```
+
+Use `--condition` only for dry-run calibration. A confirmatory run always requires all three
+conditions. For any other real coding agent, supply a runtime JSON with registry-qualified agent
+and MCP image digests, an argv command containing `{workspace}`, `{prompt_file}`, `{mcp_config}`,
+and `{result_file}`, and environment variable names (not secret values). Loading a runtime file does
+not require those variables; execution fails before creating a Docker network if any are missing.
+Runtime evidence records the non-root agent, MCP, and scorer UID:GID plus resource limits. On POSIX,
+generated runtime defaults match the non-root host UID:GID so disposable bind mounts remain
+writable. The adapter must write this JSON object:
 
 ```json
 {
@@ -126,12 +160,33 @@ adapter must write this JSON object:
 ```
 
 Raw run state under `build/real-workload/run-state/` can contain public memory, patches, and agent
-logs and is not a publishable artifact. The report under `docs/verification/v2.2/<run-id>/` contains
-hashes and metrics only. Review it before publishing, especially for `private_opt_in` runs.
+logs and is not a publishable artifact. Reports default to `docs/verification/v2.2/<run-id>/`; the
+pilot command above deliberately keeps its report under `build/real-workload/evidence/`. Review any
+report before publishing, especially for `private_opt_in` runs.
+
+## Pinned real-agent pilot result
+
+The 2026-08-11 MarkupSafe replay completed with protocol-valid evidence in all three conditions.
+All three patches passed the semantic hidden test. MemoryOS made one MCP call, persisted one
+retrieval run, and selected only `warning-category-decision`; flat memory selected both that useful
+record and the stale `old-warning-category` record. No stale canary or cross-project canary reached
+the patch, message, or bounded logs.
+
+This is a plumbing and safety result, not an effect result. With one task, functional success was
+1.0 for every condition. MemoryOS took 84.96 seconds, flat memory 82.11 seconds, and no memory
+101.34 seconds; flat memory also used fewer input tokens than MemoryOS. These single observations
+have no useful confidence interval, provider cost was unavailable under ChatGPT authentication,
+and repeated calibration already showed patch-shape variance. The report therefore correctly says
+`effect_claim=none`.
 
 ## Honest remaining boundary
 
-The bundled adapter is not a language model. It is intentionally task-specific and only verifies
-the infrastructure. A real-agent result requires an independently configured coding-agent image,
-model endpoint or isolated model gateway, and provider credentials. Until those are supplied and a
-confirmatory sample passes, MemoryOS makes no real-agent effect claim.
+The deterministic fixture remains plumbing-only; the bundled Codex adapter now provides one real
+coding-agent pilot. It is still unsuitable for a confirmatory claim or arbitrary untrusted
+repositories: the pilot uses unrestricted model internet egress, a directly mounted long-lived
+authentication file, local image IDs, an outer unconfined seccomp exception, and no provider cost
+meter. Before scaling, add a model-only egress gateway with short-lived credentials, replace the
+seccomp exception, publish registry-qualified image digests, and collect cost. Then run an
+exploratory 10-15-task corpus across at least three repositories before deciding whether the
+50-task confirmatory study is justified. Until a confirmatory sample passes, MemoryOS makes no
+real-agent effect claim.

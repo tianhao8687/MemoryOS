@@ -17,7 +17,7 @@ from memoryos.evaluation.real_workload_agent import (
     AgentRuntimeSpec,
 )
 from memoryos.evaluation.real_workload_containers import ContainerCommandResult
-from memoryos.evaluation.real_workload_models import RealWorkloadManifest
+from memoryos.evaluation.real_workload_models import ExperimentCondition, RealWorkloadManifest
 from memoryos.evaluation.real_workload_report import RunMode
 from memoryos.evaluation.real_workload_runner import RealWorkloadRunner
 from memoryos.evaluation.real_workload_scoring import HiddenTestResult
@@ -254,3 +254,19 @@ def test_runner_executes_three_isolated_conditions_and_writes_truthful_report(
     assert report["temporal_validation"][0]["checked_task_ids"] == ("set-value",)
     assert report["temporal_validation"][1]["checked_task_ids"] == ()
     assert datetime.fromisoformat(report["finished_at"]).tzinfo is not None
+
+    calibration = runner.run(
+        manifest,
+        runtime,
+        hidden_root=hidden_root,
+        output_root=tmp_path / "evidence",
+        mode=RunMode.DRY_RUN,
+        run_id="fixture-memoryos-calibration",
+        conditions=[ExperimentCondition.MEMORYOS],
+        order_seed=7,
+    )
+
+    assert calibration["status"] == "completed_invalid"
+    assert calibration["condition_run_count"] == 1
+    assert calibration["records"][0]["condition"] == "memoryos"
+    assert "does not have all three conditions" in " ".join(calibration["protocol_errors"])
