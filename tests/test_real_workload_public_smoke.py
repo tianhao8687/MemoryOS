@@ -28,6 +28,21 @@ def test_public_smoke_manifest_and_hidden_overlay_are_pinned() -> None:
     assert task.hidden_test.read_only_root is True
 
 
+def test_real_agent_pilot_manifest_and_semantic_overlay_are_pinned() -> None:
+    manifest = load_real_workload_manifest(SMOKE_ROOT / "real_agent_manifest.json")
+    task = manifest.tasks[0]
+    patch = SMOKE_ROOT / "hidden" / str(task.hidden_test.hidden_patch)
+
+    assert manifest.tier is DatasetTier.PUBLIC_REPLAY
+    assert manifest.name == "markupsafe-real-agent-pilot"
+    assert len(manifest.tasks) == 1
+    assert task.source_published_at is not None
+    assert task.source_published_at <= task.cutoff
+    assert hashlib.sha256(patch.read_bytes()).hexdigest() == task.hidden_test.hidden_patch_sha256
+    assert task.hidden_test.network == "none"
+    assert task.hidden_test.read_only_root is True
+
+
 def test_deterministic_fixture_applies_only_the_documented_smoke_change(tmp_path: Path) -> None:
     source = tmp_path / "src" / "markupsafe"
     source.mkdir(parents=True)

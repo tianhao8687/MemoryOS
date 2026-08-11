@@ -218,6 +218,7 @@ def test_executor_uses_sidecar_and_hardened_agent_mounts(tmp_path: Path) -> None
     agent = engine.attached_arguments[0]
     assert "--read-only" in agent
     assert "no-new-privileges" in agent
+    assert "seccomp=unconfined" not in agent
     assert agent.count("--mount") == 4
     assert _mount_source(agent, "/output/agent-result.json").is_file()
     assert "/output" not in [
@@ -258,6 +259,133 @@ def test_executor_rejects_missing_structured_result(tmp_path: Path) -> None:
             prompt,
             tmp_path / "missing-output",
         )
+
+
+def test_executor_mounts_credentials_without_injecting_their_host_paths(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    auth = tmp_path / "auth.json"
+    auth.write_text('{"auth_mode":"chatgpt"}\n', encoding="utf-8")
+    variable = "MEMORYOS_TEST_CODEX_AUTH_FILE"
+    monkeypatch.setenv(variable, str(auth.resolve()))
+    payload = _runtime_spec().model_dump(mode="json")
+    payload["credential_mounts"] = [
+        {
+            "source_environment": variable,
+            "destination": "/run/credentials/codex-auth.json",
+        }
+    ]
+    payload["evidence_type"] = AgentEvidenceType.REAL_CODING_AGENT.value
+    payload["allow_unconfined_seccomp_for_nested_sandbox"] = True
+    spec = AgentRuntimeSpec.model_validate(payload)
+    task = _task()
+    runtime = MemoryRuntimeBuilder().prepare(
+        ExperimentCondition.NO_MEMORY,
+        task,
+        [_seed()],
+        tmp_path / "credential-state",
+    )
+    prompt = tmp_path / "credential-task.txt"
+    prompt.write_text(task.prompt, encoding="utf-8")
+    engine = FakeContainerEngine()
+
+    DockerAgentExecutor(engine).run(
+        spec,
+        _workspace(tmp_path),
+        runtime,
+        prompt,
+        tmp_path / "credential-output",
+    )
+
+    agent = engine.attached_arguments[0]
+    assert agent.count("--mount") == 5
+    assert _mount_source(agent, "/run/credentials/codex-auth.json") == auth.resolve()
+    assert variable not in agent
+    assert "seccomp=unconfined" in agent
+    assert str(auth.resolve()) in " ".join(agent)
+    assert auth.read_text(encoding="utf-8") not in " ".join(agent)
+
+
+def test_executor_requires_credential_path_environment_at_execution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    variable = "MEMORYOS_TEST_MISSING_CODEX_AUTH_FILE"
+    monkeypatch.delenv(variable, raising=False)
+    payload = _runtime_spec().model_dump(mode="json")
+    payload["credential_mounts"] = [
+        {
+            "source_environment": variable,
+            "destination": "/run/credentials/codex-auth.json",
+        }
+    ]
+    spec = AgentRuntimeSpec.model_validate(payload)
+    task = _task()
+    runtime = MemoryRuntimeBuilder().prepare(
+        ExperimentCondition.NO_MEMORY,
+        task,
+        [_seed()],
+        tmp_path / "missing-credential-state",
+    )
+    prompt = tmp_path / "missing-credential-task.txt"
+    prompt.write_text(task.prompt, encoding="utf-8")
+    engine = FakeContainerEngine()
+
+    with pytest.raises(AgentExecutionError, match=variable):
+        DockerAgentExecutor(engine).run(
+            spec,
+            _workspace(tmp_path),
+            runtime,
+            prompt,
+            tmp_path / "missing-credential-output",
+        )
+
+    assert engine.networks == []
+
+
+def test_executor_rejects_symlinked_credential_source(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    auth = tmp_path / "auth.json"
+    auth.write_text('{"auth_mode":"chatgpt"}\n', encoding="utf-8")
+    auth_link = tmp_path / "auth-link.json"
+    try:
+        auth_link.symlink_to(auth)
+    except OSError:
+        pytest.skip("symbolic links are unavailable on this host")
+    variable = "MEMORYOS_TEST_LINKED_CODEX_AUTH_FILE"
+    monkeypatch.setenv(variable, str(auth_link.absolute()))
+    payload = _runtime_spec().model_dump(mode="json")
+    payload["credential_mounts"] = [
+        {
+            "source_environment": variable,
+            "destination": "/run/credentials/codex-auth.json",
+        }
+    ]
+    spec = AgentRuntimeSpec.model_validate(payload)
+    task = _task()
+    runtime = MemoryRuntimeBuilder().prepare(
+        ExperimentCondition.NO_MEMORY,
+        task,
+        [_seed()],
+        tmp_path / "linked-credential-state",
+    )
+    prompt = tmp_path / "linked-credential-task.txt"
+    prompt.write_text(task.prompt, encoding="utf-8")
+    engine = FakeContainerEngine()
+
+    with pytest.raises(AgentExecutionError, match="regular non-link"):
+        DockerAgentExecutor(engine).run(
+            spec,
+            _workspace(tmp_path),
+            runtime,
+            prompt,
+            tmp_path / "linked-credential-output",
+        )
+
+    assert engine.networks == []
 
 
 def test_runtime_loading_is_pure_but_executor_rejects_missing_environment(
@@ -329,6 +457,21 @@ def test_writable_bind_mount_rejects_nonroot_uid_mismatch(
         (
             {"command": ["agent", "{workspace}", "{prompt_file}", "{result_file}"]},
             "missing placeholders",
+        ),
+        (
+            {
+                "credential_mounts": [
+                    {
+                        "source_environment": "MEMORYOS_AUTH_FILE",
+                        "destination": "/workspace/auth.json",
+                    }
+                ]
+            },
+            "under /run/credentials",
+        ),
+        (
+            {"allow_unconfined_seccomp_for_nested_sandbox": True},
+            "reserved for real agents",
         ),
     ],
 )

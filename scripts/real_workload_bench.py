@@ -4,6 +4,7 @@ import argparse
 from datetime import UTC, datetime
 from pathlib import Path
 
+from memoryos.evaluation.real_workload_models import ExperimentCondition
 from memoryos.evaluation.real_workload_report import RunMode
 from memoryos.evaluation.real_workload_runner import RealWorkloadRunner, load_runner_inputs
 
@@ -19,6 +20,12 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, default=Path("docs/verification/v2.2"))
     parser.add_argument("--mode", choices=[mode.value for mode in RunMode], default="dry_run")
     parser.add_argument("--tasks", type=int)
+    parser.add_argument(
+        "--condition",
+        action="append",
+        choices=[condition.value for condition in ExperimentCondition],
+        help="Run only selected conditions for a dry-run calibration; repeat as needed.",
+    )
     parser.add_argument("--order-seed", type=int, default=20260810)
     parser.add_argument("--run-id")
     arguments = parser.parse_args()
@@ -32,6 +39,11 @@ def main() -> None:
         mode=RunMode(arguments.mode),
         run_id=run_id,
         task_limit=arguments.tasks,
+        conditions=(
+            [ExperimentCondition(value) for value in arguments.condition]
+            if arguments.condition
+            else None
+        ),
         order_seed=arguments.order_seed,
     )
     print(
