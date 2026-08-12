@@ -226,3 +226,30 @@ def test_workspace_refuses_reuse(tmp_path: Path, repository: tuple[Path, str, st
             ExperimentCondition.FLAT_MEMORY,
             run_id="run-003",
         )
+
+
+def test_existing_cache_can_be_reused_without_remote_refresh(
+    tmp_path: Path, repository: tuple[Path, str, str]
+) -> None:
+    source, base, solution = repository
+    root = tmp_path / "bench"
+    repository_spec = RepositorySpec(id="fixture", clone_url=str(source), license_spdx="MIT")
+    online = RepositoryWorkspaceManager(root)
+    online.prepare_repository(repository_spec)
+    source.rename(tmp_path / "source-offline")
+
+    offline = RepositoryWorkspaceManager(root, refresh_existing_cache=False)
+    prepared = offline.prepare_repository(repository_spec)
+    offline.assert_manifest_commits(prepared, [_task(base, solution)])
+
+
+def test_cache_reuse_without_fetch_requires_existing_cache(tmp_path: Path) -> None:
+    manager = RepositoryWorkspaceManager(tmp_path / "bench", refresh_existing_cache=False)
+    repository_spec = RepositorySpec(
+        id="missing",
+        clone_url=str(tmp_path / "missing-source"),
+        license_spdx="MIT",
+    )
+
+    with pytest.raises(WorkspaceError, match="cache is required"):
+        manager.prepare_repository(repository_spec)

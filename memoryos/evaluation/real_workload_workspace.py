@@ -56,6 +56,7 @@ class RepositoryWorkspaceManager:
         *,
         executable: Path | None = None,
         command_timeout_seconds: int = 180,
+        refresh_existing_cache: bool = True,
     ) -> None:
         self.root = root.resolve()
         self.cache_root = self.root / "cache"
@@ -64,6 +65,7 @@ class RepositoryWorkspaceManager:
         self.runs_root.mkdir(parents=True, exist_ok=True)
         self.executable = (executable or _find_git()).resolve()
         self.command_timeout_seconds = command_timeout_seconds
+        self.refresh_existing_cache = refresh_existing_cache
 
     def prepare_repository(self, repository: RepositorySpec) -> PreparedRepository:
         mirror = self.cache_root / f"{repository.id}.git"
@@ -75,8 +77,13 @@ class RepositoryWorkspaceManager:
                 raise WorkspaceError(
                     f"repository cache origin mismatch for {repository.id}; use a fresh cache root"
                 )
-            self._git_bare(mirror, "fetch", "--prune", "--no-recurse-submodules", "origin")
+            if self.refresh_existing_cache:
+                self._git_bare(mirror, "fetch", "--prune", "--no-recurse-submodules", "origin")
         else:
+            if not self.refresh_existing_cache:
+                raise WorkspaceError(
+                    f"repository cache is required when refresh is disabled: {repository.id}"
+                )
             self._run(
                 self.cache_root,
                 "clone",
