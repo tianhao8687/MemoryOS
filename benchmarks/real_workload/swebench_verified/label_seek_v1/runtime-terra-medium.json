@@ -1,0 +1,48 @@
+{
+  "image": "sha256:bbf463d0636258fe5f77cbb32f45465e942fc8ae059180491c28e8afe3eed1c1",
+  "mcp_image": "sha256:963f7855c80e86f9317c7a129127b8e394adbf79b982511488bca62b2831a620",
+  "command": [
+    "python3",
+    "/opt/benchmark-agent/codex_benchmark_agent.py",
+    "--workspace",
+    "{workspace}",
+    "--prompt",
+    "{prompt_file}",
+    "--mcp-config",
+    "{mcp_config}",
+    "--result",
+    "{result_file}",
+    "--auth-file",
+    "/run/credentials/codex-auth.json",
+    "--model",
+    "gpt-5.6-terra",
+    "--reasoning-effort",
+    "medium",
+    "--service-tier",
+    "priority",
+    "--timeout-seconds",
+    "840"
+  ],
+  "provider": "openai-codex-chatgpt",
+  "model": "gpt-5.6-terra",
+  "agent_version": "codex-cli/0.147.0+app-server-adapter/4",
+  "evidence_type": "real_coding_agent",
+  "environment_variables": [],
+  "credential_mounts": [
+    {
+      "source_environment": "MEMORYOS_CODEX_AUTH_FILE",
+      "destination": "/run/credentials/codex-auth.json"
+    }
+  ],
+  "network_access": "internet",
+  "allow_unconfined_seccomp_for_nested_sandbox": true,
+  "user": "65532:65532",
+  "mcp_user": "65532:65532",
+  "scoring_user": "65532:65532",
+  "mcp_python_command": "python",
+  "timeout_seconds": 900,
+  "memory_mb": 4096,
+  "cpus": 2.0,
+  "pids_limit": 512,
+  "max_log_bytes": 2097152
+}

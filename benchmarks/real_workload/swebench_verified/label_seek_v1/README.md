@@ -11,6 +11,11 @@ Repository partitions remain immutable: Pylint and pytest are `train`, while Sea
 repository-held-out `dev` partition. Selection, prompts, memories, hidden scorers, runtime policy,
 and arm randomization are frozen before any arm in this batch runs.
 
+The batch uses the pinned `runtime-terra-medium.json`: an everyday balanced coding-agent model,
+medium reasoning, and a 14-minute agent budget inside a 15-minute container limit. This bounded
+runtime is intentional because project memory should be evaluated as a way to reduce search under a
+realistic delivery budget, not only with the strongest model and an effectively unbounded session.
+
 Every memory summarizes code or repository behavior already present at the task cutoff. The agent
 never receives the SWE-bench gold patch, official tests, solution commit, scorer source, or outcome
 of the other arm. Hidden scorers run without network access and must fail on the pinned base while

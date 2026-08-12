@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from memoryos.evaluation.real_workload_models import load_real_workload_manifest
+from memoryos.evaluation.real_workload_runner import load_runner_inputs
 
 ROOT = Path(__file__).parents[1]
 TASK_ROOT = ROOT / "benchmarks" / "real_workload" / "swebench_verified" / "label_seek_v1"
@@ -30,6 +31,15 @@ def test_label_seeking_pack_is_frozen_before_outcomes() -> None:
     }
     assert verification["network"] == "none"
     assert verification["read_only_root"] is True
+
+    _, runtime = load_runner_inputs(
+        TASK_ROOT / "manifest.json",
+        TASK_ROOT / "runtime-terra-medium.json",
+    )
+    assert runtime.model == "gpt-5.6-terra"
+    assert runtime.provider == "openai-codex-chatgpt"
+    assert runtime.timeout_seconds == 900
+    assert runtime.evidence_type.value == "real_coding_agent"
 
 
 def test_label_seeking_provenance_hashes_and_scorers_are_bound() -> None:
