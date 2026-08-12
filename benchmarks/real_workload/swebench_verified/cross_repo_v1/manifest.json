@@ -169,7 +169,7 @@
           "benchmark_hidden_test.py"
         ],
         "hidden_patch": "seaborn_nominal_axis_hidden.patch",
-        "hidden_patch_sha256": "316dd981f0eab268cf7e063c4adf5c76850d91350a76b0227561f98ced4efb8f",
+        "hidden_patch_sha256": "c7eddfb75aec2898df4dff1c9bfec1e222621e22a4b4548e361113b693e775fc",
         "expected_exit_code": 0,
         "timeout_seconds": 30,
         "memory_mb": 256,

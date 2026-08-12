@@ -107,7 +107,11 @@ def test_cross_repository_hidden_scorers_separate_base_and_fix(
     assert fixed.returncode == 0, fixed.stderr
 
 
-def test_seaborn_hidden_scorer_accepts_equivalent_axes_tick_api(tmp_path: Path) -> None:
+@pytest.mark.parametrize("tick_api", ["axes", "axis_ticklocs"])
+def test_seaborn_hidden_scorer_accepts_equivalent_tick_apis(
+    tmp_path: Path,
+    tick_api: str,
+) -> None:
     manifest = load_real_workload_manifest(TASK_ROOT / "manifest.json")
     task = next(task for task in manifest.tasks if task.id == "seaborn-pr-3069")
     assert task.hidden_test.hidden_patch is not None
@@ -119,7 +123,7 @@ def test_seaborn_hidden_scorer_accepts_equivalent_axes_tick_api(tmp_path: Path) 
     )
     _write_files(
         tmp_path,
-        {"seaborn/_core/plot.py": _seaborn_source(fixed=True, use_axes_ticks=True)},
+        {"seaborn/_core/plot.py": _seaborn_source(fixed=True, tick_api=tick_api)},
     )
 
     result = _run_scorer(tmp_path)
@@ -152,13 +156,17 @@ def _added_file_source(path: Path) -> str:
     return "\n".join(line[1:] for line in lines[start:] if line.startswith("+")) + "\n"
 
 
-def _seaborn_source(*, fixed: bool, use_axes_ticks: bool = False) -> str:
-    grid_call = "axis_obj.grid(False)" if use_axes_ticks else 'axis_obj.grid(False, which="both")'
-    tick_count = (
-        'len(getattr(ax, f"get_{axis}ticks")())'
-        if use_axes_ticks
-        else "len(axis_obj.get_major_ticks())"
+def _seaborn_source(*, fixed: bool, tick_api: str = "axis_major") -> str:
+    grid_call = (
+        'axis_obj.grid(False, which="both")'
+        if tick_api == "axis_major"
+        else "axis_obj.grid(False)"
     )
+    tick_count = {
+        "axis_major": "len(axis_obj.get_major_ticks())",
+        "axis_ticklocs": "len(axis_obj.get_ticklocs())",
+        "axes": 'len(getattr(ax, f"get_{axis}ticks")())',
+    }[tick_api]
     behavior = (
         f"""
                 elif isinstance(self._scales.get(axis_key), Nominal):

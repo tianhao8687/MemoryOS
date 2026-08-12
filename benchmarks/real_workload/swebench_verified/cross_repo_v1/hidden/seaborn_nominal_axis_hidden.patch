@@ -3,7 +3,7 @@ new file mode 100644
 index 0000000..69b7acc
 --- /dev/null
 +++ b/benchmark_hidden_test.py
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,132 @@
 +from __future__ import annotations
 +
 +import ast
@@ -25,6 +25,18 @@ index 0000000..69b7acc
 +    @staticmethod
 +    def get_major_ticks() -> list[object]:
 +        return [object(), object(), object()]
++
++    @staticmethod
++    def get_ticklocs() -> list[float]:
++        return [0.0, 1.0, 2.0]
++
++    @staticmethod
++    def get_majorticklocs() -> list[float]:
++        return [0.0, 1.0, 2.0]
++
++    @staticmethod
++    def get_minorticklocs() -> list[float]:
++        return []
 +
 +    @staticmethod
 +    def convert_units(value: object) -> object:
