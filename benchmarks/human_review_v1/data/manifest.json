@@ -1,0 +1,125 @@
+{
+  "artifacts": {
+    "assignments": {
+      "reviewer-a": {
+        "path": "blind/reviewer-a.jsonl",
+        "rows": 61,
+        "sha256": "e4ca179e9a44a718f148c50d29c4dbe7db04ef0ca04f9a45cabd18bda3240381"
+      },
+      "reviewer-b": {
+        "path": "blind/reviewer-b.jsonl",
+        "rows": 61,
+        "sha256": "9812f8528aaacb86bbbce35fe62cee4d79c30063d94d31e2a5992623e377d07f"
+      }
+    },
+    "coupling_audit": {
+      "path": "coupling_audit.json",
+      "rows": 1,
+      "sha256": "ca7692b83c9e3895036411590b10393294d8fb92b38798b85b3ce77b93f5d0d7"
+    },
+    "response_templates": {
+      "reviewer-a": {
+        "path": "templates/reviewer-a.responses.jsonl",
+        "rows": 1922,
+        "sha256": "3f83836edeec5b67d02bfcfcc30fe4e65210385278fd22ac8de08cdc7a8dc87d"
+      },
+      "reviewer-b": {
+        "path": "templates/reviewer-b.responses.jsonl",
+        "rows": 1922,
+        "sha256": "a6c20e880913e8c83b2aa876a55974b754f118f7ce305b738e69b0a7cd6979bf"
+      }
+    },
+    "rubric": {
+      "path": "RUBRIC.md",
+      "rows": 1,
+      "sha256": "1da206e4ae038431dda09410d07cd4373a64f8c4e95730b021bc879bc0e087fc"
+    },
+    "source_map": {
+      "path": "control/source_map.jsonl",
+      "rows": 1922,
+      "sha256": "48d19e44c7b62a5ef7c6cb72463d50a5cdaa091b1368e48fe701db52625f086b"
+    }
+  },
+  "build_checks": {
+    "blind_assignments_contain_no_label_or_control_fields": true,
+    "candidate_order_differs_by_assignment": true,
+    "control_source_map_is_separate": true,
+    "qrels_were_not_loaded": true,
+    "response_templates_are_blank": true,
+    "source_artifacts_are_hash_pinned": true,
+    "test_split_is_absent": true,
+    "time_stratified_repository_sampling": true,
+    "two_or_more_independent_assignments": true
+  },
+  "dataset_id": "memoryos-human-review-v1-pilot",
+  "generated_at": "2026-08-12T12:00:00Z",
+  "generator_source_sha256": "7f483be0b97e88b7386fed7b1f2434f80efbf504c4189fee8e48516f237b20b2",
+  "label_tier": "pending_human_adjudication",
+  "limitations": [
+    "This is an unlabeled pilot review pack, not a completed human-gold dataset.",
+    "Git-history cases inherit candidate construction from the silver dataset even though silver qrels are never loaded.",
+    "The initial real-workload source is diagnostic and may overlap a Git source repository.",
+    "Human relevance labels alone cannot calibrate truth mutation, conflict confidence, or memory-health automation."
+  ],
+  "qrels_loaded_during_build": false,
+  "release_blockers": [
+    "Two independent completed human reviews are missing.",
+    "Independent adjudication is missing.",
+    "A sealed human-gold test from repositories absent from silver calibration is missing.",
+    "Real coding-agent shadow outcomes are not yet linked to adjudicated retrieval labels."
+  ],
+  "rubric_version": "retrieval-utility-v1",
+  "schema_version": "1.0",
+  "source_config_sha256": "ea6cca907d76002ca67fe3ee9d5c0edb64a44112169fea1a35b68b80271b4f3e",
+  "sources": [
+    {
+      "cases": 60,
+      "id": "memoryos-git-silver-v1",
+      "kind": "git_history",
+      "path": "benchmarks/calibration_v1/data",
+      "repositories": [
+        "encode-httpx",
+        "expressjs-express",
+        "pallets-markupsafe",
+        "tokio-bytes",
+        "vitejs-vite"
+      ],
+      "source_manifest_sha256": "52e670691d4c723680f7d2c67efcce31701001c88218bd3d915c82de5013eb3a"
+    },
+    {
+      "cases": 1,
+      "id": "markupsafe-real-agent-pilot",
+      "kind": "real_workload",
+      "path": "benchmarks/real_workload/public_smoke/real_agent_manifest.json",
+      "repositories": [
+        "pallets-markupsafe"
+      ],
+      "source_manifest_sha256": "e31f3f7533d43a67dabd44071bbff2bd39502e8e2f03009b6eadc2ea85d65d48"
+    }
+  ],
+  "status": "pilot_unlabeled",
+  "summary": {
+    "assignment_count": 2,
+    "cases": 61,
+    "cases_by_partition": {
+      "calibration": 48,
+      "diagnostic": 1,
+      "validation": 12
+    },
+    "cases_by_repository": {
+      "encode-httpx": 12,
+      "expressjs-express": 12,
+      "pallets-markupsafe": 13,
+      "tokio-bytes": 12,
+      "vitejs-vite": 12
+    },
+    "cases_by_source_kind": {
+      "git_history": 60,
+      "real_workload": 1
+    },
+    "judgments_per_reviewer": 1922,
+    "source_datasets": 2,
+    "source_repositories": 5
+  },
+  "test_split_sealed": true
+}

@@ -1,0 +1,102 @@
+{
+  "cases_by_source_kind": {
+    "git_history": 60,
+    "real_workload": 1
+  },
+  "dataset_id": "memoryos-human-review-v1-pilot",
+  "external_real_workload_repository_ids": [],
+  "findings": [
+    {
+      "code": "sealed-test-not-sampled",
+      "detail": "The existing repository-held-out test split is absent from the review pack and remains sealed for confirmatory evaluation.",
+      "risk": "controlled"
+    },
+    {
+      "code": "source-kind-concentration",
+      "detail": "The largest source kind (git_history) contributes 60 of 61 cases. Report it as a raw concentration; do not hide it in an aggregate score.",
+      "risk": "material"
+    },
+    {
+      "code": "human-labels-pending",
+      "detail": "The pack contains blank independent-review templates, not human judgments. It cannot be called gold or used to approve production weights.",
+      "risk": "blocking"
+    },
+    {
+      "code": "real-workload-repository-overlap",
+      "detail": "Real-workload repositories overlap Git-history sources: pallets-markupsafe. These tasks are diagnostic, not independent external validation.",
+      "risk": "material"
+    },
+    {
+      "code": "no-external-real-workload-repository",
+      "detail": "No real-workload task comes from a repository outside the Git-history source set, so cross-source generalization is still unmeasured.",
+      "risk": "blocking"
+    }
+  ],
+  "git_repository_ids": [
+    "encode-httpx",
+    "expressjs-express",
+    "pallets-markupsafe",
+    "tokio-bytes",
+    "vitejs-vite"
+  ],
+  "label_state": "pending_human_adjudication",
+  "leave_one_source_out_plan": [
+    {
+      "held_out_source_id": "memoryos-git-silver-v1",
+      "id": "holdout-memoryos-git-silver-v1",
+      "interpretation": "Score this source only after tuning on the other listed sources. Repository overlap must be reported beside the fold result.",
+      "repository_overlap": [
+        "pallets-markupsafe"
+      ],
+      "status": "pending_human_labels",
+      "training_source_ids": [
+        "markupsafe-real-agent-pilot"
+      ]
+    },
+    {
+      "held_out_source_id": "markupsafe-real-agent-pilot",
+      "id": "holdout-markupsafe-real-agent-pilot",
+      "interpretation": "Score this source only after tuning on the other listed sources. Repository overlap must be reported beside the fold result.",
+      "repository_overlap": [
+        "pallets-markupsafe"
+      ],
+      "status": "pending_human_labels",
+      "training_source_ids": [
+        "memoryos-git-silver-v1"
+      ]
+    }
+  ],
+  "next_data_requirements": [
+    "Add public or consented real tasks from repositories and organizations absent from memoryos-git-silver-v1.",
+    "Keep each new task source as a named evaluation slice; do not pool away its identity.",
+    "After adjudication, execute every leave-one-source-out fold and publish worst-slice results beside aggregate metrics.",
+    "Keep truth-conflict, health, and automatic-mutation calibration in separate datasets."
+  ],
+  "overlapping_real_workload_repository_ids": [
+    "pallets-markupsafe"
+  ],
+  "protections": {
+    "candidate_order_varies_by_reviewer": true,
+    "independent_adjudicator_required": true,
+    "qrels_not_loaded_by_builder": true,
+    "repository_and_time_stratified_sampling": true,
+    "test_split_sealed": true,
+    "two_independent_reviews_required": true
+  },
+  "real_workload_repository_ids": [
+    "pallets-markupsafe"
+  ],
+  "release_blockers": [
+    "Two independent completed human reviews are missing.",
+    "Independent adjudication is missing.",
+    "A sealed human-gold test from repositories absent from silver calibration is missing.",
+    "Real coding-agent shadow outcomes are not yet linked to adjudicated retrieval labels."
+  ],
+  "schema_version": "1.0",
+  "source_dataset_ids": [
+    "markupsafe-real-agent-pilot",
+    "memoryos-git-silver-v1"
+  ],
+  "status": "pilot_only",
+  "total_cases": 61
+}

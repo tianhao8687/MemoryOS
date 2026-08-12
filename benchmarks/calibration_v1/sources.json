@@ -1,0 +1,106 @@
+{
+  "dataset_id": "memoryos-git-silver-v1",
+  "generated_at": "2026-08-12T08:00:00Z",
+  "generator_version": "git-silver-v1",
+  "repositories": [
+    {
+      "clone_url": "https://github.com/pallets/markupsafe.git",
+      "id": "pallets-markupsafe",
+      "language": "python",
+      "license_path": "LICENSE.txt",
+      "license_spdx": "BSD-3-Clause",
+      "license_url": "https://github.com/pallets/markupsafe/blob/b2e4d9c7687be25695fffbe93a37622302b24fb1/LICENSE.txt",
+      "role": "query_source",
+      "snapshot_commit": "b2e4d9c7687be25695fffbe93a37622302b24fb1",
+      "source_url": "https://github.com/pallets/markupsafe",
+      "split": "train"
+    },
+    {
+      "clone_url": "https://github.com/encode/httpx.git",
+      "id": "encode-httpx",
+      "language": "python",
+      "license_path": "LICENSE.md",
+      "license_spdx": "BSD-3-Clause",
+      "license_url": "https://github.com/encode/httpx/blob/b5addb64f0161ff6bfe94c124ef76f6a1fba5254/LICENSE.md",
+      "role": "query_source",
+      "snapshot_commit": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+      "source_url": "https://github.com/encode/httpx",
+      "split": "train"
+    },
+    {
+      "clone_url": "https://github.com/expressjs/express.git",
+      "id": "expressjs-express",
+      "language": "javascript",
+      "license_path": "LICENSE",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/expressjs/express/blob/a3714473feb3d2908add734d340e7755fd85e0a3/LICENSE",
+      "role": "query_source",
+      "snapshot_commit": "a3714473feb3d2908add734d340e7755fd85e0a3",
+      "source_url": "https://github.com/expressjs/express",
+      "split": "train"
+    },
+    {
+      "clone_url": "https://github.com/vitejs/vite.git",
+      "id": "vitejs-vite",
+      "language": "typescript",
+      "license_path": "LICENSE",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/vitejs/vite/blob/b4d66fee14d970f45b8a6f3d7d6aee73ca9b88ab/LICENSE",
+      "role": "query_source",
+      "snapshot_commit": "b4d66fee14d970f45b8a6f3d7d6aee73ca9b88ab",
+      "source_url": "https://github.com/vitejs/vite",
+      "split": "train"
+    },
+    {
+      "clone_url": "https://github.com/tokio-rs/bytes.git",
+      "id": "tokio-bytes",
+      "language": "rust",
+      "license_path": "LICENSE",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/tokio-rs/bytes/blob/d5c8ad3227afe459c09f1d0d85455abf00f0381a/LICENSE",
+      "role": "query_source",
+      "snapshot_commit": "d5c8ad3227afe459c09f1d0d85455abf00f0381a",
+      "source_url": "https://github.com/tokio-rs/bytes",
+      "split": "dev"
+    },
+    {
+      "clone_url": "https://github.com/jesseduffield/lazygit.git",
+      "id": "jesseduffield-lazygit",
+      "language": "go",
+      "license_path": "LICENSE",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/jesseduffield/lazygit/blob/ddceff696286811d2adc02e27bad1b275b9b1c75/LICENSE",
+      "role": "query_source",
+      "snapshot_commit": "ddceff696286811d2adc02e27bad1b275b9b1c75",
+      "source_url": "https://github.com/jesseduffield/lazygit",
+      "split": "test"
+    },
+    {
+      "clone_url": "https://github.com/pallets/itsdangerous.git",
+      "id": "pallets-itsdangerous-guard",
+      "language": "python",
+      "license_path": "LICENSE.txt",
+      "license_spdx": "BSD-3-Clause",
+      "license_url": "https://github.com/pallets/itsdangerous/blob/672971d66a2ef9f85151e53283113f33d642dabd/LICENSE.txt",
+      "role": "guard_only",
+      "snapshot_commit": "672971d66a2ef9f85151e53283113f33d642dabd",
+      "source_url": "https://github.com/pallets/itsdangerous"
+    }
+  ],
+  "schema_version": "1.0",
+  "settings": {
+    "candidate_pool_size": 32,
+    "cross_scope_guards_per_query": 1,
+    "future_guards_per_query": 1,
+    "history_limit": 800,
+    "lexical_negative_candidates": 8,
+    "lookback_commits": 240,
+    "max_candidate_paths": 24,
+    "max_positive_candidates": 12,
+    "max_queries_per_repository": 50,
+    "max_target_paths": 12,
+    "min_queries_per_repository": 35,
+    "min_query_tokens": 3,
+    "recent_negative_candidates": 8
+  }
+}

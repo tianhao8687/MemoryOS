@@ -32,6 +32,7 @@ from memoryos.evaluation.real_workload_report import (
 )
 from memoryos.evaluation.real_workload_scoring import HiddenTestRunner, scan_canary_leakage
 from memoryos.evaluation.real_workload_workspace import RepositoryWorkspaceManager
+from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
 
 _RUN_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
 _EMPTY_PATCH_SHA256 = hashlib.sha256(b"").hexdigest()
@@ -72,6 +73,7 @@ class RealWorkloadRunner:
         task_limit: int | None = None,
         conditions: list[ExperimentCondition] | None = None,
         order_seed: int = 20260810,
+        scoring_profile: ShadowRetrievalProfile | None = None,
     ) -> dict[str, Any]:
         if not _RUN_ID.fullmatch(run_id):
             raise ValueError("run_id contains unsafe path characters")
@@ -84,6 +86,8 @@ class RealWorkloadRunner:
             raise ValueError("condition calibration filter must be non-empty and unique")
         if mode is RunMode.CONFIRMATORY and set(selected_conditions) != set(ExperimentCondition):
             raise ValueError("confirmatory mode must run all three conditions")
+        if scoring_profile is not None and selected_conditions != [ExperimentCondition.MEMORYOS]:
+            raise ValueError("shadow scoring profiles require a MemoryOS-only dry run")
         evidence_dir = output_root.resolve() / run_id
         if evidence_dir.exists():
             raise ValueError(f"refusing to reuse evidence directory: {evidence_dir}")
@@ -151,6 +155,7 @@ class RealWorkloadRunner:
                     run_id,
                     execution_index,
                     seeds,
+                    scoring_profile,
                 )
                 records.append(record)
                 execution_index += 1
@@ -162,6 +167,10 @@ class RealWorkloadRunner:
             mode=mode,
             run_id=run_id,
             started_at=started_at,
+        )
+        report["runtime_spec_sha256"] = _canonical_sha256(runtime.model_dump(mode="json"))
+        report["scoring_profile_sha256"] = (
+            None if scoring_profile is None else scoring_profile.digest()
         )
         report["order_seed"] = order_seed
         report["execution_order"] = execution_order
@@ -178,6 +187,8 @@ class RealWorkloadRunner:
                 "run_id": run_id,
                 "manifest_digest": manifest.digest(),
                 "runtime": runtime.model_dump(mode="json"),
+                "runtime_spec_sha256": report["runtime_spec_sha256"],
+                "scoring_profile_sha256": report["scoring_profile_sha256"],
                 "order_seed": order_seed,
                 "task_ids": [task.id for task in tasks],
                 "report_sha256": hashlib.sha256(
@@ -201,6 +212,7 @@ class RealWorkloadRunner:
         run_id: str,
         execution_index: int,
         seeds: dict[str, Any],
+        scoring_profile: ShadowRetrievalProfile | None,
     ) -> ConditionRunRecord:
         condition_started = time.perf_counter()
         task_state = state_dir / "tasks" / task.id / condition.value
@@ -224,6 +236,7 @@ class RealWorkloadRunner:
                     if condition is ExperimentCondition.NO_MEMORY
                     else "http://benchmark-memory:8000/mcp"
                 ),
+                scoring_profile=scoring_profile,
             )
             execution = self.agent_executor.run(
                 runtime_spec,
@@ -291,6 +304,9 @@ class RealWorkloadRunner:
                 selected_seed_ids=list(usage.selected_seed_ids),
                 memory_tool_calls=usage.tool_calls,
                 retrieval_runs=usage.retrieval_runs,
+                retrieval_candidate_features=list(usage.candidate_features),
+                retrieval_config_hashes=list(usage.retrieval_config_hashes),
+                scoring_profile_sha256=usage.scoring_profile_sha256,
                 input_tokens=execution.result.input_tokens,
                 output_tokens=execution.result.output_tokens,
                 cost_usd=execution.result.cost_usd,
@@ -380,6 +396,16 @@ def _write_json(path: Path, payload: Any) -> None:
         encoding="utf-8",
         newline="\n",
     )
+
+
+def _canonical_sha256(payload: Any) -> str:
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 __all__ = ["RealWorkloadRunner", "load_agent_runtime", "load_runner_inputs"]

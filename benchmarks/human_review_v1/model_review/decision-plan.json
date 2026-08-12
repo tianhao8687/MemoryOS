@@ -1,0 +1,249 @@
+{
+  "schema_version": "1.0",
+  "packet_sha256": "1770de0605d6411b41ac2a559baf518799b17927cce2f49012fde80144fcd0bd",
+  "adjudicator_id": "model-third-party-root-v1",
+  "safety_strategy": "strictest_visible",
+  "reviewed_all_packet_rows": true,
+  "cases": {
+    "case-7991e96cd063242b6ba7fc44": {
+      "semantic_relevance": [1, 0, 2, 1, 2, 2, 0, 2, 0, 2],
+      "must_retrieve_indices": []
+    },
+    "case-17ff98264c2958730eb454ca": {
+      "semantic_relevance": [2, 0, 3, 1, 0, 1, 0, 0, 0, 0, 2],
+      "must_retrieve_indices": [1, 3, 11]
+    },
+    "case-506860140417657ff14b8905": {
+      "semantic_relevance": [0, 2, 0, 1],
+      "must_retrieve_indices": [2]
+    },
+    "case-281c368f296cf34d01660675": {
+      "semantic_relevance": [0, 0, 0, 0, 1, 2, 0, 0],
+      "must_retrieve_indices": [6]
+    },
+    "case-915a99ceafcce96e73b9d61d": {
+      "semantic_relevance": [0, 1, 0, 0, 0, 0],
+      "must_retrieve_indices": []
+    },
+    "case-5e465c90b91804db4e464d38": {
+      "semantic_relevance": [1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+      "must_retrieve_indices": []
+    },
+    "case-070e7f9362f3d00a44d363d6": {
+      "semantic_relevance": [0, 0, 1, 0, 0, 0, 1],
+      "must_retrieve_indices": []
+    },
+    "case-e00eda31e12677f9744ebd2c": {
+      "semantic_relevance": [2, 1, 2, 0, 2, 2, 0, 2, 0, 2, 2],
+      "must_retrieve_indices": [10, 11]
+    },
+    "case-38fa633e88e1c900725279b7": {
+      "semantic_relevance": [0, 1, 0, 1, 3, 1, 0, 1, 0, 1],
+      "must_retrieve_indices": []
+    },
+    "case-7bc081425c3350310973feed": {
+      "semantic_relevance": [1, 0, 1, 1, 2, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0],
+      "must_retrieve_indices": [5]
+    },
+    "case-bc0e6c7b4784711361f269fb": {
+      "semantic_relevance": [1, 1, 0, 0, 0, 2, 0, 1, 1, 2],
+      "must_retrieve_indices": [10]
+    },
+    "case-3c86a203d2cd7dfe5303f322": {
+      "semantic_relevance": [0, 3, 0, 2, 0],
+      "must_retrieve_indices": [2]
+    },
+    "case-6a62ca49f9db1c43f3cb67a5": {
+      "semantic_relevance": [2, 1, 3, 2, 2, 0, 1, 1],
+      "must_retrieve_indices": [3]
+    },
+    "case-699f09f4a1f98dcd3910758c": {
+      "semantic_relevance": [2, 2, 1, 1, 0, 1, 1, 1, 2, 1],
+      "must_retrieve_indices": []
+    },
+    "case-259b1abfc2f80888918dba71": {
+      "semantic_relevance": [0, 2, 0, 0, 1, 1, 1, 1, 0, 0],
+      "must_retrieve_indices": [2]
+    },
+    "case-afe20a8a8e129908022a8b6f": {
+      "semantic_relevance": [1, 0, 1, 0, 0, 0, 1, 1, 1, 0],
+      "must_retrieve_indices": []
+    },
+    "case-85a82606a14944b325aab659": {
+      "semantic_relevance": [1, 2, 3, 2, 0, 1, 0, 0, 3, 0, 3],
+      "must_retrieve_indices": [3, 11]
+    },
+    "case-bd10f34ad63feb0c3bc9d132": {
+      "semantic_relevance": [0, 0, 2, 1, 0],
+      "must_retrieve_indices": []
+    },
+    "case-9ea321d38d0ca9caa5da0728": {
+      "semantic_relevance": [0, 0, 1, 0, 0, 0, 2],
+      "must_retrieve_indices": [7]
+    },
+    "case-f1117b131c86916ba4b7524b": {
+      "semantic_relevance": [3, 0, 0, 0, 0, 2, 1, 3],
+      "must_retrieve_indices": [1]
+    },
+    "case-ebf45c8ebf10df38cb5f6062": {
+      "semantic_relevance": [1, 1, 0, 0, 0, 1, 0, 0],
+      "must_retrieve_indices": []
+    },
+    "case-74cf1800690cff86bb2d284f": {
+      "semantic_relevance": [0, 0, 2, 0, 1, 2, 1, 1, 1, 2, 1],
+      "must_retrieve_indices": [6, 10]
+    },
+    "case-a87866c7a378e9c18f1893ec": {
+      "semantic_relevance": [0, 0, 0, 0, 0, 0, 0, 0],
+      "must_retrieve_indices": []
+    },
+    "case-1e27a200b988a82d55621b4b": {
+      "semantic_relevance": [1, 2, 1, 1, 0],
+      "must_retrieve_indices": [2]
+    },
+    "case-6f518e01a8dfe6c57b214425": {
+      "semantic_relevance": [0, 1, 0, 2, 1, 1, 1, 1, 1, 1, 0],
+      "must_retrieve_indices": [4]
+    },
+    "case-e0e69b5bc1ac4b2735d59caf": {
+      "semantic_relevance": [0, 1, 1, 1, 0, 1, 1, 1, 2, 1, 2, 0, 0, 1],
+      "must_retrieve_indices": [9]
+    },
+    "case-0f3b8d68bb9ad3e1c396219b": {
+      "semantic_relevance": [1, 2, 0, 1, 1, 3, 2, 1, 1, 1],
+      "must_retrieve_indices": [2, 6]
+    },
+    "case-7867b331b57700f416fbecba": {
+      "semantic_relevance": [0, 3, 0, 1, 0, 0, 1, 0, 0],
+      "must_retrieve_indices": [2]
+    },
+    "case-f45a69f489c09366a5069e09": {
+      "semantic_relevance": [0, 0, 0, 0, 0, 1, 0],
+      "must_retrieve_indices": []
+    },
+    "case-413d4a3c2902b0c115728a59": {
+      "semantic_relevance": [1, 2, 2, 1, 1, 2, 2, 1, 1, 1, 2, 1, 0, 2, 2, 1, 1, 2],
+      "must_retrieve_indices": [2, 11]
+    },
+    "case-07a9c28f70a1092ad2fcb7aa": {
+      "semantic_relevance": [0, 0, 0, 2, 0, 0, 0, 1, 1],
+      "must_retrieve_indices": []
+    },
+    "case-16c9b7c6d1f16816638489a8": {
+      "semantic_relevance": [0],
+      "must_retrieve_indices": []
+    },
+    "case-717508c07034d77ec6ad5541": {
+      "semantic_relevance": [0, 1, 0, 0, 0, 3, 1],
+      "must_retrieve_indices": [6]
+    },
+    "case-6d14a25d354bf5d418aee7f4": {
+      "semantic_relevance": [1, 0, 0, 0, 0, 0],
+      "must_retrieve_indices": []
+    },
+    "case-14fd3e334544ecd90fc3d15d": {
+      "semantic_relevance": [1, 2, 2, 1, 1, 1, 2, 1, 2, 2, 1],
+      "must_retrieve_indices": [9]
+    },
+    "case-1cb22c26d2145c44cc0f8027": {
+      "semantic_relevance": [2, 1, 1, 0, 2, 2, 0],
+      "must_retrieve_indices": [5, 6]
+    },
+    "case-b322aa093e7bb1e172b5d5c2": {
+      "semantic_relevance": [1, 1, 0, 1, 0, 0, 1, 2, 1, 0, 0, 1],
+      "must_retrieve_indices": []
+    },
+    "case-04360d5a2f72666eee2298ba": {
+      "semantic_relevance": [0, 0, 1, 1, 0, 1, 3],
+      "must_retrieve_indices": [7]
+    },
+    "case-c86a8228de0056197343b841": {
+      "semantic_relevance": [1, 1, 2, 0, 3, 1, 0, 0, 2, 2, 0],
+      "must_retrieve_indices": [3, 5]
+    },
+    "case-2375c0fcf94f9256ce94ee5d": {
+      "semantic_relevance": [1, 3, 1, 0],
+      "must_retrieve_indices": []
+    },
+    "case-279fcf5dd932e6005ea8a668": {
+      "semantic_relevance": [0, 2, 1, 1, 1, 1, 2, 2, 1, 1, 1, 0, 1],
+      "must_retrieve_indices": []
+    },
+    "case-4e8b0ffac1425938dca615c2": {
+      "semantic_relevance": [2, 0, 0, 3, 0, 0, 2, 1],
+      "must_retrieve_indices": [4]
+    },
+    "case-c584edaccc1a1e7ac66e0564": {
+      "semantic_relevance": [2, 1, 0, 0],
+      "must_retrieve_indices": [1]
+    },
+    "case-631e91fdf0a4efb5e9bfcd00": {
+      "semantic_relevance": [1, 3, 1, 0, 2, 1, 0],
+      "must_retrieve_indices": [2]
+    },
+    "case-b772a9092ce54dbf3b9a96b9": {
+      "semantic_relevance": [1, 2, 1, 0, 0, 1, 1, 1, 1, 0, 3],
+      "must_retrieve_indices": [11]
+    },
+    "case-d0e4d352ff8b479ccb2e5c73": {
+      "semantic_relevance": [1, 1, 1, 3, 2, 1, 1, 1, 0, 2, 2],
+      "must_retrieve_indices": [4]
+    },
+    "case-0598a334acc0a1ad8bd02847": {
+      "semantic_relevance": [0],
+      "must_retrieve_indices": []
+    },
+    "case-68bc50706fb230990e49aae4": {
+      "semantic_relevance": [3, 1, 3, 2, 0, 2, 0, 0],
+      "must_retrieve_indices": [3, 6]
+    },
+    "case-2715948b9beb514d8388df2c": {
+      "semantic_relevance": [0, 0, 1, 2, 0, 0, 3, 0, 0, 0, 3],
+      "must_retrieve_indices": [7, 11]
+    },
+    "case-806d3ae97245e2cafea8ffcb": {
+      "semantic_relevance": [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0],
+      "must_retrieve_indices": [6]
+    },
+    "case-10b877161ffc31c2bf9cc00f": {
+      "semantic_relevance": [1, 3, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+      "must_retrieve_indices": [2]
+    },
+    "case-d97a18e5e378e955a8844499": {
+      "semantic_relevance": [0, 0, 2, 1, 0, 0, 2, 0, 0, 2, 0, 0, 0],
+      "must_retrieve_indices": []
+    },
+    "case-a88eaa06ec93a3f056e0fd3f": {
+      "semantic_relevance": [0, 0, 0, 0, 0, 2, 1, 3, 0, 0, 3],
+      "must_retrieve_indices": [6, 8, 11]
+    },
+    "case-639b45a8dde6608de8f9278c": {
+      "semantic_relevance": [1, 0, 0, 1, 2, 0, 1, 1, 2, 3, 1],
+      "must_retrieve_indices": [10]
+    },
+    "case-1e69b7969008a84a15947d9e": {
+      "semantic_relevance": [0, 0, 0, 0, 1, 2, 0, 0, 0],
+      "must_retrieve_indices": []
+    },
+    "case-f17431dba244f82a90f36241": {
+      "semantic_relevance": [0],
+      "must_retrieve_indices": []
+    },
+    "case-eda5f9e796783c5369f963cf": {
+      "semantic_relevance": [2, 1, 1, 0, 0, 0, 1, 2, 0],
+      "must_retrieve_indices": [8]
+    },
+    "case-9ddcae18f1b00d9591f66706": {
+      "semantic_relevance": [2, 1, 2, 1],
+      "must_retrieve_indices": []
+    },
+    "case-681e8a4a4bf80ee3e35d5c1f": {
+      "semantic_relevance": [0, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2],
+      "must_retrieve_indices": [8]
+    },
+    "case-87df16ec153f97a12c0ed042": {
+      "semantic_relevance": [1, 0, 2, 0, 1],
+      "must_retrieve_indices": []
+    }
+  }
+}

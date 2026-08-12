@@ -1,0 +1,131 @@
+{
+  "aggregate": {
+    "attempted_pairs": 2,
+    "harmed_pairs": 0,
+    "helped_pairs": 1,
+    "informative_pairs": 2,
+    "latency_effect_seconds": {
+      "ci95_high": -163.93733000000003,
+      "ci95_low": -176.26452,
+      "difference": -170.10092500000005
+    },
+    "production_eligible": false,
+    "safety_worsened_pairs": 0,
+    "success_effect": {
+      "ci95_high": 1.0,
+      "ci95_low": 0.0,
+      "difference": 0.5
+    },
+    "unchanged_pairs": 1,
+    "valid_pairs": 2
+  },
+  "artifact_id": "requests-6028-real-agent-ablation-v1",
+  "limitations": [
+    "This is one task from one repository and one agent model; it is training evidence, not a general product-effect estimate.",
+    "Provider cost was unavailable under ChatGPT authentication, so no cost effect is claimed.",
+    "One of two valid pairs was discordant; the second pair succeeded in both arms and contributes efficiency evidence only.",
+    "The single TRAIN label cannot satisfy the frozen three-repository plus held-out-development training gate.",
+    "This artifact is a publishable summary; raw agent logs, authentication material, and local run state remain unpublished."
+  ],
+  "manifest": {
+    "base_commit": "0192aac24123735b3eaf9b08df46429bb770c283",
+    "file_sha256": "8c603b2dc0bc93f44f6d1df925a93916d29d2a839c82d5d390d4caf93f86355c",
+    "manifest_digest": "de43a26c425359c184c80e744aad5a4da48a081122392ee84132100c7df0d7f3",
+    "path": "benchmarks/real_workload/swebench_verified/requests_6028/manifest.json",
+    "repository_id": "psf-requests",
+    "solution_commit": "8fa9724398c4f44090997ff430a1dd3e935a9057",
+    "task_id": "requests-pr-6028"
+  },
+  "pairs": [
+    {
+      "arm_order": [
+        "memoryos_minus_memory",
+        "memoryos_full"
+      ],
+      "discordant_success": true,
+      "full": {
+        "hidden_test_success": true,
+        "input_tokens": 314343,
+        "latency_seconds": 133.536788,
+        "output_tokens": 5173,
+        "patch_sha256": "77b9f70555e683f33702ea0068695b00dd7d91e1ca29a9cad71577d60019d2e6",
+        "prompt_sha256": "0f702df58ffc067b319f4a2942f12c39375fa3a1a518dd3c15f0e937e38b2a5e",
+        "protocol_valid": true,
+        "run_id": "requests-6028-real-ablation-20260812-01r-full",
+        "runtime_sha256": "69000b4a830652128c83ed0403f1848163b75f172c2c4f3ac62204a1cb5df788",
+        "source_report_sha256": "e15f598c2b9e8d5255cb708542f8c625e74fac851bde3cacb270b57d481043bd",
+        "target_memory_selected": true
+      },
+      "minus": {
+        "hidden_test_success": false,
+        "input_tokens": 950597,
+        "latency_seconds": 309.801308,
+        "output_tokens": 11119,
+        "patch_sha256": "4d6a21ebd518cf93ff081518908072ba9dc4fd4fe9fc0cfad30c8d7fefae9a0e",
+        "prompt_sha256": "0f702df58ffc067b319f4a2942f12c39375fa3a1a518dd3c15f0e937e38b2a5e",
+        "protocol_valid": true,
+        "run_id": "requests-6028-real-ablation-20260812-01-minus",
+        "runtime_sha256": "69000b4a830652128c83ed0403f1848163b75f172c2c4f3ac62204a1cb5df788",
+        "source_report_sha256": "42023c8311e6d801430aa7434f2e929db261cc9b5b7e91adc38cafe69650db14",
+        "target_memory_selected": false
+      },
+      "repeat_id": "requests-6028-real-001"
+    },
+    {
+      "arm_order": [
+        "memoryos_full",
+        "memoryos_minus_memory"
+      ],
+      "discordant_success": false,
+      "full": {
+        "hidden_test_success": true,
+        "input_tokens": 310785,
+        "latency_seconds": 130.43667,
+        "output_tokens": 4726,
+        "patch_sha256": "77b9f70555e683f33702ea0068695b00dd7d91e1ca29a9cad71577d60019d2e6",
+        "prompt_sha256": "0f702df58ffc067b319f4a2942f12c39375fa3a1a518dd3c15f0e937e38b2a5e",
+        "protocol_valid": true,
+        "run_id": "requests-6028-real-ablation-20260812-02-full",
+        "runtime_sha256": "69000b4a830652128c83ed0403f1848163b75f172c2c4f3ac62204a1cb5df788",
+        "source_report_sha256": "b26b2c0cd018c629c5ad485aac7cf38cf6dd6f1c7c1272d9298d7e6e4ba84cf8",
+        "target_memory_selected": true
+      },
+      "minus": {
+        "hidden_test_success": true,
+        "input_tokens": 1045336,
+        "latency_seconds": 294.374,
+        "output_tokens": 13824,
+        "patch_sha256": "4b258f196e924dc17f4406b1eebc14ad589fe893e1e2ce52f670353c3ab42ccd",
+        "prompt_sha256": "0f702df58ffc067b319f4a2942f12c39375fa3a1a518dd3c15f0e937e38b2a5e",
+        "protocol_valid": true,
+        "run_id": "requests-6028-real-ablation-20260812-02-minus",
+        "runtime_sha256": "69000b4a830652128c83ed0403f1848163b75f172c2c4f3ac62204a1cb5df788",
+        "source_report_sha256": "d6d87fd75814f65cf8be39d9399b351c7d1567b7a7b1a09c3503e09ef41edf32",
+        "target_memory_selected": false
+      },
+      "repeat_id": "requests-6028-real-005"
+    }
+  ],
+  "production_eligible": false,
+  "production_weights_changed": false,
+  "published_at": "2026-08-12T11:15:00Z",
+  "runtime": {
+    "agent_version": "codex-cli/0.147.0+app-server-adapter/4",
+    "evidence_type": "real_coding_agent",
+    "image": "sha256:bbf463d0636258fe5f77cbb32f45465e942fc8ae059180491c28e8afe3eed1c1",
+    "mcp_image": "sha256:963f7855c80e86f9317c7a129127b8e394adbf79b982511488bca62b2831a620",
+    "model": "gpt-5.6-sol",
+    "provider": "openai-codex-chatgpt",
+    "runtime_file_sha256": "e99687bf3b0791c112c9bab10a5e5793ff7d9ff0f65f309a6750b3520d2e07a1",
+    "runtime_sha256": "69000b4a830652128c83ed0403f1848163b75f172c2c4f3ac62204a1cb5df788"
+  },
+  "schema_version": "1.0",
+  "target_memory_id": "proxy-url-auth-regression-risk",
+  "training_observation": {
+    "artifact_sha256": "20a7b5d7ce42155ebfbf882c30f177b6dd97a8f55fa35e09e78f09a386c702a1",
+    "id": "ablation-bd98aeebaf717eb5286dca0c790d6f8b",
+    "label_tier": "executable_outcome_real",
+    "partition": "train",
+    "real_executable_labels": 1
+  }
+}

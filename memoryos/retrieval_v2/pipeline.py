@@ -34,6 +34,7 @@ from memoryos.retrieval.search import RetrievalEngine
 from memoryos.retrieval_v2.diversity import mmr_select
 from memoryos.retrieval_v2.fusion import reciprocal_rank_fusion
 from memoryos.retrieval_v2.planner import QueryPlan, plan_query
+from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
 from memoryos.temporal.intervals import as_of, is_known_at
 
 
@@ -54,22 +55,31 @@ def _scope_factor(scope_type: str) -> float:
     )
 
 
+def retrieval_config_hash(scoring_profile: ShadowRetrievalProfile | None = None) -> str:
+    config_payload: dict[str, Any] = {
+        "rrf": RRF_WEIGHTS,
+        "k": RRF_K,
+        "mmr_lambda": 0.78,
+    }
+    if scoring_profile is not None:
+        config_payload["shadow_profile"] = scoring_profile.model_dump(mode="json")
+    return hashlib.sha256(json.dumps(config_payload, sort_keys=True).encode("utf-8")).hexdigest()
+
+
 class RetrievalPipeline:
     def __init__(
         self,
         database: Database,
         baseline: RetrievalEngine,
         reranker: Reranker | None = None,
+        *,
+        scoring_profile: ShadowRetrievalProfile | None = None,
     ) -> None:
         self.database = database
         self.baseline = baseline
         self.reranker = reranker
-        self.config_hash = hashlib.sha256(
-            json.dumps(
-                {"rrf": RRF_WEIGHTS, "k": RRF_K, "mmr_lambda": 0.78},
-                sort_keys=True,
-            ).encode("utf-8")
-        ).hexdigest()
+        self.scoring_profile = scoring_profile
+        self.config_hash = retrieval_config_hash(scoring_profile)
 
     def search(
         self,
@@ -156,7 +166,7 @@ class RetrievalPipeline:
                     .group_by(ClaimRow.memory_id)
                 ).all()
             }
-            feedback = self._feedback_factors(session, list(by_id))
+            feedback, feedback_signals = self._feedback_signals(session, list(by_id))
             archived_ids = set(
                 session.scalars(
                     select(MemoryHealthRow.memory_id).where(
@@ -181,12 +191,8 @@ class RetrievalPipeline:
                     freshness
                 ]
                 memory = item["memory"]
-                final_score = (
-                    base_fused
-                    * freshness_factor
-                    * feedback.get(memory_id, 1.0)
-                    * _scope_factor(str(memory["scope_type"]))
-                )
+                feedback_factor = feedback.get(memory_id, 1.0)
+                scope_factor = _scope_factor(str(memory["scope_type"]))
                 ranks = rank_traces.get(memory_id, {})
                 reasons = [
                     channel
@@ -195,6 +201,33 @@ class RetrievalPipeline:
                 ]
                 if freshness == "suspect":
                     reasons.append("suspect freshness downweighted")
+                trace = {
+                    "fts_rank": ranks.get("fts"),
+                    "vector_rank": ranks.get("vector"),
+                    "graph_rank": ranks.get("graph"),
+                    "temporal_rank": ranks.get("temporal"),
+                    "fused_score": round(base_fused, 8),
+                    "scope_match": memory["scope_type"],
+                    "scope_factor": scope_factor,
+                    "freshness": freshness,
+                    "freshness_factor": freshness_factor,
+                    "truth_state": truth_state,
+                    "evidence_count": int(evidence_counts.get(memory_id, 0)),
+                    "feedback_factor": feedback_factor,
+                    "helpful_feedback_count": feedback_signals.get(memory_id, {}).get("helpful", 0),
+                    "unhelpful_feedback_count": feedback_signals.get(memory_id, {}).get(
+                        "unhelpful", 0
+                    ),
+                    "memory_confidence": float(memory.get("confidence", 0.5)),
+                    "memory_importance": float(memory.get("importance", 0.5)),
+                    "reranker_score": None,
+                    "final_reason": reasons or ["baseline fallback"],
+                }
+                final_score = (
+                    base_fused * freshness_factor * feedback_factor * scope_factor
+                    if self.scoring_profile is None
+                    else self.scoring_profile.score(trace)
+                )
                 candidates.append(
                     {
                         **item,
@@ -202,18 +235,7 @@ class RetrievalPipeline:
                         "fused_score": final_score,
                         "truth_state": truth_state,
                         "claim_ids": [claim.id for claim in claims],
-                        "trace": {
-                            "fts_rank": ranks.get("fts"),
-                            "vector_rank": ranks.get("vector"),
-                            "graph_rank": ranks.get("graph"),
-                            "temporal_rank": ranks.get("temporal"),
-                            "fused_score": round(base_fused, 8),
-                            "scope_match": memory["scope_type"],
-                            "freshness": freshness,
-                            "evidence_count": int(evidence_counts.get(memory_id, 0)),
-                            "reranker_score": None,
-                            "final_reason": reasons or ["baseline fallback"],
-                        },
+                        "trace": trace,
                     }
                 )
             candidates.sort(key=lambda item: float(item["fused_score"]), reverse=True)
@@ -226,13 +248,25 @@ class RetrievalPipeline:
                         if identity in reranked:
                             value = reranked[identity]
                             item["trace"]["reranker_score"] = value
-                            item["fused_score"] = float(item["fused_score"]) * 0.7 + value * 0.3
+                            item["fused_score"] = (
+                                float(item["fused_score"]) * 0.7 + value * 0.3
+                                if self.scoring_profile is None
+                                else self.scoring_profile.score(item["trace"])
+                            )
+                            if self.scoring_profile is not None:
+                                item["score"] = round(float(item["fused_score"]), 8)
                     candidates.sort(key=lambda item: float(item["fused_score"]), reverse=True)
                     reranker_mode = self.reranker.name
                 except ProviderError:
                     reranker_mode = "provider-fallback"
             total = max(int(baseline["total"]), len(candidates))
-            diverse = mmr_select(candidates, limit=min(total, request.offset + request.limit))
+            diverse = mmr_select(
+                candidates,
+                limit=min(total, request.offset + request.limit),
+                lambda_relevance=(
+                    0.78 if self.scoring_profile is None else self.scoring_profile.mmr_lambda
+                ),
+            )
             selected = diverse[request.offset : request.offset + request.limit]
             if record_retrieval:
                 MemoryHealthService.record_retrieval(
@@ -256,11 +290,18 @@ class RetrievalPipeline:
                 "items": selected,
                 "total": total,
                 "mode": baseline["mode"],
-                "pipeline_mode": f"rrf-{baseline['mode']}",
+                "pipeline_mode": (
+                    f"rrf-{baseline['mode']}"
+                    if self.scoring_profile is None
+                    else f"shadow-profile-{baseline['mode']}"
+                ),
                 "reranker": reranker_mode,
                 "query_plan": plan.model_dump(),
                 "retrieval_run_id": run.id,
                 "config_hash": self.config_hash,
+                "scoring_profile_sha256": (
+                    None if self.scoring_profile is None else self.scoring_profile.digest()
+                ),
             }
 
     @staticmethod
@@ -376,9 +417,17 @@ class RetrievalPipeline:
 
     @staticmethod
     def _feedback_factors(session: Any, memory_ids: list[str]) -> dict[str, float]:
+        factors, _ = RetrievalPipeline._feedback_signals(session, memory_ids)
+        return factors
+
+    @staticmethod
+    def _feedback_signals(
+        session: Any,
+        memory_ids: list[str],
+    ) -> tuple[dict[str, float], dict[str, dict[str, int]]]:
         factors: dict[str, float] = {}
         if not memory_ids:
-            return factors
+            return factors, {}
         rows = session.execute(
             select(
                 MemoryFeedbackRow.memory_id,
@@ -389,11 +438,14 @@ class RetrievalPipeline:
             .group_by(MemoryFeedbackRow.memory_id, MemoryFeedbackRow.helpful)
         ).all()
         scores: dict[str, float] = defaultdict(float)
+        counts: dict[str, dict[str, int]] = defaultdict(lambda: {"helpful": 0, "unhelpful": 0})
         for memory_id, helpful, count in rows:
             if helpful is FeedbackValue.YES:
                 scores[memory_id] += min(0.2, 0.03 * count)
+                counts[memory_id]["helpful"] += int(count)
             elif helpful is FeedbackValue.NO:
                 scores[memory_id] -= min(0.35, 0.06 * count)
+                counts[memory_id]["unhelpful"] += int(count)
         for memory_id, delta in scores.items():
             factors[memory_id] = max(0.5, 1.0 + delta)
-        return factors
+        return factors, dict(counts)

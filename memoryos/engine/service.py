@@ -64,7 +64,7 @@ from memoryos.providers.openai_compatible import (
     OpenAICompatibleReranker,
 )
 from memoryos.retrieval.search import RetrievalEngine
-from memoryos.retrieval_v2 import RetrievalPipeline
+from memoryos.retrieval_v2 import RetrievalPipeline, ShadowRetrievalProfile
 from memoryos.security.redaction import redact_secrets
 
 logger = logging.getLogger(__name__)
@@ -80,7 +80,13 @@ def _normalized_key(memory: MemoryRow) -> str:
 
 
 class MemoryService:
-    def __init__(self, database: Database, settings: MemoryOSSettings) -> None:
+    def __init__(
+        self,
+        database: Database,
+        settings: MemoryOSSettings,
+        *,
+        retrieval_scoring_profile: ShadowRetrievalProfile | None = None,
+    ) -> None:
         self.database = database
         self.settings = settings
         embedding_provider = None
@@ -120,7 +126,12 @@ class MemoryService:
                 max_input_chars=settings.provider_max_input_chars,
             )
         self.retrieval = RetrievalEngine(database, embedding_provider)
-        self.retrieval_v2 = RetrievalPipeline(database, self.retrieval, reranker)
+        self.retrieval_v2 = RetrievalPipeline(
+            database,
+            self.retrieval,
+            reranker,
+            scoring_profile=retrieval_scoring_profile,
+        )
         self.context_builder = TaskAwareContextCompiler(self.retrieval_v2)
         self.truth = TruthMaintenanceService(relationship_judge)
         self.anchors = SourceAnchorService(database)

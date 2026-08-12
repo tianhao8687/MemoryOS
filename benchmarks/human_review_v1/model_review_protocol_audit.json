@@ -1,0 +1,43 @@
+{
+  "adjudication_controls": {
+    "adjudication_policy_frozen_before_decision_review": true,
+    "all_disagreement_rows_reviewed": true,
+    "control_source_map_opened_after_final_adjudication_hash": true,
+    "qrels_opened_after_final_adjudication_hash": true,
+    "silver_comparison_role": "post_adjudication_diagnostic_only"
+  },
+  "effective_reviews": [
+    {
+      "assignment_id": "reviewer-a",
+      "isolation_basis": "reviewer_self_report",
+      "reviewer_id": "model-reviewer-a2-v1",
+      "status": "accepted_replacement"
+    },
+    {
+      "assignment_id": "reviewer-b",
+      "isolation_basis": "reviewer_self_report",
+      "reviewer_id": "model-reviewer-b-v1",
+      "status": "accepted"
+    }
+  ],
+  "human_gold_claim": false,
+  "independence_limits": [
+    "The two effective reviewers and adjudicator ran as separate agents in one Codex task, not as independent human annotators.",
+    "Isolation claims about files not opened are reviewer self-reports; output coverage, assignment separation, reviewer IDs, and artifact hashes are machine-validated.",
+    "Reviewer confidence values were mechanically normalized into the rubric's high/medium/low enum without changing any relevance, safety, must-retrieve, issue-tag, or rationale decision."
+  ],
+  "invalidated_attempts": [
+    {
+      "control_or_qrels_reported_exposed": false,
+      "data_used_in_effective_review_or_adjudication": false,
+      "details": "The initial reviewer A used project-wide text search to locate response enumeration and validator entry points. It self-reported the breach before submitting an effective review and was stopped and replaced.",
+      "reason": "The blind-review contract allowed only the rubric, one blind assignment, and its response template.",
+      "reviewer_slot": "reviewer-a",
+      "status": "invalidated"
+    }
+  ],
+  "label_tier": "model_adjudicated_provisional",
+  "protocol_date": "2026-08-12",
+  "schema_version": "1.0",
+  "status": "completed_with_replacement"
+}

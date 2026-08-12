@@ -78,6 +78,82 @@ Tree-sitter language pack 是 V2 core dependency。若要启用可选 SQLite ANN
 
 ## MemoryBench 与验收
 
+### Retrieval calibration dataset
+
+`benchmarks/calibration_v1` contains the first versioned, data-backed retrieval calibration input:
+300 Git-derived silver queries across six query repositories and five languages, plus a dedicated
+seventh repository for cross-scope guards. Train/dev/test are held out by query repository. Runtime
+queries and scorer-only qrels are separate, every artifact is SHA-256 pinned, and every query has an
+exact-path positive, a future-history guard, and a cross-scope guard.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_calibration_dataset.py
+.\.venv\Scripts\python.exe scripts\validate_calibration_dataset.py
+```
+
+The dataset calibrates retrieval only. Its Git path-overlap labels are explicitly `silver`, not human
+gold, and cannot justify truth-conflict confidence or memory-health thresholds. Protocol, sources,
+limitations, and offline rebuild instructions are in
+[`benchmarks/calibration_v1/README.md`](benchmarks/calibration_v1/README.md).
+
+### Blind human review pilot (optional diagnostic)
+
+`benchmarks/human_review_v1` adds the next anti-overfitting layer without manufacturing labels. It
+contains 61 blinded cases and 1,922 candidate decisions per reviewer: 60 time-stratified train/dev
+queries across five non-test repositories plus one public real-workload diagnostic. The existing
+test repository remains sealed. Two assignments contain the same cases in different candidate
+orders and omit silver qrels, target commits, workload expectations, confidence, and importance.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_human_review_pack.py
+.\.venv\Scripts\python.exe scripts\validate_human_review_pack.py
+```
+
+The pack is deliberately `pending_human_adjudication`, not gold. Turning this particular pack into
+human gold would still require two completed human reviews and a separate human adjudicator, but
+human annotation is no longer a production-calibration prerequisite. Its machine-readable coupling
+audit also reports that the initial real task shares the MarkupSafe repository with the Git source
+set. See
+[`benchmarks/human_review_v1/README.md`](benchmarks/human_review_v1/README.md).
+
+A separate, checked-in model-only exercise now covers both blind assignments and all 1,922 pairs.
+The third model role adjudicated 527 core disagreements; relevance agreement was 75.70% but Cohen's
+kappa was only 0.203, while safety agreement was 97.66% (kappa 0.834). These are provisional rubric
+diagnostics, not human labels and not a production-weight approval. The complete incident log,
+hashes, decisions, post-hoc silver comparison, and validation command are in
+[`benchmarks/human_review_v1/model_review/README.md`](benchmarks/human_review_v1/model_review/README.md).
+
+### AI-only executable calibration
+
+`benchmarks/ai_calibration_v1` defines the active no-human route for replacing heuristic retrieval
+weights. At least three distinct model families from three providers make order-swapped pairwise
+judgments; runtime/model/prompt/response identities are hash-bound, and those votes
+are uncertainty-weighted weak supervision, never truth. Selected memories then receive real coding
+agent full/minus ablations. A constrained pairwise learner can only create a candidate profile, and
+a separate sealed gate requires at least 50 tasks, three repositories, ten sequences, two unseen
+agent models, a positive success lower confidence bound, no safety or worst-repository regression,
+bounded latency/cost, and complete paired cost accounting. No stage automatically activates a
+profile. Candidate profiles run only through an explicit paired shadow runner; the normal service
+keeps the frozen production scorer. Training rejects sealed test/promotion observations rather than
+printing their metrics during model selection. It also rejects duplicate observation IDs, requires
+both AI-jury and real executable evidence inside the train partition, and binds the exact canonical
+train/dev input SHA-256 into the candidate profile.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\validate_ai_calibration.py
+.\.venv\Scripts\python.exe scripts\run_executable_ablation.py --help
+.\.venv\Scripts\python.exe scripts\run_weight_shadow.py --help
+.\.venv\Scripts\python.exe scripts\ai_calibration.py --help
+```
+
+The checked-in readiness registry currently says `protocol_ready_evidence_pending`: two valid
+real-agent full/minus pairs now cover one SWE-bench Verified task, with one discordant real TRAIN
+label and a repeated latency reduction. The model review still represents only one effective model
+family/provider, training still lacks the required repository-held-out development evidence, and
+there are no sealed promotion tasks. Production weights therefore remain frozen. Protocol,
+evidence hashes, commands, and exact blockers are in
+[`benchmarks/ai_calibration_v1/README.md`](benchmarks/ai_calibration_v1/README.md).
+
 单独运行 V2 回归与 V2.1 盲测：
 
 ```powershell
