@@ -136,6 +136,29 @@ def test_label_seeking_run_order_and_runtime_are_locked() -> None:
         assert item["expected_arm_order"] == order
 
 
+def test_label_seeking_post_run_audit_fails_closed() -> None:
+    audit = json.loads((TASK_ROOT / "post-run-audit.json").read_bytes())
+
+    assert audit["status"] == "completed_with_scorer_invalidations"
+    assert audit["raw_pairs"] == 4
+    assert audit["protocol_valid_pairs"] == 1
+    assert audit["invalidated_pairs"] == 3
+    assert audit["raw_training_observations"] == 2
+    assert audit["eligible_training_observations"] == 0
+    assert audit["production_effect_claim"] is False
+    assert len({item["run_id"] for item in audit["runs"]}) == 4
+
+    invalid = [item for item in audit["runs"] if item["pair_status"].startswith("invalid_")]
+    assert len(invalid) == 3
+    assert all(item["training_observation_eligible"] is False for item in invalid)
+    assert all(len(item["invalidation_reason"]) >= 80 for item in invalid)
+    assert all(
+        len(digest) == 64
+        for item in audit["runs"]
+        for digest in item["artifact_sha256"].values()
+    )
+
+
 def _added_file_source(path: Path) -> str:
     lines = path.read_text(encoding="utf-8").splitlines()
     start = next(index for index, line in enumerate(lines) if line.startswith("@@ ")) + 1

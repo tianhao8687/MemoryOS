@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "audited_at": "2026-08-12T15:07:42Z",
+  "status": "completed_with_scorer_invalidations",
+  "raw_pairs": 4,
+  "protocol_valid_pairs": 1,
+  "invalidated_pairs": 3,
+  "raw_training_observations": 2,
+  "eligible_training_observations": 0,
+  "production_effect_claim": false,
+  "runs": [
+    {
+      "run_id": "label-seek-v1-pylint-4661-001",
+      "task_id": "pylint-pr-4661",
+      "repository_id": "pylint-dev-pylint",
+      "full_success": true,
+      "minus_success": true,
+      "full_latency_seconds": 236.126926,
+      "minus_latency_seconds": 160.01517,
+      "pair_status": "valid_same_outcome",
+      "training_observation_eligible": false,
+      "artifact_sha256": {
+        "ablation_runs": "0942477c1b9b4c28e28179ef36ea4cef965e9321eefd6fc10e9be8438b814d24",
+        "ablation_report": "bc1ce1c2944f55d674c797029837efa123ff6ff2d5555485caec364ffe248aa7",
+        "training_observations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "full_patch": "1588d1b25b759d36d4738c72610df0f6ee89577d8d890260959a08a49fe45fde",
+        "minus_patch": "76807d76b752ca4dde4d82d828512e22a988b0ca8a7efaba9eb7925f727462cc"
+      }
+    },
+    {
+      "run_id": "label-seek-v1-pylint-6528-003",
+      "task_id": "pylint-pr-6528",
+      "repository_id": "pylint-dev-pylint",
+      "full_success": false,
+      "minus_success": true,
+      "full_latency_seconds": 321.855798,
+      "minus_latency_seconds": 190.655851,
+      "pair_status": "invalid_scorer_false_negative",
+      "training_observation_eligible": false,
+      "invalidated_training_observation_sha256": "2bb86b815f0b653cd4ca96d14aac0061919963289dec3a8c73091ce14440fce5",
+      "invalidation_reason": "The AST-isolated fake PyLinter omitted the existing _ignore_paths state initialized by PyLinter.open(), so it rejected an implementation that used the same runtime field as _expand_files.",
+      "artifact_sha256": {
+        "ablation_runs": "960e43df23d46751dc8bf168135260adcde621bf00ae04a45471cd1ca2c3f5a5",
+        "ablation_report": "5368c77bf1990cc3184293c3e42e43e5de9033ad41d644ba6fd241801d854d4b",
+        "full_patch": "48a4a9dd4248680838a7dcff85eb85ba42ab20e461269ca20218cdac46f87986",
+        "minus_patch": "2ea61d9b6891ea0f4cf11288530e90a1dcff108df2a3d7a893b5d82dd4014858"
+      }
+    },
+    {
+      "run_id": "label-seek-v1-pytest-6197-001",
+      "task_id": "pytest-pr-6197",
+      "repository_id": "pytest-dev-pytest",
+      "full_success": true,
+      "minus_success": false,
+      "full_latency_seconds": 172.029659,
+      "minus_latency_seconds": 171.809225,
+      "pair_status": "invalid_scorer_false_negative",
+      "training_observation_eligible": false,
+      "invalidated_training_observation_sha256": "2077d6c694d9144676b501c56b24ce68de618e95bddd85dc88c7f71a321b1a51",
+      "invalidation_reason": "The scorer rejected every Package.collect mount call. The minus arm moved mounting behind evidence that a file would actually be collected, which preserves lazy discovery for unrelated packages and is a behaviorally equivalent architecture.",
+      "artifact_sha256": {
+        "ablation_runs": "24805e95bd94396590ba4ea94480cbcc8e94accfe3f13fdf8c3e5ef3dcf67331",
+        "ablation_report": "b0b6d818f8d9430f54668c890863fbc9569bb92da62d2c52623e9b49a9be0cec",
+        "full_patch": "d59bdf0dc649e1979ecda4477dce22b48a5c6ac069092617801e11cd3b77d7e5",
+        "minus_patch": "89a4c543db8f4b8acf650035256f4f8005eb170b4c9747296e36b746bf9ffa8d"
+      }
+    },
+    {
+      "run_id": "label-seek-v1-pytest-10356-001",
+      "task_id": "pytest-pr-10356",
+      "repository_id": "pytest-dev-pytest",
+      "full_success": false,
+      "minus_success": false,
+      "full_latency_seconds": 169.73446,
+      "minus_latency_seconds": 141.702895,
+      "pair_status": "invalid_scorer_dependency_closure",
+      "training_observation_eligible": false,
+      "invalidation_reason": "The isolated scorer omitted a new helper called by the minus arm and required the official solution's optional consider_mro parameter even though direct-only store behavior can be implemented without that API shape. The full arm also omitted its inspect import and remains a real failure, but the pair cannot be labeled under this scorer.",
+      "artifact_sha256": {
+        "ablation_runs": "d94d7d94cd9eda345f72d962f030505cf067fa09ce5432da8a12ae6fb918b30d",
+        "ablation_report": "7a074f16fe8d95a408a7c7947ee9834e93a654ae78e9c429883bc51a7ba65065",
+        "training_observations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "full_patch": "60a7bee975f6c51cc631eaf3ee393457064316d45547db00e4b355b6efd15f9a",
+        "minus_patch": "9460d3c83a1f5ade97b2cd8bffd8292c837af5e974e64ad6c367db8c0094eee6"
+      }
+    }
+  ],
+  "infrastructure_incidents": [
+    {
+      "task_id": "pylint-pr-6528",
+      "stage": "pre_agent_fetch",
+      "reason": "concurrent fetch against one bare mirror",
+      "agent_outcome_observed": false,
+      "preserved_under": "D:/MemoryOS-Lab/invalidated-infrastructure/label-seek-v1-pylint-6528-003-concurrent-fetch"
+    },
+    {
+      "task_id": "pylint-pr-6528",
+      "stage": "second_arm_fetch",
+      "reason": "Windows Schannel TLS handshake failure",
+      "first_arm_reused_after_strict_identity_validation": true,
+      "preserved_under": "D:/MemoryOS-Lab/invalidated-infrastructure/label-seek-v1-pylint-6528-003-tls-after-minus"
+    },
+    {
+      "task_id": "pytest-pr-10356",
+      "stage": "pre_agent_fetch",
+      "reason": "Windows Schannel TLS handshake failure",
+      "agent_outcome_observed": false,
+      "preserved_under": "D:/MemoryOS-Lab/invalidated-infrastructure/label-seek-v1-pytest-10356-001-tls"
+    }
+  ]
+}

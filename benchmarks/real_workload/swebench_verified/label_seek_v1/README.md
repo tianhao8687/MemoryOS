@@ -24,3 +24,12 @@ passing on the official solution commit before the task is eligible to run.
 Only a protocol-valid pair whose full and minus arms have different executable outcomes creates a
 causal training observation. Same-outcome pairs remain replication evidence and are never relabeled
 from latency or subjective patch quality.
+
+## Post-run audit
+
+The frozen batch completed, but its post-run scorer audit invalidated three of four pairs. Two raw
+discordant observations were emitted and are explicitly ineligible: one scorer omitted an existing
+runtime field, and another overconstrained an equivalent lazy-loading architecture. A third scorer
+failed to carry an agent-added helper into its isolated dependency closure. Only Pylint 4661 remains
+a valid same-outcome pair, and this batch contributes zero training labels. See
+`post-run-audit.json` for bound patch/evidence hashes and infrastructure incidents.
