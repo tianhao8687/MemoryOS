@@ -153,9 +153,7 @@ def test_label_seeking_post_run_audit_fails_closed() -> None:
     assert all(item["training_observation_eligible"] is False for item in invalid)
     assert all(len(item["invalidation_reason"]) >= 80 for item in invalid)
     assert all(
-        len(digest) == 64
-        for item in audit["runs"]
-        for digest in item["artifact_sha256"].values()
+        len(digest) == 64 for item in audit["runs"] for digest in item["artifact_sha256"].values()
     )
 
 

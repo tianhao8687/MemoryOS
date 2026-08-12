@@ -72,7 +72,7 @@ def test_checked_in_ai_calibration_evidence_inventory_is_consistent() -> None:
     assert readiness.status == "protocol_ready_evidence_pending"
     assert readiness.gates.effective_jury_model_families == 1
     assert readiness.gates.effective_jury_providers == 1
-    assert readiness.gates.real_agent_ablation_pairs == 5
+    assert readiness.gates.real_agent_ablation_pairs == 9
     assert readiness.gates.candidate_profile_available is False
     assert readiness.gates.promotion_approved is False
     assert readiness.production_profile_active is False
@@ -99,3 +99,26 @@ def test_cross_repository_evidence_rejects_invalidated_attempt_leakage() -> None
     stale["aggregate"]["valid_pairs"] += 1
     with pytest.raises(ValueError, match="valid-pair count"):
         _validate_real_agent_ablation_evidence(artifact, stale, root)
+
+
+def test_label_seeking_evidence_rejects_audit_count_leakage() -> None:
+    root = Path(__file__).resolve().parents[1]
+    readiness = load_ai_calibration_readiness(
+        root / "benchmarks" / "ai_calibration_v1" / "readiness.json"
+    )
+    artifact = next(
+        item
+        for item in readiness.evidence
+        if item.artifact_id == "swebench-label-seeking-real-agent-ablation-v1-v2"
+    )
+    payload = json.loads((root / artifact.path).read_bytes())
+    stale = deepcopy(payload)
+    stale["audit_summary"]["protocol_valid_pairs"] += 1
+
+    with pytest.raises(ValueError, match="audit summary"):
+        _validate_real_agent_ablation_evidence(artifact, stale, root)
+
+    leaked = deepcopy(payload)
+    leaked["pairs"][0]["discordant_success"] = True
+    with pytest.raises(ValueError, match="discordance flag"):
+        _validate_real_agent_ablation_evidence(artifact, leaked, root)

@@ -246,6 +246,7 @@ def _validate_evidence_semantics(
     elif artifact.artifact_id in {
         "requests-6028-real-agent-ablation-v1",
         "swebench-cross-repository-real-agent-ablation-v1",
+        "swebench-label-seeking-real-agent-ablation-v1-v2",
     }:
         _validate_real_agent_ablation_evidence(artifact, payload, repository_root)
     else:
@@ -259,6 +260,59 @@ def _validate_real_agent_ablation_evidence(
 ) -> None:
     if artifact.artifact_id == "requests-6028-real-agent-ablation-v1":
         _validate_pinned_evidence_file(payload.get("manifest"), repository_root)
+    elif artifact.artifact_id == "swebench-label-seeking-real-agent-ablation-v1-v2":
+        task_packs = payload.get("task_packs")
+        if not isinstance(task_packs, list) or len(task_packs) != 2:
+            raise ValueError("label-seeking evidence must bind both frozen task packs")
+        audits: list[dict[str, object]] = []
+        pack_ids: set[str] = set()
+        for task_pack in task_packs:
+            if not isinstance(task_pack, dict):
+                raise ValueError("label-seeking task-pack binding must be an object")
+            pack_id = task_pack.get("id")
+            if not isinstance(pack_id, str) or not pack_id or pack_id in pack_ids:
+                raise ValueError("label-seeking task-pack IDs must be unique")
+            pack_ids.add(pack_id)
+            for key in (
+                "manifest",
+                "partition_lock",
+                "provenance",
+                "run_lock",
+                "scorer_verification",
+                "post_run_audit",
+            ):
+                _validate_pinned_evidence_file(task_pack.get(key), repository_root)
+            audits.append(
+                _load_pinned_evidence_json(task_pack.get("post_run_audit"), repository_root)
+            )
+        if pack_ids != {"label-seek-v1", "label-seek-v2"}:
+            raise ValueError("label-seeking evidence bound unexpected task packs")
+        expected_audit_summary = {
+            "protocol_valid_pairs": sum(
+                _audit_count(audit.get("protocol_valid_pairs"), "protocol-valid pairs")
+                for audit in audits
+            ),
+            "invalid_pairs": sum(
+                _audit_count(
+                    audit.get("invalidated_pairs", audit.get("invalid_pairs")),
+                    "invalid pairs",
+                )
+                for audit in audits
+            ),
+            "eligible_training_observations": sum(
+                _audit_count(
+                    audit.get("eligible_training_observations"),
+                    "eligible training observations",
+                )
+                for audit in audits
+            ),
+        }
+        if payload.get("audit_summary") != expected_audit_summary:
+            raise ValueError("label-seeking evidence audit summary is stale")
+        if expected_audit_summary["protocol_valid_pairs"] != artifact.executable_ablation_pairs:
+            raise ValueError("label-seeking audit valid-pair count differs from readiness")
+        if expected_audit_summary["eligible_training_observations"] != 0:
+            raise ValueError("label-seeking audit unexpectedly contains an eligible label")
     else:
         task_pack = payload.get("task_pack")
         if not isinstance(task_pack, dict):
@@ -412,6 +466,12 @@ def _is_sha256(value: object) -> bool:
     )
 
 
+def _audit_count(value: object, label: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ValueError(f"label-seeking audit has an invalid {label} count")
+    return value
+
+
 def _validate_pinned_evidence_file(value: object, repository_root: Path) -> None:
     if not isinstance(value, dict):
         raise ValueError("real-agent evidence file binding must be an object")
@@ -427,6 +487,23 @@ def _validate_pinned_evidence_file(value: object, repository_root: Path) -> None
         raise ValueError("real-agent evidence file binding is missing")
     if _file_sha256(resolved) != expected_hash:
         raise ValueError("real-agent evidence file binding hash is stale")
+
+
+def _load_pinned_evidence_json(
+    value: object,
+    repository_root: Path,
+) -> dict[str, object]:
+    _validate_pinned_evidence_file(value, repository_root)
+    assert isinstance(value, dict)
+    relative = value["path"]
+    assert isinstance(relative, str)
+    try:
+        payload = json.loads((repository_root / relative).read_bytes())
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("pinned real-agent evidence is not valid UTF-8 JSON") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("pinned real-agent evidence must contain a JSON object")
+    return payload
 
 
 __all__ = [

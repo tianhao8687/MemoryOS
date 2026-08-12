@@ -36,22 +36,24 @@ and even an approved decision never activates a profile automatically.
 
 [`protocol.json`](protocol.json) is the frozen machine-readable protocol.
 [`readiness.json`](readiness.json) is a SHA-256-pinned evidence inventory. At this snapshot the
-protocol and tooling are ready, and five protocol-valid real-agent full/minus pairs now cover four
-SWE-bench Verified tasks across Requests, Pylint, pytest, and Seaborn. The original Requests pilot
-contains the only discordant pair and therefore the only real executable TRAIN label. The three
-new cross-repository pairs deliberately retain unchanged outcomes: pytest and Seaborn passed in
-both arms, while Pylint failed in both arms. This mixed evidence prevents success-only selection
-but remains insufficient for fitting: the prior blind review used one model family/provider, the
-frozen training gate still lacks usable labels across three train repositories and a held-out
-development observation, and there is no candidate or promotion approval. This status is
-intentionally `protocol_ready_evidence_pending`.
+protocol and tooling are ready, and nine protocol-valid real-agent full/minus pairs now cover six
+distinct SWE-bench Verified tasks across Requests, Pylint, pytest, and Seaborn. The original
+Requests pilot contains the only discordant pair and therefore the only real executable TRAIN
+label. Three cross-repository pairs and four later label-seeking pairs all retain unchanged
+outcomes. The later batch includes order-balanced pytest repeats and fail-closed scorer audits; it
+was adaptively enriched for training-data acquisition and is not a product-effect sample. This
+mixed evidence prevents success-only selection but remains insufficient for fitting: the prior
+blind review used one model family/provider, the frozen training gate still lacks usable labels
+across three train repositories and a held-out development observation, and there is no candidate
+or promotion approval. This status is intentionally `protocol_ready_evidence_pending`.
 
 The cross-repository task pack is locked under
 [`../real_workload/swebench_verified/cross_repo_v1`](../real_workload/swebench_verified/cross_repo_v1).
 Its public-dataset revision, repository partitions, temporal provenance, scorer hashes, and
-base/fix verification are pinned before the published outcomes. The evidence summary records and
-excludes every completed scorer-invalid pair and every incomplete scorer-development attempt; none
-of those attempts contributes to the five-pair readiness count.
+base/fix verification are pinned before the published outcomes. The later label-seeking packs are
+locked under `label_seek_v1` and `label_seek_v2`, including run order and post-run audit hashes.
+The evidence summaries record and exclude every scorer-invalid pair, agent-protocol violation, and
+incomplete infrastructure attempt; none contributes to the nine-pair readiness count.
 
 Evidence file hashes use Git-canonical text bytes: validators normalize CRLF checkouts to LF before
 hashing, while still parsing and validating the referenced JSON semantics. This keeps the same
