@@ -131,6 +131,26 @@ def test_seaborn_hidden_scorer_accepts_equivalent_tick_apis(
     assert result.returncode == 0, result.stderr
 
 
+def test_pylint_hidden_scorer_accepts_annotation_parent_guard(tmp_path: Path) -> None:
+    manifest = load_real_workload_manifest(TASK_ROOT / "manifest.json")
+    task = next(task for task in manifest.tasks if task.id == "pylint-pr-4551")
+    assert task.hidden_test.hidden_patch is not None
+    source = _added_file_source(TASK_ROOT / "hidden" / task.hidden_test.hidden_patch)
+    (tmp_path / "benchmark_hidden_test.py").write_text(
+        source,
+        encoding="utf-8",
+        newline="\n",
+    )
+    _write_files(
+        tmp_path,
+        _pylint_sources(fixed=True, diagram_style="parent_guard"),
+    )
+
+    result = _run_scorer(tmp_path)
+
+    assert result.returncode == 0, result.stderr
+
+
 def _run_scorer(root: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "benchmark_hidden_test.py"],
@@ -203,7 +223,7 @@ class Plotter:
 """
 
 
-def _pylint_sources(*, fixed: bool) -> dict[str, str]:
+def _pylint_sources(*, fixed: bool, diagram_style: str = "unconditional") -> dict[str, str]:
     inference = (
         "frame.locals_type[node.name] = [node.parent.annotation]"
         if fixed
@@ -218,6 +238,31 @@ def _pylint_sources(*, fixed: bool) -> dict[str, str]:
         if fixed
         else 'label += f"{func.name}(value)\\\\l"'
     )
+    if fixed and diagram_style == "parent_guard":
+        diagram_source = """class ClassDiagram:
+    def class_names(self, nodes):
+        names = []
+        for node in nodes:
+            parent = getattr(node, "parent", None)
+            if (
+                isinstance(parent, astroid.AnnAssign) and parent.annotation is node
+                or isinstance(parent, astroid.Arguments)
+            ):
+                node_name = node.as_string()
+                if node_name not in names:
+                    names.append(node_name)
+        return names
+"""
+    else:
+        diagram_source = f"""class ClassDiagram:
+    def class_names(self, nodes):
+        names = []
+        for node in nodes:
+            if isinstance(node, {accepted}) and hasattr(node, "name") and not self.has_node(node):
+                if node.name not in names:
+                    names.append(node.name)
+        return names
+"""
     return {
         "pylint/pyreverse/utils.py": """def is_exception(node):
     return node.type == "exception"
@@ -230,15 +275,7 @@ def _pylint_sources(*, fixed: bool) -> dict[str, str]:
         frame = node.frame() if node.name in node.frame() else node.root()
         {inference}
 """,
-        "pylint/pyreverse/diagrams.py": f"""class ClassDiagram:
-    def class_names(self, nodes):
-        names = []
-        for node in nodes:
-            if isinstance(node, {accepted}) and hasattr(node, "name") and not self.has_node(node):
-                if node.name not in names:
-                    names.append(node.name)
-        return names
-""",
+        "pylint/pyreverse/diagrams.py": diagram_source,
         "pylint/pyreverse/writer.py": f"""from pylint.pyreverse.utils import is_exception
 
 class DiagramWriter:
