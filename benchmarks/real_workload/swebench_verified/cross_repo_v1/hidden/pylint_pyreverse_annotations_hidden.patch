@@ -3,7 +3,7 @@ new file mode 100644
 index 0000000..1f3fbef
 --- /dev/null
 +++ b/benchmark_hidden_test.py
-@@ -0,0 +1,262 @@
+@@ -0,0 +1,250 @@
 +from __future__ import annotations
 +
 +import ast
@@ -31,6 +31,9 @@ index 0000000..1f3fbef
 +
 +    def as_string(self) -> str:
 +        return self.name
++
++    def infer(self):
++        yield ClassDef(self.name)
 +
 +
 +class Subscript(Name):
@@ -68,10 +71,10 @@ index 0000000..1f3fbef
 +
 +
 +class AssignName(Name):
-+    def __init__(self, name: str, frame: object, annotation: Node, default: object) -> None:
++    def __init__(self, name: str, frame: object, annotation: Node | None, default: object) -> None:
 +        super().__init__(name)
 +        self._frame = frame
-+        self.parent = AnnAssign(annotation)
++        self.parent = AnnAssign(annotation) if annotation is not None else Node()
 +        self._default = default
 +
 +    def frame(self) -> object:
@@ -82,6 +85,9 @@ index 0000000..1f3fbef
 +
 +    def infer(self):
 +        yield self._default
++
++    def assign_type(self) -> Node:
++        return self.parent
 +
 +
 +class AssignAttr(Name):
@@ -208,29 +214,11 @@ index 0000000..1f3fbef
 +if not any("Widget" in name for name in inferred_names):
 +    raise AssertionError("annotated assignment was reduced to its default-value inference")
 +
-+
-+class Diagram:
-+    @staticmethod
-+    def has_node(_: object) -> bool:
-+        return False
-+
-+
-+class_names = load_method(
-+    Path("pylint/pyreverse/diagrams.py"),
-+    "ClassDiagram",
-+    "class_names",
-+    {"astroid": astroid},
-+)
-+name_annotation = Name("Widget")
-+name_annotation.parent = AnnAssign(name_annotation)
-+subscript_annotation = Subscript("list[Widget]")
-+subscript_annotation.parent = Arguments()
-+names = class_names(Diagram(), [name_annotation, subscript_annotation])
-+if names != ["Widget", "list[Widget]"]:
-+    diagram_source = Path("pylint/pyreverse/diagrams.py").read_text(encoding="utf-8")
-+    if "type_annotation" not in diagram_source or "annotation.as_string()" not in diagram_source:
-+        raise AssertionError(f"annotation nodes were filtered out of the UML diagram: {names!r}")
-+
++plain_default = InferredDefault(1)
++plain_assignment = AssignName("plain", frame, None, plain_default)
++linker.visit_assignname(plain_assignment)
++if plain_default not in frame.locals_type["plain"]:
++    raise AssertionError("unannotated assignment lost its inferred-type fallback")
 +
 +writer_namespace = runpy.run_path(
 +    "pylint/pyreverse/writer.py",

@@ -250,7 +250,10 @@ def _pylint_sources(
     inference_style: str = "direct",
 ) -> dict[str, str]:
     inference = (
-        "frame.locals_type[node.name] = [node.parent.annotation]"
+        """if isinstance(node.parent, astroid.AnnAssign):
+            frame.locals_type[node.name] = [node.parent.annotation]
+        else:
+            frame.locals_type[node.name] = list(set(node.infer()))"""
         if fixed
         else "frame.locals_type[node.name] = list(set(node.infer()))"
     )
