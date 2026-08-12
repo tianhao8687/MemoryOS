@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -8,8 +9,10 @@ from pydantic import ValidationError
 
 from memoryos.evaluation.ai_calibration_protocol import (
     _file_sha256,
+    _validate_real_agent_ablation_evidence,
     default_ai_calibration_protocol,
     load_ai_calibration_protocol,
+    load_ai_calibration_readiness,
     validate_ai_calibration_assets,
 )
 
@@ -69,7 +72,30 @@ def test_checked_in_ai_calibration_evidence_inventory_is_consistent() -> None:
     assert readiness.status == "protocol_ready_evidence_pending"
     assert readiness.gates.effective_jury_model_families == 1
     assert readiness.gates.effective_jury_providers == 1
-    assert readiness.gates.real_agent_ablation_pairs == 2
+    assert readiness.gates.real_agent_ablation_pairs == 5
     assert readiness.gates.candidate_profile_available is False
     assert readiness.gates.promotion_approved is False
     assert readiness.production_profile_active is False
+
+
+def test_cross_repository_evidence_rejects_invalidated_attempt_leakage() -> None:
+    root = Path(__file__).resolve().parents[1]
+    readiness = load_ai_calibration_readiness(
+        root / "benchmarks" / "ai_calibration_v1" / "readiness.json"
+    )
+    artifact = next(
+        item
+        for item in readiness.evidence
+        if item.artifact_id == "swebench-cross-repository-real-agent-ablation-v1"
+    )
+    payload = json.loads((root / artifact.path).read_bytes())
+    leaked = deepcopy(payload)
+    leaked["invalidated_attempts"][0]["excluded_from_counts"] = False
+
+    with pytest.raises(ValueError, match="not excluded"):
+        _validate_real_agent_ablation_evidence(artifact, leaked, root)
+
+    stale = deepcopy(payload)
+    stale["aggregate"]["valid_pairs"] += 1
+    with pytest.raises(ValueError, match="valid-pair count"):
+        _validate_real_agent_ablation_evidence(artifact, stale, root)

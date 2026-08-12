@@ -198,9 +198,7 @@ def _added_file_source(path: Path) -> str:
 
 def _seaborn_source(*, fixed: bool, tick_api: str = "axis_major") -> str:
     grid_call = (
-        'axis_obj.grid(False, which="both")'
-        if tick_api == "axis_major"
-        else "axis_obj.grid(False)"
+        'axis_obj.grid(False, which="both")' if tick_api == "axis_major" else "axis_obj.grid(False)"
     )
     tick_count = {
         "axis_major": "len(axis_obj.get_major_ticks())",

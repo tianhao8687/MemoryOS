@@ -1,6 +1,7 @@
 {
   "blockers": [
     "Need order-swapped pairwise votes from at least three genuinely distinct model families and providers.",
+    "Need usable train labels across at least three training repositories plus repository-held-out development observations; the new cross-repository pairs had unchanged outcomes and create no labels.",
     "Need a repository-held-out candidate profile trained without safety-gate leakage.",
     "Need paired real-agent frozen-baseline/candidate shadow runs bound to that profile.",
     "Need at least 50 sealed tasks across three repositories, ten sequences, and two unseen agent models with complete paired cost data.",
@@ -60,6 +61,24 @@
       "real_agent_tasks": 1,
       "records": 4,
       "role": "real_agent_ablation"
+    },
+    {
+      "artifact_id": "swebench-cross-repository-real-agent-ablation-v1",
+      "candidate_training_eligible": false,
+      "effective_model_families": 0,
+      "effective_providers": 0,
+      "executable_ablation_pairs": 3,
+      "file_sha256": "ae54ea0629fa715db1439100a5c07ca14eae7599a5c954bdeb21d744ab3b2bac",
+      "limitations": [
+        "The three valid pairs cover one task each from Pylint, pytest, and Seaborn with one coding-agent model.",
+        "All three pairs had unchanged executable outcomes and therefore create no causal training labels.",
+        "Invalid scorer-development attempts are explicitly hash-bound and excluded from the aggregate."
+      ],
+      "path": "benchmarks/ai_calibration_v1/evidence/swebench-cross-repository-real-agent-ablation-v1.json",
+      "promotion_eligible": false,
+      "real_agent_tasks": 3,
+      "records": 6,
+      "role": "real_agent_ablation"
     }
   ],
   "gates": {
@@ -70,7 +89,7 @@
     "effective_jury_providers": 1,
     "order_swapped_pairwise_comparisons": 0,
     "promotion_approved": false,
-    "real_agent_ablation_pairs": 2,
+    "real_agent_ablation_pairs": 5,
     "sealed_promotion_repositories": 0,
     "sealed_promotion_sequences": 0,
     "sealed_promotion_tasks": 0

@@ -146,12 +146,14 @@ train/dev input SHA-256 into the candidate profile.
 .\.venv\Scripts\python.exe scripts\ai_calibration.py --help
 ```
 
-The checked-in readiness registry currently says `protocol_ready_evidence_pending`: two valid
-real-agent full/minus pairs now cover one SWE-bench Verified task, with one discordant real TRAIN
-label and a repeated latency reduction. The model review still represents only one effective model
-family/provider, training still lacks the required repository-held-out development evidence, and
-there are no sealed promotion tasks. Production weights therefore remain frozen. Protocol,
-evidence hashes, commands, and exact blockers are in
+The checked-in readiness registry currently says `protocol_ready_evidence_pending`: five valid
+real-agent full/minus pairs now cover four SWE-bench Verified tasks across Requests, Pylint, pytest,
+and Seaborn. Only one Requests pair is discordant and creates a real TRAIN label; the three new
+cross-repository pairs preserve two both-pass outcomes and one both-fail outcome, rather than
+selecting only favorable examples. The model review still represents only one effective model
+family/provider, training still lacks usable labels across three training repositories and the
+required repository-held-out development observation, and there are no sealed promotion tasks.
+Production weights therefore remain frozen. Protocol, evidence hashes, commands, and blockers are in
 [`benchmarks/ai_calibration_v1/README.md`](benchmarks/ai_calibration_v1/README.md).
 
 单独运行 V2 回归与 V2.1 盲测：

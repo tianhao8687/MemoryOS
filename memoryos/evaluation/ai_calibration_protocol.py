@@ -398,9 +398,7 @@ def _validate_real_agent_ablation_evidence(
             raise ValueError("real-agent non-evidence attempt must be an object")
         if attempt.get("excluded_from_counts") is not True:
             raise ValueError("incomplete real-agent attempt was not excluded from counts")
-        if not isinstance(attempt.get("run_id"), str) or not isinstance(
-            attempt.get("reason"), str
-        ):
+        if not isinstance(attempt.get("run_id"), str) or not isinstance(attempt.get("reason"), str):
             raise ValueError("incomplete real-agent attempt lacks an identity or reason")
     if payload.get("production_weights_changed") is not False:
         raise ValueError("real-agent evidence must not claim production activation")
