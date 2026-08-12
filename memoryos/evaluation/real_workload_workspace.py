@@ -129,6 +129,10 @@ class RepositoryWorkspaceManager:
             raise WorkspaceError(f"refusing to reuse an existing benchmark workspace: {workspace}")
         workspace.parent.mkdir(parents=True, exist_ok=True)
         self._git(workspace.parent, "init", "--quiet", str(workspace))
+        # Benchmark run/task/condition components can make otherwise valid repository
+        # paths exceed Git for Windows' legacy 260-character boundary. Keep the setting
+        # local to the disposable repository so checkout and scoring see the same tree.
+        self._git(workspace, "config", "core.longpaths", "true")
         self._git(workspace, "config", "core.autocrlf", "false")
         self._git(workspace, "config", "core.eol", "lf")
         self._git(

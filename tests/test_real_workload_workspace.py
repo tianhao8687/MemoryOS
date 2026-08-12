@@ -94,6 +94,7 @@ def test_materialized_workspace_excludes_solution_and_remotes(
 
     assert _git(workspace.path, "rev-parse", "HEAD") == base
     assert _git(workspace.path, "remote") == ""
+    assert _git(workspace.path, "config", "--get", "core.longpaths") == "true"
     assert not (workspace.path / ".git" / "FETCH_HEAD").exists()
     _git(workspace.path, "cat-file", "-e", f"{solution}^{{commit}}", check=False)
     executable = shutil.which("git")
