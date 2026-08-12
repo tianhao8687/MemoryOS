@@ -126,3 +126,73 @@ agent-runtime digest identical, while retrieval config hashes must differ and th
 must bind the exact shadow-profile digest. Only public tasks from repositories absent from train and
 development can be marked sealed. The production `MemoryService` constructor still passes no
 profile, and no settings, CLI, HTTP, or MCP production path loads one implicitly.
+
+## Public relevance bootstrap
+
+Public Git/SWE-Gym relevance data may initialize only the relative FTS/vector retrieval ratio. The
+bootstrap trainer keeps repository-level train/dev/test partitions, uses repository-macro metrics,
+caps per-query preference pairs, records leave-one-repository-out ranges, and emits a strict
+`public_bootstrap_prior` with `production_eligible=false`. It cannot calibrate graph, temporal,
+freshness, scope, truth, feedback, confidence, importance, reranking, or safety behavior.
+
+`build_public_rrf_shadow.py` converts that prior into a narrower `rrf_channel_candidate_shadow`.
+The converter preserves the frozen FTS+vector total scale, graph and temporal weights, RRF K, MMR,
+and every downstream score factor and hard gate. The shadow binds the dataset, feature rows,
+FastEmbed model revision/source, feature adapter, and converter hashes. MemoryOS refuses to run it
+without the matching embedding model, and the benchmark MCP verifies the live embedding service
+identity before indexing or retrieval.
+
+The local bridge uses the exact FastEmbed `query_embed` and `passage_embed` methods used to create
+the public training features while exposing the existing OpenAI-compatible embeddings interface.
+Public-shadow executable ablations must pass `--diagnostic-only`; they produce no calibration
+observation and cannot activate production weights. A typical local sequence is:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_public_rrf_shadow.py `
+  --profile D:\MemoryOS-Lab\training\public-bootstrap-v1\FINAL-swegym-bge-repo-macro.json `
+  --output D:\MemoryOS-Lab\training\public-bootstrap-v1\SHADOW-swegym-bge-rrf.json
+
+.\.venv\Scripts\python.exe scripts\serve_fastembed_openai.py `
+  --dependency-path D:\MemoryOS-Lab\python\fastembed-0.8.0 `
+  --model-cache D:\MemoryOS-Lab\models\fastembed `
+  --model BAAI/bge-small-en-v1.5 `
+  --vector-channel-id fastembed:BAAI/bge-small-en-v1.5@<revision> `
+  --vector-channel-source-sha256 <source-sha256> `
+  --vector-feature-adapter-sha256 <adapter-sha256>
+```
+
+The real-agent ablation command then receives `--rrf-channel-profile`,
+`--embedding-base-url`, `--embedding-model`, and `--diagnostic-only`. Production remains on the
+frozen baseline unless a separate causal dataset, sealed promotion run, and explicit activation all
+pass.
+
+Replay the candidate and frozen baseline on the same real MemoryOS candidate pools, then compute a
+repository-stratified paired bootstrap without rerunning retrieval:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_public_rrf_shadow_replay.py `
+  --dataset D:\MemoryOS-Lab\datasets\swe-gym\SWE-Gym-20260813\train-00000-of-00001.parquet `
+  --pyarrow-path D:\MemoryOS-Lab\pydeps `
+  --profile D:\MemoryOS-Lab\training\public-bootstrap-v1\SHADOW-swegym-bge-rrf.json `
+  --output D:\MemoryOS-Lab\training\public-bootstrap-v1\public-rrf-replay-test-52.json `
+  --state-root D:\MemoryOS-Lab\training\public-bootstrap-v1\replay-state `
+  --embedding-base-url http://127.0.0.1:8877/v1 `
+  --embedding-model BAAI/bge-small-en-v1.5 `
+  --split test `
+  --queries-per-repository 26
+
+.\.venv\Scripts\python.exe scripts\analyze_public_rrf_shadow_replay.py `
+  --report D:\MemoryOS-Lab\training\public-bootstrap-v1\public-rrf-replay-test-52.json `
+  --output D:\MemoryOS-Lab\training\public-bootstrap-v1\public-rrf-replay-test-52-analysis-v2.json `
+  --bootstrap-rounds 10000 `
+  --bootstrap-seed 20260813
+```
+
+The 2026-08-13 replay used all 26 Conan test queries and a deterministic 26-query Pandas sample.
+The 19.25% FTS / 80.75% vector prior increased repository-macro NDCG@10 by 0.01719 and required
+Recall@5 by 0.05769, but the NDCG 95% interval crossed zero (-0.00847, 0.04612), only two test
+repositories were available, and Pandas regressed on both metrics. The machine gate therefore
+returned `retain_frozen_baseline`. One real pytest coding-agent full/minus-memory pair was helped,
+but that establishes the utility of the selected memory, not the causal effect of this weight
+ratio. The immutable summary and artifact hashes are recorded in
+[`evidence/public-rrf-shadow-v1.json`](evidence/public-rrf-shadow-v1.json).

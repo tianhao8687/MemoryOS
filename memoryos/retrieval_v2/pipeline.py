@@ -34,6 +34,12 @@ from memoryos.retrieval.search import RetrievalEngine
 from memoryos.retrieval_v2.diversity import mmr_select
 from memoryos.retrieval_v2.fusion import reciprocal_rank_fusion
 from memoryos.retrieval_v2.planner import QueryPlan, plan_query
+from memoryos.retrieval_v2.rrf_shadow import (
+    FROZEN_MMR_LAMBDA,
+    FROZEN_RRF_K,
+    FROZEN_RRF_WEIGHTS,
+    RRFChannelShadowProfile,
+)
 from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
 from memoryos.temporal.intervals import as_of, is_known_at
 
@@ -45,8 +51,8 @@ class Reranker(Protocol):
     def rerank(self, query: str, candidates: list[dict[str, Any]]) -> dict[str, float]: ...
 
 
-RRF_WEIGHTS = {"fts": 1.0, "vector": 1.0, "graph": 0.82, "temporal": 0.9}
-RRF_K = 60
+RRF_WEIGHTS = FROZEN_RRF_WEIGHTS
+RRF_K = FROZEN_RRF_K
 
 
 def _scope_factor(scope_type: str) -> float:
@@ -55,14 +61,22 @@ def _scope_factor(scope_type: str) -> float:
     )
 
 
-def retrieval_config_hash(scoring_profile: ShadowRetrievalProfile | None = None) -> str:
+def retrieval_config_hash(
+    scoring_profile: ShadowRetrievalProfile | None = None,
+    *,
+    rrf_channel_profile: RRFChannelShadowProfile | None = None,
+) -> str:
+    if scoring_profile is not None and rrf_channel_profile is not None:
+        raise ValueError("retrieval can use only one shadow profile at a time")
     config_payload: dict[str, Any] = {
         "rrf": RRF_WEIGHTS,
         "k": RRF_K,
-        "mmr_lambda": 0.78,
+        "mmr_lambda": FROZEN_MMR_LAMBDA,
     }
     if scoring_profile is not None:
         config_payload["shadow_profile"] = scoring_profile.model_dump(mode="json")
+    if rrf_channel_profile is not None:
+        config_payload["rrf_channel_shadow_profile"] = rrf_channel_profile.model_dump(mode="json")
     return hashlib.sha256(json.dumps(config_payload, sort_keys=True).encode("utf-8")).hexdigest()
 
 
@@ -74,12 +88,19 @@ class RetrievalPipeline:
         reranker: Reranker | None = None,
         *,
         scoring_profile: ShadowRetrievalProfile | None = None,
+        rrf_channel_profile: RRFChannelShadowProfile | None = None,
     ) -> None:
+        if scoring_profile is not None and rrf_channel_profile is not None:
+            raise ValueError("retrieval can use only one shadow profile at a time")
         self.database = database
         self.baseline = baseline
         self.reranker = reranker
         self.scoring_profile = scoring_profile
-        self.config_hash = retrieval_config_hash(scoring_profile)
+        self.rrf_channel_profile = rrf_channel_profile
+        self.config_hash = retrieval_config_hash(
+            scoring_profile,
+            rrf_channel_profile=rrf_channel_profile,
+        )
 
     def search(
         self,
@@ -150,7 +171,17 @@ class RetrievalPipeline:
                 "graph": [identity for identity in graph_ids if identity in by_id],
                 "temporal": [identity for identity in temporal_ids if identity in by_id],
             }
-            fused, rank_traces = reciprocal_rank_fusion(rankings, weights=RRF_WEIGHTS, k=RRF_K)
+            rrf_weights = (
+                RRF_WEIGHTS
+                if self.rrf_channel_profile is None
+                else self.rrf_channel_profile.channel_weights
+            )
+            rrf_k = RRF_K if self.rrf_channel_profile is None else self.rrf_channel_profile.rrf_k
+            fused, rank_traces = reciprocal_rank_fusion(
+                rankings,
+                weights=rrf_weights,
+                k=rrf_k,
+            )
             claim_rows = list(
                 session.scalars(select(ClaimRow).where(ClaimRow.memory_id.in_(list(by_id))))
             )
@@ -264,7 +295,11 @@ class RetrievalPipeline:
                 candidates,
                 limit=min(total, request.offset + request.limit),
                 lambda_relevance=(
-                    0.78 if self.scoring_profile is None else self.scoring_profile.mmr_lambda
+                    self.scoring_profile.mmr_lambda
+                    if self.scoring_profile is not None
+                    else FROZEN_MMR_LAMBDA
+                    if self.rrf_channel_profile is None
+                    else self.rrf_channel_profile.mmr_lambda
                 ),
             )
             selected = diverse[request.offset : request.offset + request.limit]
@@ -291,16 +326,22 @@ class RetrievalPipeline:
                 "total": total,
                 "mode": baseline["mode"],
                 "pipeline_mode": (
-                    f"rrf-{baseline['mode']}"
-                    if self.scoring_profile is None
-                    else f"shadow-profile-{baseline['mode']}"
+                    f"shadow-profile-{baseline['mode']}"
+                    if self.scoring_profile is not None
+                    else f"rrf-channel-shadow-{baseline['mode']}"
+                    if self.rrf_channel_profile is not None
+                    else f"rrf-{baseline['mode']}"
                 ),
                 "reranker": reranker_mode,
                 "query_plan": plan.model_dump(),
                 "retrieval_run_id": run.id,
                 "config_hash": self.config_hash,
                 "scoring_profile_sha256": (
-                    None if self.scoring_profile is None else self.scoring_profile.digest()
+                    self.scoring_profile.digest()
+                    if self.scoring_profile is not None
+                    else self.rrf_channel_profile.digest()
+                    if self.rrf_channel_profile is not None
+                    else None
                 ),
             }
 

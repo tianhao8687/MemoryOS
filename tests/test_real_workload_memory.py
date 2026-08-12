@@ -12,12 +12,17 @@ from sqlalchemy import select
 from memoryos.config import settings_for
 from memoryos.db import Database
 from memoryos.db.models import MemoryRow, RetrievalRunRow
-from memoryos.evaluation.real_workload_memory import MemoryRuntime, MemoryRuntimeBuilder
+from memoryos.evaluation.real_workload_memory import (
+    MemoryRuntime,
+    MemoryRuntimeBuilder,
+    MemoryRuntimeError,
+)
 from memoryos.evaluation.real_workload_models import (
     ExperimentCondition,
     MemorySeedSpec,
     WorkloadTaskSpec,
 )
+from memoryos.retrieval_v2.rrf_shadow import RRFChannelShadowProfile
 from memoryos.retrieval_v2.scoring import CALIBRATABLE_FEATURES, ShadowRetrievalProfile
 
 IMAGE = "python:3.12-slim@sha256:" + "a" * 64
@@ -96,6 +101,20 @@ def _payload(result: Any) -> dict[str, Any]:
             if isinstance(value, dict):
                 return value
     raise AssertionError("MCP result did not contain a JSON object")
+
+
+def _rrf_profile() -> RRFChannelShadowProfile:
+    return RRFChannelShadowProfile(
+        source_public_profile_sha256="a" * 64,
+        source_dataset_sha256="b" * 64,
+        source_feature_rows_sha256="c" * 64,
+        source_vector_channel_id="fastembed:BAAI/bge-small-en-v1.5@revision",
+        source_vector_channel_sha256="d" * 64,
+        source_vector_adapter_sha256="e" * 64,
+        conversion_source_sha256="f" * 64,
+        channel_weights={"fts": 0.4, "vector": 1.6, "graph": 0.82, "temporal": 0.9},
+        limitations=["diagnostic only"],
+    )
 
 
 async def _call_context(runtime: MemoryRuntime) -> dict[str, Any]:
@@ -255,3 +274,34 @@ async def test_failed_scope_call_does_not_satisfy_usage_gate(tmp_path: Path) -> 
     evidence = builder.validate_usage(runtime)
     assert evidence.valid is False
     assert "no successful" in evidence.errors[0]
+
+
+def test_rrf_shadow_runtime_is_model_bound_and_nonproduction(tmp_path: Path) -> None:
+    builder = MemoryRuntimeBuilder()
+    profile = _rrf_profile()
+    runtime = builder.prepare(
+        ExperimentCondition.MEMORYOS,
+        _task(),
+        _seeds(),
+        tmp_path / "rrf-shadow",
+        rrf_channel_profile=profile,
+        embedding_base_url="http://host.docker.internal:8877/v1",
+        embedding_model="BAAI/bge-small-en-v1.5",
+    )
+
+    assert runtime.scoring_profile_sha256 == profile.digest()
+    assert runtime.embedding_model == "BAAI/bge-small-en-v1.5"
+    assert ("MEMORYOS_ANN_ENABLED", "false") in runtime.server_environment
+    assert "--rrf-channel-profile" in runtime.server_arguments
+    assert profile.source_vector_channel_id in runtime.server_arguments
+    assert profile.source_vector_adapter_sha256 in runtime.server_arguments
+    with pytest.raises(MemoryRuntimeError, match="does not match"):
+        builder.prepare(
+            ExperimentCondition.MEMORYOS,
+            _task(),
+            _seeds(),
+            tmp_path / "rrf-mismatch",
+            rrf_channel_profile=profile,
+            embedding_base_url="http://host.docker.internal:8877/v1",
+            embedding_model="other-model",
+        )

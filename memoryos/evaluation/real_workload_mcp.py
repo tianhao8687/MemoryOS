@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
+import httpx
 from mcp.server.fastmcp import FastMCP
 from pydantic import TypeAdapter
 from sqlalchemy import select
@@ -22,6 +23,7 @@ from memoryos.evaluation.real_workload_models import (
     ExperimentCondition,
     MemorySeedSpec,
 )
+from memoryos.retrieval_v2.rrf_shadow import load_rrf_channel_shadow_profile
 from memoryos.retrieval_v2.scoring import load_shadow_retrieval_profile
 
 TOKEN_RE = re.compile(r"[\w.]+", re.UNICODE)
@@ -153,19 +155,68 @@ class MemoryOSBackend:
         cutoff: datetime,
         *,
         weight_profile: Path | None = None,
+        rrf_channel_profile: Path | None = None,
+        expected_vector_channel_id: str | None = None,
+        expected_vector_channel_source_sha256: str | None = None,
+        expected_vector_feature_adapter_sha256: str | None = None,
     ) -> None:
+        if weight_profile is not None and rrf_channel_profile is not None:
+            raise ValueError("benchmark MemoryOS can use only one shadow profile")
         self.database = Database(settings_for(data_dir))
         self.database.initialize()
         scoring_profile = (
             None if weight_profile is None else load_shadow_retrieval_profile(weight_profile)
         )
+        channel_profile = (
+            None
+            if rrf_channel_profile is None
+            else load_rrf_channel_shadow_profile(rrf_channel_profile)
+        )
+        expected_identity = (
+            expected_vector_channel_id,
+            expected_vector_channel_source_sha256,
+            expected_vector_feature_adapter_sha256,
+        )
+        if any(value is None for value in expected_identity) and not all(
+            value is None for value in expected_identity
+        ):
+            raise ValueError("expected vector channel identity must be complete")
+        if channel_profile is None and expected_vector_channel_id is not None:
+            raise ValueError("expected vector channel identity requires an RRF shadow")
+        if channel_profile is not None:
+            if expected_identity != (
+                channel_profile.source_vector_channel_id,
+                channel_profile.source_vector_channel_sha256,
+                channel_profile.source_vector_adapter_sha256,
+            ):
+                raise ValueError("RRF shadow does not match its expected vector channel identity")
+            self._verify_embedding_service(
+                expected_vector_channel_id=channel_profile.source_vector_channel_id,
+                expected_vector_channel_source_sha256=(
+                    channel_profile.source_vector_channel_sha256
+                ),
+                expected_vector_feature_adapter_sha256=(
+                    channel_profile.source_vector_adapter_sha256
+                ),
+            )
         self.service = MemoryService(
             self.database,
             self.database.settings,
             retrieval_scoring_profile=scoring_profile,
+            retrieval_rrf_channel_profile=channel_profile,
         )
         self.repository = repository
         self.cutoff = cutoff
+        with self.database.session() as session:
+            memory_ids = list(session.scalars(select(MemoryRow.id)))
+        if self.database.settings.embedding_base_url and self.database.settings.embedding_model:
+            failed = [
+                memory_id
+                for memory_id in memory_ids
+                if not self.service.retrieval.index_memory(memory_id)
+            ]
+            if failed:
+                raise RuntimeError("benchmark vector indexing did not cover every seeded memory")
         with self.database.session() as session:
             rows = list(session.scalars(select(MemoryRow)))
             self.seed_ids = {
@@ -173,6 +224,29 @@ class MemoryOSBackend:
                 for row in rows
                 if "benchmark_seed_id" in row.metadata_json
             }
+
+    def _verify_embedding_service(
+        self,
+        *,
+        expected_vector_channel_id: str,
+        expected_vector_channel_source_sha256: str,
+        expected_vector_feature_adapter_sha256: str,
+    ) -> None:
+        base_url = self.database.settings.embedding_base_url
+        if base_url is None:
+            raise RuntimeError("RRF shadow embedding service is not configured")
+        try:
+            response = httpx.get(f"{base_url.rstrip('/')}/health", timeout=10.0)
+            response.raise_for_status()
+            health = response.json()
+        except (httpx.HTTPError, TypeError, ValueError) as exc:
+            raise RuntimeError("RRF shadow embedding service health check failed") from exc
+        if not isinstance(health, dict) or (
+            health.get("vector_channel_id") != expected_vector_channel_id
+            or health.get("vector_channel_source_sha256") != expected_vector_channel_source_sha256
+            or health.get("vector_feature_adapter_sha256") != expected_vector_feature_adapter_sha256
+        ):
+            raise RuntimeError("RRF shadow embedding service identity mismatch")
 
     def context(
         self,
@@ -379,6 +453,10 @@ def main() -> None:
     parser.add_argument("--seed-file", type=Path)
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--weight-profile", type=Path)
+    parser.add_argument("--rrf-channel-profile", type=Path)
+    parser.add_argument("--expected-vector-channel-id")
+    parser.add_argument("--expected-vector-channel-source-sha256")
+    parser.add_argument("--expected-vector-feature-adapter-sha256")
     parser.add_argument(
         "--transport",
         choices=["stdio", "streamable-http"],
@@ -393,6 +471,14 @@ def main() -> None:
             parser.error("--seed-file is required for flat_memory")
         if arguments.weight_profile is not None:
             parser.error("--weight-profile is only valid for memoryos")
+        if arguments.rrf_channel_profile is not None:
+            parser.error("--rrf-channel-profile is only valid for memoryos")
+        if arguments.expected_vector_channel_id is not None:
+            parser.error("--expected-vector-channel-id is only valid for memoryos")
+        if arguments.expected_vector_channel_source_sha256 is not None:
+            parser.error("--expected-vector-channel-source-sha256 is only valid for memoryos")
+        if arguments.expected_vector_feature_adapter_sha256 is not None:
+            parser.error("--expected-vector-feature-adapter-sha256 is only valid for memoryos")
         backend: ReadOnlyMemoryBackend = _load_flat_backend(arguments.seed_file, cutoff)
     else:
         if arguments.data_dir is None:
@@ -402,6 +488,12 @@ def main() -> None:
             arguments.repository,
             cutoff,
             weight_profile=arguments.weight_profile,
+            rrf_channel_profile=arguments.rrf_channel_profile,
+            expected_vector_channel_id=arguments.expected_vector_channel_id,
+            expected_vector_channel_source_sha256=(arguments.expected_vector_channel_source_sha256),
+            expected_vector_feature_adapter_sha256=(
+                arguments.expected_vector_feature_adapter_sha256
+            ),
         )
     auditor = ToolAuditor(arguments.audit_file, backend=arguments.backend)
     create_benchmark_mcp(

@@ -32,6 +32,35 @@ jobs:
       - name: Install backend dependencies
         run: python -m pip install --upgrade pip ".[ann,dev]"
 
+      - name: Cache required Tree-sitter parsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/tree-sitter-language-pack
+          key: tree-sitter-language-pack-${{ runner.os }}-${{ runner.arch }}-1.14.3
+
+      - name: Install required Tree-sitter parsers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TSLP_BUNDLE_SHA256: 935c0990f08cde9f41ff5519de5129b6b73acebcc80a6db647a1aadf5ca19a77
+          TSLP_VERSION: 1.14.3
+        run: |
+          if ! python -c "from tree_sitter_language_pack import downloaded_languages; required = {'python', 'typescript', 'javascript', 'rust'}; raise SystemExit(0 if required <= set(downloaded_languages()) else 1)"; then
+            archive="${RUNNER_TEMP}/parsers-linux-x86_64.tar.zst"
+            cache_dir="$(python -c 'from tree_sitter_language_pack import cache_dir; print(cache_dir())')"
+            gh release download "v${TSLP_VERSION}" \
+              --repo xberg-io/tree-sitter-language-pack \
+              --pattern parsers-linux-x86_64.tar.zst \
+              --output "${archive}"
+            echo "${TSLP_BUNDLE_SHA256}  ${archive}" | sha256sum --check --strict -
+            mkdir -p "${cache_dir}"
+            tar --extract --zstd --file "${archive}" --directory "${cache_dir}" \
+              ./libtree_sitter_python.so \
+              ./libtree_sitter_typescript.so \
+              ./libtree_sitter_javascript.so \
+              ./libtree_sitter_rust.so
+          fi
+          python -c "from tree_sitter_language_pack import get_parser; [get_parser(name) for name in ('python', 'typescript', 'javascript', 'rust')]"
+
       - name: Check imports
         run: python -c "import memoryos; assert memoryos.__version__ == '2.1.0'"
 

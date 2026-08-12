@@ -22,7 +22,7 @@ dependencies = [
   "python-multipart>=0.0.20,<1",
   "rich>=14,<15",
   "sqlalchemy>=2.0.41,<3",
-  "tree-sitter-language-pack>=1.14,<2",
+  "tree-sitter-language-pack==1.14.3",
   "typer>=0.16,<1",
   "uvicorn>=0.35,<1",
 ]

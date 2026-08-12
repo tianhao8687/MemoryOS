@@ -149,3 +149,17 @@ They are implementation commitments, not future proposals.
     objective exists. An interrupted experiment may reuse a completed arm only after its derived
     manifest and full runtime digests match and its individual protocol gates pass. Published
     summaries exclude credentials and raw logs, and no such evidence changes production weights.
+44. Treat public relevance training as an initialization prior, not a full retrieval scorer. A
+    public profile may change only the relative FTS/vector RRF ratio in a non-production shadow;
+    preserve their total scale and freeze graph, temporal, RRF K, MMR, downstream freshness/scope/
+    feedback/truth factors, and all hard gates. Bind the shadow to the exact vector model revision,
+    source hash, and feature adapter, verify that identity against the live embedding service, and
+    require diagnostic executable ablations to emit no causal training observations. Production
+    activation still requires independently held-out causal outcomes and an explicit promotion.
+45. Reject a public FTS/vector prior for production unless its real-pipeline replay covers at least
+    three repositories, has a positive repository-stratified paired-bootstrap lower bound for
+    NDCG@10, does not reduce overall required Recall@5, and has no per-repository NDCG@10 or required
+    Recall@5 regression. A passing public gate may advance only to causal shadow evaluation; it is
+    never a production approval. The first BGE/SWE-Gym candidate (19.25% FTS / 80.75% vector)
+    improved the 52-query point estimates but failed repository coverage, confidence-bound, and
+    Pandas worst-repository gates, so the frozen 50/50 production ratio remains unchanged.

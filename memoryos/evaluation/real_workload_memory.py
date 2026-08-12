@@ -30,6 +30,7 @@ from memoryos.evaluation.real_workload_models import (
     WorkloadTaskSpec,
 )
 from memoryos.retrieval_v2.pipeline import retrieval_config_hash
+from memoryos.retrieval_v2.rrf_shadow import RRFChannelShadowProfile
 from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
 
 _PUBLISHABLE_RETRIEVAL_FEATURES = frozenset(
@@ -66,6 +67,8 @@ class MemoryRuntime:
     scoring_profile_sha256: str | None
     expected_retrieval_config_hash: str | None
     server_arguments: tuple[str, ...]
+    server_environment: tuple[tuple[str, str], ...]
+    embedding_model: str | None
 
 
 @dataclass(frozen=True)
@@ -102,13 +105,39 @@ class MemoryRuntimeBuilder:
         python_path: str | None = None,
         http_url: str | None = None,
         scoring_profile: ShadowRetrievalProfile | None = None,
+        rrf_channel_profile: RRFChannelShadowProfile | None = None,
+        embedding_base_url: str | None = None,
+        embedding_model: str | None = None,
     ) -> MemoryRuntime:
         destination = run_dir.resolve()
         destination.mkdir(parents=True, exist_ok=False)
         config_path = destination / "mcp.json"
         selected = _select_seeds(task, seeds)
-        if scoring_profile is not None and condition is not ExperimentCondition.MEMORYOS:
-            raise MemoryRuntimeError("shadow scoring profiles are valid only for MemoryOS")
+        if scoring_profile is not None and rrf_channel_profile is not None:
+            raise MemoryRuntimeError("benchmark can use only one shadow profile")
+        if (scoring_profile is not None or rrf_channel_profile is not None) and (
+            condition is not ExperimentCondition.MEMORYOS
+        ):
+            raise MemoryRuntimeError("shadow retrieval profiles are valid only for MemoryOS")
+        if (embedding_base_url is None) != (embedding_model is None):
+            raise MemoryRuntimeError("embedding_base_url and embedding_model must be set together")
+        if rrf_channel_profile is not None:
+            if embedding_model is None:
+                raise MemoryRuntimeError("RRF channel shadow requires its real embedding provider")
+            expected_prefix = f"fastembed:{embedding_model}@"
+            if not rrf_channel_profile.source_vector_channel_id.startswith(expected_prefix):
+                raise MemoryRuntimeError(
+                    "embedding_model does not match the RRF shadow source vector channel"
+                )
+        server_environment = {"PYTHONUNBUFFERED": "1"}
+        if embedding_base_url is not None and embedding_model is not None:
+            server_environment.update(
+                {
+                    "MEMORYOS_EMBEDDING_BASE_URL": embedding_base_url,
+                    "MEMORYOS_EMBEDDING_MODEL": embedding_model,
+                    "MEMORYOS_ANN_ENABLED": "false",
+                }
+            )
         if condition is ExperimentCondition.NO_MEMORY:
             _write_json(config_path, {"mcpServers": {}})
             return MemoryRuntime(
@@ -121,6 +150,8 @@ class MemoryRuntimeBuilder:
                 scoring_profile_sha256=None,
                 expected_retrieval_config_hash=None,
                 server_arguments=(),
+                server_environment=(),
+                embedding_model=None,
             )
 
         audit_path = destination / "memory-tool-audit.jsonl"
@@ -153,10 +184,24 @@ class MemoryRuntimeBuilder:
                 profile_path = destination / "shadow-retrieval-profile.json"
                 _write_json(profile_path, scoring_profile.model_dump(mode="json"))
                 common_arguments.extend(["--weight-profile", path_mapper(profile_path)])
+            if rrf_channel_profile is not None:
+                profile_path = destination / "rrf-channel-shadow-profile.json"
+                _write_json(profile_path, rrf_channel_profile.model_dump(mode="json"))
+                common_arguments.extend(["--rrf-channel-profile", path_mapper(profile_path)])
+                common_arguments.extend(
+                    [
+                        "--expected-vector-channel-id",
+                        rrf_channel_profile.source_vector_channel_id,
+                        "--expected-vector-channel-source-sha256",
+                        rrf_channel_profile.source_vector_channel_sha256,
+                        "--expected-vector-feature-adapter-sha256",
+                        rrf_channel_profile.source_vector_adapter_sha256,
+                    ]
+                )
         else:  # pragma: no cover - enum exhaustiveness guard
             raise MemoryRuntimeError(f"unsupported memory condition: {condition}")
 
-        environment = {"PYTHONUNBUFFERED": "1"}
+        environment = dict(server_environment)
         if python_path:
             environment["PYTHONPATH"] = python_path
         server_config: dict[str, Any]
@@ -178,13 +223,24 @@ class MemoryRuntimeBuilder:
             data_dir=data_dir,
             seed_ids=tuple(seed.id for seed in selected),
             generated_memory_ids=generated,
-            scoring_profile_sha256=(None if scoring_profile is None else scoring_profile.digest()),
+            scoring_profile_sha256=(
+                scoring_profile.digest()
+                if scoring_profile is not None
+                else rrf_channel_profile.digest()
+                if rrf_channel_profile is not None
+                else None
+            ),
             expected_retrieval_config_hash=(
-                retrieval_config_hash(scoring_profile)
+                retrieval_config_hash(
+                    scoring_profile,
+                    rrf_channel_profile=rrf_channel_profile,
+                )
                 if condition is ExperimentCondition.MEMORYOS
                 else None
             ),
             server_arguments=tuple(common_arguments),
+            server_environment=tuple(sorted(server_environment.items())),
+            embedding_model=embedding_model,
         )
 
     def validate_usage(self, runtime: MemoryRuntime) -> MemoryUsageEvidence:
@@ -275,6 +331,14 @@ class MemoryRuntimeBuilder:
                 errors.append(
                     "MemoryOS RetrievalRun config hash does not match its scoring profile"
                 )
+            if (
+                runtime.embedding_model is not None
+                and runtime.seed_ids
+                and not any(
+                    item["trace"].get("vector_rank") is not None for item in candidate_features
+                )
+            ):
+                errors.append("MemoryOS run did not produce real vector retrieval evidence")
         if not successful:
             errors.append("memory condition produced no successful MCP tool audit event")
         return MemoryUsageEvidence(
