@@ -1,5 +1,7 @@
 # MemoryOS
 
+> [开发问题总复盘：开发中遇到的问题、失败实验、修复证据与遗留风险](docs/DEVELOPMENT_PROBLEMS_RETROSPECTIVE.md)
+
 MemoryOS V2.1 是面向编码 Agent 的本地优先 Reality Intelligence 层。它在 V2 的 Claim Graph、Git-aware freshness 与任务上下文之上，加入不可变 ClaimVersion 事务历史、真正双时态 Current Truth、确定性/不确定性冲突路由、持久化 sqlite-vec 路径、记忆健康治理和有来源约束的抽象巩固。MCP、HTTP、CLI 和 React Workbench 继续共享同一 SQLite 事实源。
 
 当前版本：`2.1.0`。在干净 `main` 上的唯一全量验收入口为：
