@@ -151,6 +151,26 @@ def test_pylint_hidden_scorer_accepts_annotation_parent_guard(tmp_path: Path) ->
     assert result.returncode == 0, result.stderr
 
 
+def test_pylint_hidden_scorer_models_public_uninferable_sentinel(tmp_path: Path) -> None:
+    manifest = load_real_workload_manifest(TASK_ROOT / "manifest.json")
+    task = next(task for task in manifest.tasks if task.id == "pylint-pr-4551")
+    assert task.hidden_test.hidden_patch is not None
+    source = _added_file_source(TASK_ROOT / "hidden" / task.hidden_test.hidden_patch)
+    (tmp_path / "benchmark_hidden_test.py").write_text(
+        source,
+        encoding="utf-8",
+        newline="\n",
+    )
+    _write_files(
+        tmp_path,
+        _pylint_sources(fixed=True, inference_style="uninferable_fallback"),
+    )
+
+    result = _run_scorer(tmp_path)
+
+    assert result.returncode == 0, result.stderr
+
+
 def _run_scorer(root: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "benchmark_hidden_test.py"],
@@ -223,7 +243,12 @@ class Plotter:
 """
 
 
-def _pylint_sources(*, fixed: bool, diagram_style: str = "unconditional") -> dict[str, str]:
+def _pylint_sources(
+    *,
+    fixed: bool,
+    diagram_style: str = "unconditional",
+    inference_style: str = "direct",
+) -> dict[str, str]:
     inference = (
         "frame.locals_type[node.name] = [node.parent.annotation]"
         if fixed
@@ -263,18 +288,37 @@ def _pylint_sources(*, fixed: bool, diagram_style: str = "unconditional") -> dic
                     names.append(node.name)
         return names
 """
-    return {
-        "pylint/pyreverse/utils.py": """def is_exception(node):
-    return node.type == "exception"
-""",
-        "pylint/pyreverse/inspector.py": f"""class Linker:
+    if fixed and inference_style == "uninferable_fallback":
+        inspector_source = """def _infer_node(node):
+    inferred = set(node.infer())
+    if inferred == {astroid.Uninferable}:
+        inferred = set()
+    if isinstance(node.parent, astroid.AnnAssign):
+        return {node.parent.annotation}
+    return inferred
+
+class Linker:
+    def visit_assignname(self, node):
+        if hasattr(node, "_handled"):
+            return
+        node._handled = True
+        frame = node.frame() if node.name in node.frame() else node.root()
+        frame.locals_type[node.name] = list(_infer_node(node))
+"""
+    else:
+        inspector_source = f"""class Linker:
     def visit_assignname(self, node):
         if hasattr(node, "_handled"):
             return
         node._handled = True
         frame = node.frame() if node.name in node.frame() else node.root()
         {inference}
+"""
+    return {
+        "pylint/pyreverse/utils.py": """def is_exception(node):
+    return node.type == "exception"
 """,
+        "pylint/pyreverse/inspector.py": inspector_source,
         "pylint/pyreverse/diagrams.py": diagram_source,
         "pylint/pyreverse/writer.py": f"""from pylint.pyreverse.utils import is_exception
 

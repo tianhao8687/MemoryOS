@@ -375,10 +375,20 @@ def _validate_real_agent_ablation_evidence(
         if checks.get("base_exit_code") == 0 or checks.get("solution_exit_code") != 0:
             raise ValueError("corrected scorer does not separate the base and solution")
         captured_exits = checks.get("captured_arm_exit_codes")
-        if not isinstance(captured_exits, list) or not captured_exits:
+        if not isinstance(captured_exits, dict) or not captured_exits:
             raise ValueError("scorer invalidation lacks captured-arm rechecks")
-        if any(value != 0 for value in captured_exits):
-            raise ValueError("corrected scorer did not accept every invalidated captured arm")
+        if set(captured_exits) - {"full", "minus"} or any(
+            value not in {0, 1} for value in captured_exits.values()
+        ):
+            raise ValueError("scorer invalidation has malformed captured-arm rechecks")
+        misclassified_arms = attempt.get("misclassified_arms")
+        if (
+            not isinstance(misclassified_arms, list)
+            or not misclassified_arms
+            or any(arm not in captured_exits for arm in misclassified_arms)
+            or any(captured_exits[arm] != 0 for arm in misclassified_arms)
+        ):
+            raise ValueError("scorer invalidation does not identify a corrected false negative")
 
     non_evidence = payload.get("non_evidence_attempts", [])
     if not isinstance(non_evidence, list):
