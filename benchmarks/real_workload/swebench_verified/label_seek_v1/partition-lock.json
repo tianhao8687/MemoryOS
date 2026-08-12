@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-12T14:33:40Z",
+  "locked_before_outcomes": true,
+  "dataset_revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
+  "selection_policy": "Pre-outcome enrichment for tasks where cutoff-valid project architecture memory can plausibly reduce agent search cost; not an effectiveness sample.",
+  "policy": "Repository-level assignments extend the prior immutable lock: Pylint and pytest remain train; Seaborn remains repository-held-out dev.",
+  "assignments": [
+    {
+      "instance_id": "pylint-dev__pylint-4661",
+      "repository_id": "pylint-dev-pylint",
+      "task_id": "pylint-pr-4661",
+      "partition": "train"
+    },
+    {
+      "instance_id": "pylint-dev__pylint-6528",
+      "repository_id": "pylint-dev-pylint",
+      "task_id": "pylint-pr-6528",
+      "partition": "train"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6197",
+      "repository_id": "pytest-dev-pytest",
+      "task_id": "pytest-pr-6197",
+      "partition": "train"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-10356",
+      "repository_id": "pytest-dev-pytest",
+      "task_id": "pytest-pr-10356",
+      "partition": "train"
+    }
+  ]
+}

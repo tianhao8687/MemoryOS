@@ -1,0 +1,202 @@
+{
+  "schema_version": "2.2",
+  "name": "swebench-label-seeking-ablation-v1",
+  "tier": "public_replay",
+  "generated_at": "2026-08-12T14:33:40Z",
+  "repositories": [
+    {
+      "id": "pylint-dev-pylint",
+      "clone_url": "https://github.com/pylint-dev/pylint.git",
+      "source_url": "https://github.com/pylint-dev/pylint",
+      "license_spdx": "GPL-2.0-only",
+      "license_url": "https://github.com/pylint-dev/pylint/blob/273a8b25620467c1e5686aa8d2a1dbb8c02c78d0/LICENSE"
+    },
+    {
+      "id": "pytest-dev-pytest",
+      "clone_url": "https://github.com/pytest-dev/pytest.git",
+      "source_url": "https://github.com/pytest-dev/pytest",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/pytest-dev/pytest/blob/3c1534944cbd34e8a41bc9e76818018fadefc9a1/LICENSE"
+    }
+  ],
+  "memories": [
+    {
+      "id": "pylint-persistent-stats-cache-contract",
+      "repository_id": "pylint-dev-pylint",
+      "memory_type": "project",
+      "category": "design-contract",
+      "title": "PYLINTHOME stores reconstructable persistent statistics",
+      "content": "PYLINTHOME is resolved in pylint.config before persistent pickle paths are built. An explicit PYLINTHOME environment value has priority, and the no-home fallback must remain usable. The files under the default directory are reconstructable lint statistics, so the platform-aware default belongs in the per-user application cache rather than configuration or durable data. Changing the default should not move or delete an existing ~/.pylint.d directory; compatibility handling may warn about it.",
+      "captured_at": "2021-07-28T19:11:10Z",
+      "valid_from": "2021-07-28T19:11:10Z",
+      "source_commit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+      "source_ref": "https://github.com/pylint-dev/pylint/commit/1d1619ef913b99b06647d2030bddff4800abdf63",
+      "expectation": "helpful",
+      "confidence": 0.93,
+      "importance": 0.88
+    },
+    {
+      "id": "pylint-recursive-ignore-boundary",
+      "repository_id": "pylint-dev-pylint",
+      "memory_type": "project",
+      "category": "architecture",
+      "title": "Recursive discovery bypasses normal module expansion filters",
+      "content": "At this cutoff, expand_modules applies --ignore to basenames, --ignore-patterns to basenames, and --ignore-paths to full paths. PyLinter._discover_files performs a separate os.walk before the discovered entries reach normal expansion, so an ignored directory has already yielded children. A recursive fix must share one ignore predicate across both paths and prune an ignored directory before yielding or descending, while preserving basename-versus-full-path semantics.",
+      "captured_at": "2022-05-09T18:44:05Z",
+      "valid_from": "2022-05-09T18:44:05Z",
+      "source_commit": "273a8b25620467c1e5686aa8d2a1dbb8c02c78d0",
+      "source_ref": "https://github.com/pylint-dev/pylint/commit/273a8b25620467c1e5686aa8d2a1dbb8c02c78d0",
+      "expectation": "helpful",
+      "confidence": 0.97,
+      "importance": 0.95
+    },
+    {
+      "id": "pytest-package-collection-must-stay-lazy",
+      "repository_id": "pytest-dev-pytest",
+      "memory_type": "project",
+      "category": "architecture",
+      "title": "Package discovery must not force PyobjMixin.obj",
+      "content": "PyobjMixin.obj is the lazy boundary that imports a collected Python object and harvests its marks. Package directory traversal should discover candidate test files without forcing that boundary: eagerly mounting the Package object imports an arbitrary package __init__.py and can mutate sys.path before the package is actually selected. Marker harvesting belongs on real object access, not at the start of Package.collect; a Package-only marker workaround does not restore lazy discovery.",
+      "captured_at": "2019-11-14T21:17:28Z",
+      "valid_from": "2019-11-14T21:17:28Z",
+      "source_commit": "e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+      "source_ref": "https://github.com/pytest-dev/pytest/commit/e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+      "expectation": "helpful",
+      "confidence": 0.96,
+      "importance": 0.94
+    },
+    {
+      "id": "pytest-mark-mro-read-write-contract",
+      "repository_id": "pytest-dev-pytest",
+      "memory_type": "project",
+      "category": "design-contract",
+      "title": "Reading inherited marks and storing direct marks are different operations",
+      "content": "get_unpacked_marks feeds class collection, while store_mark mutates one target. getattr on a subclass sees only the first inherited pytestmark attribute and cannot merge multiple bases. Class reads need each class's own __dict__ value in closest-first MRO order. Mutation must request direct marks only, otherwise adding a mark to a child copies inherited marks onto that child and later collection duplicates them. Non-class objects keep the existing single-attribute behavior.",
+      "captured_at": "2022-10-07T23:04:48Z",
+      "valid_from": "2022-10-07T23:04:48Z",
+      "source_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "source_ref": "https://github.com/pytest-dev/pytest/commit/3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "expectation": "helpful",
+      "confidence": 0.98,
+      "importance": 0.96
+    }
+  ],
+  "tasks": [
+    {
+      "id": "pylint-pr-4661",
+      "repository_id": "pylint-dev-pylint",
+      "sequence_id": "pylint-xdg-cache-home",
+      "sequence_index": 1,
+      "base_commit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+      "solution_commit": "ae6cbd1062c0a8e68d32a5cdc67c993da26d0f4a",
+      "cutoff": "2021-07-28T19:30:00Z",
+      "source_url": "https://github.com/pylint-dev/pylint/issues/4661",
+      "source_published_at": "2021-07-03T00:57:06Z",
+      "prompt": "Make Pylint's default persistent-data directory comply with platform conventions instead of creating ~/.pylint.d. Preserve the explicit PYLINTHOME override and existing no-home behavior, handle an existing legacy directory safely, declare any runtime dependency, and update focused tests.",
+      "memory_seed_ids": [
+        "pylint-persistent-stats-cache-contract"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": ["python", "benchmark_hidden_test.py"],
+        "hidden_patch": "pylint_xdg_cache_hidden.patch",
+        "hidden_patch_sha256": "18a0ab1946aa72468c6c38f8450a5611019e8cc3dbb6000479e0dc939859574e",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": ["python", "xdg", "configuration", "swebench-verified", "label-seeking"]
+    },
+    {
+      "id": "pylint-pr-6528",
+      "repository_id": "pylint-dev-pylint",
+      "sequence_id": "pylint-recursive-ignore",
+      "sequence_index": 1,
+      "base_commit": "273a8b25620467c1e5686aa8d2a1dbb8c02c78d0",
+      "solution_commit": "6ad350fb0aee8ff532b860cf9426afb98760ff88",
+      "cutoff": "2022-05-09T19:00:00Z",
+      "source_url": "https://github.com/pylint-dev/pylint/issues/6528",
+      "source_published_at": "2022-05-06T21:03:37Z",
+      "prompt": "Fix recursive Pylint discovery so --ignore, --ignore-patterns, and --ignore-paths apply to recursively visited files and directories with their documented basename/path semantics. Ignored directories must not leak descendant modules. Preserve package discovery and add focused regression coverage.",
+      "memory_seed_ids": [
+        "pylint-recursive-ignore-boundary"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": ["python", "benchmark_hidden_test.py"],
+        "hidden_patch": "pylint_recursive_ignore_hidden.patch",
+        "hidden_patch_sha256": "39151265d6bd66e7cc065326e89482d5a8938a776684ec32a8e42931d50aeda6",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": ["python", "recursive-discovery", "ignore", "swebench-verified", "label-seeking"]
+    },
+    {
+      "id": "pytest-pr-6197",
+      "repository_id": "pytest-dev-pytest",
+      "sequence_id": "pytest-lazy-package-collection",
+      "sequence_index": 1,
+      "base_commit": "e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+      "solution_commit": "19a15a94eeb403631f847fab5fe5073bc56e8bcc",
+      "cutoff": "2019-11-15T17:00:00Z",
+      "source_url": "https://github.com/pytest-dev/pytest/issues/6197",
+      "source_published_at": "2019-11-15T16:37:22Z",
+      "prompt": "Fix the pytest 5.2.3 collection regression that imports unrelated package __init__.py files under the working directory, including src-layout packages that should not be placed on sys.path. Keep normal package/test collection and marker behavior lazy and add focused regressions.",
+      "memory_seed_ids": [
+        "pytest-package-collection-must-stay-lazy"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": ["python", "benchmark_hidden_test.py"],
+        "hidden_patch": "pytest_lazy_package_hidden.patch",
+        "hidden_patch_sha256": "367e426e8954070c2f7829dc2ff525da965d5cf87d5e0578a3b42fbb6b7153f8",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": ["python", "collection", "lazy-import", "swebench-verified", "label-seeking"]
+    },
+    {
+      "id": "pytest-pr-10356",
+      "repository_id": "pytest-dev-pytest",
+      "sequence_id": "pytest-mark-mro",
+      "sequence_index": 1,
+      "base_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "solution_commit": "31df38f6a79b0734be3c1386eb7df6512b1a321b",
+      "cutoff": "2022-10-08T07:00:00Z",
+      "source_url": "https://github.com/pytest-dev/pytest/issues/10356",
+      "source_published_at": "2022-10-08T06:20:42Z",
+      "prompt": "Make class mark lookup honor Python MRO when a test class inherits from multiple marked bases. Return the child and all inherited marks in deterministic closest-first MRO order without duplicating inherited marks when a new mark is stored directly on a subclass. Preserve non-class behavior and add focused tests.",
+      "memory_seed_ids": [
+        "pytest-mark-mro-read-write-contract"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": ["python", "benchmark_hidden_test.py"],
+        "hidden_patch": "pytest_mark_mro_hidden.patch",
+        "hidden_patch_sha256": "181877eb45bfc9f339126b3bc8cb78c605b340333f6b4cb4558db460da9800ab",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": ["python", "markers", "mro", "swebench-verified", "label-seeking"]
+    }
+  ]
+}
