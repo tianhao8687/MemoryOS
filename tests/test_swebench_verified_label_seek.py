@@ -98,6 +98,44 @@ def test_label_seeking_memories_are_scoped_and_temporally_valid() -> None:
         assert memory.expectation == "helpful"
 
 
+def test_label_seeking_run_order_and_runtime_are_locked() -> None:
+    manifest, runtime = load_runner_inputs(
+        TASK_ROOT / "manifest.json",
+        TASK_ROOT / "runtime-terra-medium.json",
+    )
+    lock = json.loads((TASK_ROOT / "run-lock.json").read_bytes())
+    runtime_payload = json.dumps(
+        runtime.model_dump(mode="json"),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+
+    assert lock["locked_before_outcomes"] is True
+    assert lock["manifest_sha256"] == manifest.digest()
+    assert lock["runtime_sha256"] == hashlib.sha256(runtime_payload).hexdigest()
+    assert (
+        lock["runtime_file_sha256"]
+        == hashlib.sha256((TASK_ROOT / "runtime-terra-medium.json").read_bytes()).hexdigest()
+    )
+    assert {item["task_id"] for item in lock["runs"]} == {task.id for task in manifest.tasks}
+    assert sorted(item["expected_arm_order"][0] for item in lock["runs"]) == [
+        "memoryos_full",
+        "memoryos_full",
+        "memoryos_minus_memory",
+        "memoryos_minus_memory",
+    ]
+    for item in lock["runs"]:
+        order = ["memoryos_full", "memoryos_minus_memory"]
+        payload = (
+            f"{lock['order_seed']}\x1f{item['repeat_id']}\x1f"
+            f"{item['task_id']}\x1f{item['memory_id']}"
+        ).encode()
+        if hashlib.sha256(payload).digest()[0] & 1:
+            order.reverse()
+        assert item["expected_arm_order"] == order
+
+
 def _added_file_source(path: Path) -> str:
     lines = path.read_text(encoding="utf-8").splitlines()
     start = next(index for index, line in enumerate(lines) if line.startswith("@@ ")) + 1
