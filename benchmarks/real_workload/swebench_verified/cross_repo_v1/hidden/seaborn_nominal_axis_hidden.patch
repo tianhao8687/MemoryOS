@@ -1,9 +1,9 @@
 diff --git a/benchmark_hidden_test.py b/benchmark_hidden_test.py
 new file mode 100644
-index 0000000..ed13bea
+index 0000000..69b7acc
 --- /dev/null
 +++ b/benchmark_hidden_test.py
-@@ -0,0 +1,99 @@
+@@ -0,0 +1,120 @@
 +from __future__ import annotations
 +
 +import ast
@@ -49,6 +49,12 @@ index 0000000..ed13bea
 +            self.xlim = values["xlim"]
 +        if "ylim" in values:
 +            self.ylim = values["ylim"]
++
++    def get_xticks(self) -> list[object]:
++        return self.xaxis.get_major_ticks()
++
++    def get_yticks(self) -> list[object]:
++        return self.yaxis.get_major_ticks()
 +
 +
 +class Figure:
@@ -99,7 +105,22 @@ index 0000000..ed13bea
 +    raise AssertionError(f"nominal x limits were not categorical: {axes.xlim!r}")
 +if axes.ylim != (2.5, -0.5):
 +    raise AssertionError(f"nominal y limits were not inverted: {axes.ylim!r}")
-+if (False, "both") not in axes.xaxis.grid_calls:
++if not any(visible is False for visible, _which in axes.xaxis.grid_calls):
 +    raise AssertionError("nominal x grid was not disabled")
-+if (False, "both") not in axes.yaxis.grid_calls:
++if not any(visible is False for visible, _which in axes.yaxis.grid_calls):
 +    raise AssertionError("nominal y grid was not disabled")
++
++limited_axes = Axes()
++limited_plotter = SimpleNamespace(
++    _subplots=[{"ax": limited_axes, "x": "category_x", "y": "category_y"}],
++    _scales={"category_x": Nominal(), "category_y": Nominal()},
++    _figure=Figure(),
++)
++limited_plot = SimpleNamespace(
++    _limits={"category_x": (0.0, 1.0), "category_y": (0.0, 1.0)},
++    _target=None,
++    _layout_spec={},
++)
++finalize(limited_plotter, limited_plot)
++if limited_axes.xlim != (0.0, 1.0) or limited_axes.ylim != (0.0, 1.0):
++    raise AssertionError("explicit user limits did not take precedence over nominal defaults")

@@ -135,7 +135,7 @@ def _added_file_source(path: Path) -> str:
 def _seaborn_source(*, fixed: bool) -> str:
     behavior = (
         """
-                if isinstance(self._scales.get(axis_key), Nominal):
+                elif isinstance(self._scales.get(axis_key), Nominal):
                     axis_obj = getattr(ax, f"{axis}axis")
                     axis_obj.grid(False, which="both")
                     count = len(axis_obj.get_major_ticks())
@@ -161,6 +161,9 @@ class Plotter:
             ax = sub["ax"]
             for axis in "xy":
                 axis_key = sub[axis]
+                if axis_key in p._limits:
+                    low, high = p._limits[axis_key]
+                    getattr(ax, f"set_{{axis}}lim")(low, high, auto=None)
 {behavior}
         set_layout_engine(self._figure, "tight")
 """
