@@ -15,3 +15,12 @@ The Pylint memory adds a cutoff-valid dependency API constraint that was missing
 architecture memory. The pytest memory is unchanged; only its scorer isolation is repaired. This
 adaptive enrichment can create training evidence but cannot support product-effect claims or
 replace the sealed repository/model promotion gate.
+
+## Post-run result
+
+Three of four scheduled pairs were protocol-valid, and every valid pair had the same executable
+outcome in both arms. Pylint repeat 001 failed in both arms; both order-balanced pytest repeats
+passed in both arms. Pylint repeat 002 stopped after its first arm violated the mandatory memory
+tool protocol and was not retried. The batch therefore creates zero causal training observations
+and changes no weights. `post-run-audit.json` binds the aggregate reports, agent patches, scorer
+audit, invalid pair, and preserved infrastructure incidents.

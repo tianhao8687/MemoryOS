@@ -137,6 +137,33 @@ def test_adaptive_repeat_schedule_is_frozen_and_balanced() -> None:
     )
 
 
+def test_adaptive_post_run_audit_excludes_non_directional_and_invalid_runs() -> None:
+    audit = json.loads((TASK_ROOT / "post-run-audit.json").read_bytes())
+
+    assert audit["status"] == "completed_no_directional_labels"
+    assert audit["scheduled_pairs"] == 4
+    assert audit["protocol_valid_pairs"] == 3
+    assert audit["invalid_pairs"] == 1
+    assert audit["valid_same_outcome_pairs"] == 3
+    assert audit["raw_training_observations"] == 0
+    assert audit["eligible_training_observations"] == 0
+    assert audit["production_effect_claim"] is False
+    assert audit["production_weights_changed"] is False
+
+    valid = [item for item in audit["runs"] if item["pair_status"] == "valid_same_outcome"]
+    invalid = [item for item in audit["runs"] if item["pair_status"].startswith("invalid_")]
+    assert len(valid) == 3
+    assert len(invalid) == 1
+    assert all(item["full_success"] is item["minus_success"] for item in valid)
+    assert invalid[0]["full_arm_started"] is False
+    assert invalid[0]["training_observation_eligible"] is False
+    assert all(item["eligible"] is False for item in audit["task_level_labels"])
+    assert len(audit["infrastructure_incidents"]) == 5
+    assert all(
+        len(digest) == 64 for item in audit["runs"] for digest in item["artifact_sha256"].values()
+    )
+
+
 @pytest.mark.parametrize(
     ("source", "expected_exit_code"),
     [
