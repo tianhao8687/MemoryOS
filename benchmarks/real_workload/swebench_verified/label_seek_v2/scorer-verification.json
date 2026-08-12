@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "verified_at": "2026-08-12T15:15:46Z",
+  "container_image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+  "network": "none",
+  "read_only_root": true,
+  "results": [
+    {
+      "task_id": "pylint-pr-4551-api-memory",
+      "hidden_patch_sha256": "357ad55bdd698c04250a1f087258a5c667bba9cd29f47cbeda6c91be33adb79c",
+      "base_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "base_exit_code": 1,
+      "solution_commit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+      "solution_exit_code": 0
+    },
+    {
+      "task_id": "pytest-pr-10356-closure-v2",
+      "hidden_patch_sha256": "88bffec2955d98f481235fc05077d4b88b60ce31f1b48095effd9cc678430b5e",
+      "base_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "base_exit_code": 1,
+      "solution_commit": "31df38f6a79b0734be3c1386eb7df6512b1a321b",
+      "solution_exit_code": 0
+    }
+  ],
+  "equivalent_variants": [
+    {
+      "task_id": "pylint-pr-4551-api-memory",
+      "variant": "annotation-parent-guard",
+      "source": "tests/test_swebench_verified_cross_repo.py",
+      "expected_exit_code": 0
+    },
+    {
+      "task_id": "pylint-pr-4551-api-memory",
+      "variant": "public-uninferable-sentinel",
+      "source": "tests/test_swebench_verified_cross_repo.py",
+      "expected_exit_code": 0
+    },
+    {
+      "task_id": "pytest-pr-10356-closure-v2",
+      "variant": "prior-agent-helper-closure",
+      "patch_sha256": "9460d3c83a1f5ade97b2cd8bffd8292c837af5e974e64ad6c367db8c0094eee6",
+      "expected_exit_code": 0
+    },
+    {
+      "task_id": "pytest-pr-10356-closure-v2",
+      "variant": "prior-agent-inline-inspect",
+      "patch_sha256": "60a7bee975f6c51cc631eaf3ee393457064316d45547db00e4b355b6efd15f9a",
+      "expected_exit_code": 0
+    }
+  ]
+}

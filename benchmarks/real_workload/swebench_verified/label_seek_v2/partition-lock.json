@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-12T15:09:11Z",
+  "locked_before_outcomes": true,
+  "dataset_revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
+  "selection_policy": "Adaptive training-data acquisition after v1 scorer invalidation; repeated tasks are not an effectiveness sample and require directionally consistent repeats.",
+  "assignments": [
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "repository_id": "pylint-dev-pylint",
+      "task_id": "pylint-pr-4551-api-memory",
+      "partition": "train"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-10356",
+      "repository_id": "pytest-dev-pytest",
+      "task_id": "pytest-pr-10356-closure-v2",
+      "partition": "train"
+    }
+  ]
+}

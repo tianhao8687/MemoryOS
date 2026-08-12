@@ -1,0 +1,41 @@
+{
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "dataset_revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
+  "dataset_file_sha256": "a45b1fe4e2f0c8390b2b2938ac83e92ed5979000856808f3679c07812e9e6dcd",
+  "gold_patch_used_by_agent": false,
+  "prior_agent_patch_used_by_agent": false,
+  "selection_observed_prior_invalidated_outcomes": true,
+  "partition_lock": "partition-lock.json",
+  "tasks": [
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "issue_url": "https://github.com/pylint-dev/pylint/issues/1548",
+      "issue_created_at": "2017-06-22T11:40:07Z",
+      "source_memory_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "source_memory_commit_at": "2021-06-22T06:19:06Z",
+      "base_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "base_commit_at": "2021-06-22T06:19:06Z",
+      "solution_commit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+      "solution_committed_at": "2021-06-26T18:36:10Z",
+      "cutoff": "2021-06-22T07:00:00Z",
+      "partition": "train",
+      "adaptive_reason": "Earlier agents repeatedly failed around the pinned astroid annotation API; the new memory records only API facts available at the cutoff.",
+      "hidden_test_design": "The already-hardened dependency-shim scorer covers assignment propagation, annotation-node diagram filtering, public Uninferable handling, and method label formatting."
+    },
+    {
+      "instance_id": "pytest-dev__pytest-10356",
+      "issue_url": "https://github.com/pytest-dev/pytest/issues/10356",
+      "issue_created_at": "2022-10-08T06:20:42Z",
+      "source_memory_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "source_memory_commit_at": "2022-10-07T23:04:48Z",
+      "base_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "base_commit_at": "2022-10-07T23:04:48Z",
+      "solution_commit": "31df38f6a79b0734be3c1386eb7df6512b1a321b",
+      "solution_committed_at": "2022-10-15T15:19:27Z",
+      "cutoff": "2022-10-08T07:00:00Z",
+      "partition": "train",
+      "adaptive_reason": "The v1 scorer omitted agent-added helper closure and overconstrained the official optional parameter shape; v2 tests only observable read/write behavior.",
+      "hidden_test_design": "AST dependency closure includes called local helpers and source-declared stdlib imports, then executes multiple inheritance, direct mutation, and non-class behavior."
+    }
+  ]
+}

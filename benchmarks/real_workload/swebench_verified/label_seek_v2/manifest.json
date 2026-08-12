@@ -1,0 +1,110 @@
+{
+  "schema_version": "2.2",
+  "name": "swebench-adaptive-label-seeking-v2",
+  "tier": "public_replay",
+  "generated_at": "2026-08-12T15:09:11Z",
+  "repositories": [
+    {
+      "id": "pylint-dev-pylint",
+      "clone_url": "https://github.com/pylint-dev/pylint.git",
+      "source_url": "https://github.com/pylint-dev/pylint",
+      "license_spdx": "GPL-2.0-only",
+      "license_url": "https://github.com/pylint-dev/pylint/blob/99589b08de8c5a2c6cc61e13a37420a868c80599/LICENSE"
+    },
+    {
+      "id": "pytest-dev-pytest",
+      "clone_url": "https://github.com/pytest-dev/pytest.git",
+      "source_url": "https://github.com/pytest-dev/pytest",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/pytest-dev/pytest/blob/3c1534944cbd34e8a41bc9e76818018fadefc9a1/LICENSE"
+    }
+  ],
+  "memories": [
+    {
+      "id": "pylint-pyreverse-astroid-annotation-api",
+      "repository_id": "pylint-dev-pylint",
+      "memory_type": "project",
+      "category": "dependency-contract",
+      "title": "Pinned astroid exposes annotations through parents, not AssignName",
+      "content": "In the pinned astroid API, AssignName has no type_annotation attribute. For a local annotated assignment, the annotation is on the parent AnnAssign.annotation node. For self.attr = argument inside a method, the source annotation belongs to the matching function Arguments entry and must be propagated when linking instance attributes. astroid.Uninferable is a public sentinel and should be treated as no inferred type. Diagram filtering must retain annotation Name/Subscript nodes, and formatter changes alone cannot recover annotations discarded earlier.",
+      "captured_at": "2021-06-22T06:19:06Z",
+      "valid_from": "2021-06-22T06:19:06Z",
+      "source_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "source_ref": "https://github.com/pylint-dev/pylint/commit/99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "expectation": "helpful",
+      "confidence": 0.98,
+      "importance": 0.97
+    },
+    {
+      "id": "pytest-mark-mro-read-write-contract-v2",
+      "repository_id": "pytest-dev-pytest",
+      "memory_type": "project",
+      "category": "design-contract",
+      "title": "Reading inherited marks and storing direct marks are different operations",
+      "content": "get_unpacked_marks feeds class collection, while store_mark mutates one target. getattr on a subclass sees only the first inherited pytestmark attribute and cannot merge multiple bases. Class reads need each class's own __dict__ value in closest-first MRO order. Mutation must use only the child's direct marks so adding a mark does not copy inherited marks onto the child. Non-class objects keep the existing single-attribute behavior; equivalent implementations need not expose a new public keyword parameter.",
+      "captured_at": "2022-10-07T23:04:48Z",
+      "valid_from": "2022-10-07T23:04:48Z",
+      "source_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "source_ref": "https://github.com/pytest-dev/pytest/commit/3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "expectation": "helpful",
+      "confidence": 0.98,
+      "importance": 0.96
+    }
+  ],
+  "tasks": [
+    {
+      "id": "pylint-pr-4551-api-memory",
+      "repository_id": "pylint-dev-pylint",
+      "sequence_id": "pylint-pyreverse-annotations-adaptive",
+      "sequence_index": 1,
+      "base_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "solution_commit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+      "cutoff": "2021-06-22T07:00:00Z",
+      "source_url": "https://github.com/pylint-dev/pylint/issues/1548",
+      "source_published_at": "2017-06-22T11:40:07Z",
+      "prompt": "Update pyreverse UML generation so Python type hints are represented. An __init__ argument annotated as str and assigned to self.a should produce a typed attribute, and method argument and return annotations should appear in generated labels. Preserve inferred-type fallback and inference-error tolerance and add focused regression coverage.",
+      "memory_seed_ids": ["pylint-pyreverse-astroid-annotation-api"],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": ["python", "benchmark_hidden_test.py"],
+        "hidden_patch": "pylint_pyreverse_annotations_hidden.patch",
+        "hidden_patch_sha256": "357ad55bdd698c04250a1f087258a5c667bba9cd29f47cbeda6c91be33adb79c",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": ["python", "type-hints", "uml", "adaptive-label-seeking"]
+    },
+    {
+      "id": "pytest-pr-10356-closure-v2",
+      "repository_id": "pytest-dev-pytest",
+      "sequence_id": "pytest-mark-mro-adaptive",
+      "sequence_index": 1,
+      "base_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "solution_commit": "31df38f6a79b0734be3c1386eb7df6512b1a321b",
+      "cutoff": "2022-10-08T07:00:00Z",
+      "source_url": "https://github.com/pytest-dev/pytest/issues/10356",
+      "source_published_at": "2022-10-08T06:20:42Z",
+      "prompt": "Make class mark lookup honor Python MRO when a test class inherits from multiple marked bases. Return the child and all inherited marks in deterministic closest-first MRO order without duplicating inherited marks when a new mark is stored directly on a subclass. Preserve non-class behavior and add focused tests.",
+      "memory_seed_ids": ["pytest-mark-mro-read-write-contract-v2"],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": ["python", "benchmark_hidden_test.py"],
+        "hidden_patch": "pytest_mark_mro_closure_hidden.patch",
+        "hidden_patch_sha256": "88bffec2955d98f481235fc05077d4b88b60ce31f1b48095effd9cc678430b5e",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": ["python", "markers", "mro", "adaptive-label-seeking"]
+    }
+  ]
+}
