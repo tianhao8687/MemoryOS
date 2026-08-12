@@ -1,0 +1,68 @@
+{
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "dataset_guide_url": "https://www.swebench.com/SWE-bench/guides/datasets/",
+  "dataset_page_url": "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified",
+  "dataset_revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
+  "dataset_file_sha256": "a45b1fe4e2f0c8390b2b2938ac83e92ed5979000856808f3679c07812e9e6dcd",
+  "gold_patch_used_by_agent": false,
+  "selection_observed_agent_outcomes": false,
+  "partition_lock": "partition-lock.json",
+  "tasks": [
+    {
+      "instance_id": "pylint-dev__pylint-4661",
+      "issue_url": "https://github.com/pylint-dev/pylint/issues/4661",
+      "issue_created_at": "2021-07-03T00:57:06Z",
+      "source_memory_commit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+      "source_memory_commit_at": "2021-07-28T19:11:10Z",
+      "base_commit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+      "base_commit_at": "2021-07-28T19:11:10Z",
+      "solution_commit": "ae6cbd1062c0a8e68d32a5cdc67c993da26d0f4a",
+      "solution_committed_at": "2021-07-28T20:02:54Z",
+      "cutoff": "2021-07-28T19:30:00Z",
+      "partition": "train",
+      "hidden_test_design": "AST/source checks distinguish the PYLINTHOME override from the platform-aware cache default and accept appdirs, platformdirs, or an equivalent direct XDG cache implementation."
+    },
+    {
+      "instance_id": "pylint-dev__pylint-6528",
+      "issue_url": "https://github.com/pylint-dev/pylint/issues/6528",
+      "issue_created_at": "2022-05-06T21:03:37Z",
+      "source_memory_commit": "273a8b25620467c1e5686aa8d2a1dbb8c02c78d0",
+      "source_memory_commit_at": "2022-05-09T18:44:05Z",
+      "base_commit": "273a8b25620467c1e5686aa8d2a1dbb8c02c78d0",
+      "base_commit_at": "2022-05-09T18:44:05Z",
+      "solution_commit": "6ad350fb0aee8ff532b860cf9426afb98760ff88",
+      "solution_committed_at": "2022-05-13T06:06:04Z",
+      "cutoff": "2022-05-09T19:00:00Z",
+      "partition": "train",
+      "hidden_test_design": "AST-isolated recursive discovery executes against temporary ignored basename, basename-regex, and full-path-regex directories without importing Pylint dependencies."
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6197",
+      "issue_url": "https://github.com/pytest-dev/pytest/issues/6197",
+      "issue_created_at": "2019-11-15T16:37:22Z",
+      "source_memory_commit": "e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+      "source_memory_commit_at": "2019-11-14T21:17:28Z",
+      "base_commit": "e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+      "base_commit_at": "2019-11-14T21:17:28Z",
+      "solution_commit": "19a15a94eeb403631f847fab5fe5073bc56e8bcc",
+      "solution_committed_at": "2019-11-15T21:19:48Z",
+      "cutoff": "2019-11-15T17:00:00Z",
+      "partition": "train",
+      "hidden_test_design": "AST call-path checks ensure package directory discovery does not eagerly mount/import the package object while preserving lazy object loading."
+    },
+    {
+      "instance_id": "pytest-dev__pytest-10356",
+      "issue_url": "https://github.com/pytest-dev/pytest/issues/10356",
+      "issue_created_at": "2022-10-08T06:20:42Z",
+      "source_memory_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "source_memory_commit_at": "2022-10-07T23:04:48Z",
+      "base_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "base_commit_at": "2022-10-07T23:04:48Z",
+      "solution_commit": "31df38f6a79b0734be3c1386eb7df6512b1a321b",
+      "solution_committed_at": "2022-10-15T15:19:27Z",
+      "cutoff": "2022-10-08T07:00:00Z",
+      "partition": "train",
+      "hidden_test_design": "AST-isolated public mark helpers execute against multiple inheritance and verify MRO order plus direct-only mutation behavior."
+    }
+  ]
+}

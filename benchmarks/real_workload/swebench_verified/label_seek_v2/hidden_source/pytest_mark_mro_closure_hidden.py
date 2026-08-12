@@ -1,0 +1,126 @@
+from __future__ import annotations
+
+import ast
+import copy
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise AssertionError(message)
+
+
+def is_stdlib_import(node: ast.stmt) -> bool:
+    if isinstance(node, ast.Import):
+        return all(alias.name.split(".", 1)[0] in sys.stdlib_module_names for alias in node.names)
+    if isinstance(node, ast.ImportFrom):
+        return bool(
+            node.level == 0
+            and node.module
+            and node.module.split(".", 1)[0] in sys.stdlib_module_names
+        )
+    return False
+
+
+source_path = Path("src/_pytest/mark/structures.py")
+require(source_path.is_file(), "missing mark structures module")
+tree = ast.parse(source_path.read_text(encoding="utf-8"))
+top_level_functions = {
+    node.name: node
+    for node in tree.body
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+}
+require(
+    {"get_unpacked_marks", "store_mark"} <= set(top_level_functions),
+    "public mark helper is missing",
+)
+
+# Execute the two public entry points plus every top-level helper they call. This
+# keeps the isolation small without assuming that equivalent implementations use
+# pytest's exact helper names or inline the same operations.
+selected_names = {"get_unpacked_marks", "store_mark"}
+pending = list(selected_names)
+while pending:
+    function_name = pending.pop()
+    for node in ast.walk(top_level_functions[function_name]):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):
+            continue
+        dependency = node.func.id
+        if dependency in top_level_functions and dependency not in selected_names:
+            selected_names.add(dependency)
+            pending.append(dependency)
+
+body: list[ast.stmt] = [
+    ast.ImportFrom(module="__future__", names=[ast.alias(name="annotations")], level=0)
+]
+body.extend(copy.deepcopy(node) for node in tree.body if is_stdlib_import(node))
+for node in tree.body:
+    if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        continue
+    if node.name not in selected_names:
+        continue
+    function = copy.deepcopy(node)
+    function.decorator_list = []
+    body.append(function)
+module = ast.fix_missing_locations(ast.Module(body=body, type_ignores=[]))
+
+
+class Mark:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+
+class MarkDecorator:
+    def __init__(self, mark: Mark) -> None:
+        self.mark = mark
+
+
+namespace: dict[str, object] = {"Mark": Mark, "MarkDecorator": MarkDecorator}
+exec(compile(module, "isolated_mark_structures.py", "exec"), namespace)  # noqa: S102
+get_unpacked_marks = namespace["get_unpacked_marks"]
+store_mark = namespace["store_mark"]
+
+a = Mark("a")
+b = Mark("b")
+c = Mark("c")
+new = Mark("new")
+
+
+class A:
+    pass
+
+
+class B:
+    pass
+
+
+class C(A, B):
+    pass
+
+
+A.pytestmark = [a]
+B.pytestmark = MarkDecorator(b)
+C.pytestmark = [c]
+
+require(
+    list(get_unpacked_marks(C)) == [c, a, b],
+    "class marks are not returned in closest-first MRO order",
+)
+store_mark(C, new)
+require(C.__dict__["pytestmark"] == [c, new], "store_mark copied inherited marks onto child")
+require(
+    list(get_unpacked_marks(C)) == [c, new, a, b],
+    "stored child mark broke subsequent MRO lookup",
+)
+
+plain = SimpleNamespace(pytestmark=MarkDecorator(a))
+require(list(get_unpacked_marks(plain)) == [a], "non-class mark behavior regressed")
+store_mark(plain, b)
+require(
+    list(get_unpacked_marks(plain)) == [a, b],
+    "non-class mark mutation behavior regressed",
+)
+
+print("hidden scorer passed: mark MRO read/write behavior")

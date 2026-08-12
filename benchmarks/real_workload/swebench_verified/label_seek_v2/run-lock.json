@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-12T15:17:24Z",
+  "locked_before_outcomes": true,
+  "manifest_sha256": "bcf8a3d087596318dc79f5cfcab7f1c495d3af8a88a350cdb7db8763fbdb7439",
+  "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+  "runtime_file_sha256": "e9278b842a92f2e6f49349edebe16df4eb7e5652e2b5b7bdab7717992429f06d",
+  "order_seed": 20260812,
+  "repeats_per_task": 2,
+  "task_level_label_rule": "A task label is eligible only when every discordant protocol-valid repeat agrees in direction; same-outcome repeats are neutral and any conflicting direction invalidates the task label.",
+  "runs": [
+    {
+      "task_id": "pylint-pr-4551-api-memory",
+      "memory_id": "pylint-pyreverse-astroid-annotation-api",
+      "run_id": "label-seek-v2-pylint-4551-001",
+      "repeat_id": "label-seek-v2-pylint-4551-001",
+      "partition": "train",
+      "expected_arm_order": ["memoryos_full", "memoryos_minus_memory"]
+    },
+    {
+      "task_id": "pylint-pr-4551-api-memory",
+      "memory_id": "pylint-pyreverse-astroid-annotation-api",
+      "run_id": "label-seek-v2-pylint-4551-002",
+      "repeat_id": "label-seek-v2-pylint-4551-002",
+      "partition": "train",
+      "expected_arm_order": ["memoryos_minus_memory", "memoryos_full"]
+    },
+    {
+      "task_id": "pytest-pr-10356-closure-v2",
+      "memory_id": "pytest-mark-mro-read-write-contract-v2",
+      "run_id": "label-seek-v2-pytest-10356-001",
+      "repeat_id": "label-seek-v2-pytest-10356-001",
+      "partition": "train",
+      "expected_arm_order": ["memoryos_minus_memory", "memoryos_full"]
+    },
+    {
+      "task_id": "pytest-pr-10356-closure-v2",
+      "memory_id": "pytest-mark-mro-read-write-contract-v2",
+      "run_id": "label-seek-v2-pytest-10356-005",
+      "repeat_id": "label-seek-v2-pytest-10356-005",
+      "partition": "train",
+      "expected_arm_order": ["memoryos_full", "memoryos_minus_memory"]
+    }
+  ]
+}

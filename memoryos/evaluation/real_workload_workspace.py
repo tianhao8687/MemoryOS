@@ -56,6 +56,7 @@ class RepositoryWorkspaceManager:
         *,
         executable: Path | None = None,
         command_timeout_seconds: int = 180,
+        refresh_existing_cache: bool = True,
     ) -> None:
         self.root = root.resolve()
         self.cache_root = self.root / "cache"
@@ -64,6 +65,7 @@ class RepositoryWorkspaceManager:
         self.runs_root.mkdir(parents=True, exist_ok=True)
         self.executable = (executable or _find_git()).resolve()
         self.command_timeout_seconds = command_timeout_seconds
+        self.refresh_existing_cache = refresh_existing_cache
 
     def prepare_repository(self, repository: RepositorySpec) -> PreparedRepository:
         mirror = self.cache_root / f"{repository.id}.git"
@@ -75,8 +77,13 @@ class RepositoryWorkspaceManager:
                 raise WorkspaceError(
                     f"repository cache origin mismatch for {repository.id}; use a fresh cache root"
                 )
-            self._git_bare(mirror, "fetch", "--prune", "--no-recurse-submodules", "origin")
+            if self.refresh_existing_cache:
+                self._git_bare(mirror, "fetch", "--prune", "--no-recurse-submodules", "origin")
         else:
+            if not self.refresh_existing_cache:
+                raise WorkspaceError(
+                    f"repository cache is required when refresh is disabled: {repository.id}"
+                )
             self._run(
                 self.cache_root,
                 "clone",
@@ -129,6 +136,10 @@ class RepositoryWorkspaceManager:
             raise WorkspaceError(f"refusing to reuse an existing benchmark workspace: {workspace}")
         workspace.parent.mkdir(parents=True, exist_ok=True)
         self._git(workspace.parent, "init", "--quiet", str(workspace))
+        # Benchmark run/task/condition components can make otherwise valid repository
+        # paths exceed Git for Windows' legacy 260-character boundary. Keep the setting
+        # local to the disposable repository so checkout and scoring see the same tree.
+        self._git(workspace, "config", "core.longpaths", "true")
         self._git(workspace, "config", "core.autocrlf", "false")
         self._git(workspace, "config", "core.eol", "lf")
         self._git(

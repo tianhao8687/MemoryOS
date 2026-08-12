@@ -1,0 +1,294 @@
+{
+  "aggregate": {
+    "attempted_pairs": 4,
+    "harmed_pairs": 0,
+    "helped_pairs": 0,
+    "informative_pairs": 4,
+    "latency_effect_seconds": {
+      "difference": -8.5723255
+    },
+    "production_eligible": false,
+    "safety_worsened_pairs": 0,
+    "success_effect": {
+      "difference": 0.0
+    },
+    "unchanged_pairs": 4,
+    "valid_pairs": 4
+  },
+  "artifact_id": "swebench-label-seeking-real-agent-ablation-v1-v2",
+  "audit_summary": {
+    "eligible_training_observations": 0,
+    "invalid_pairs": 4,
+    "protocol_valid_pairs": 4
+  },
+  "limitations": [
+    "The four valid pairs cover three tasks from Pylint and pytest with one coding-agent model and are an adaptively enriched training-data exercise, not a product-effect estimate.",
+    "Every valid pair had unchanged executable success, so this artifact creates no causal training labels.",
+    "The V1 audit invalidated three scorer-defective pairs; the V2 audit excluded one agent protocol violation. Both fail-closed audits are hash-bound.",
+    "Provider cost was unavailable under ChatGPT authentication, so no cost effect is claimed.",
+    "Raw agent logs, authentication material, workspaces, and local run state remain unpublished."
+  ],
+  "non_evidence_attempts": [
+    {
+      "excluded_from_counts": true,
+      "reason": "post_run_scorer_false_negative",
+      "run_id": "label-seek-v1-pylint-6528-003"
+    },
+    {
+      "excluded_from_counts": true,
+      "reason": "post_run_scorer_false_negative",
+      "run_id": "label-seek-v1-pytest-6197-001"
+    },
+    {
+      "excluded_from_counts": true,
+      "reason": "post_run_scorer_dependency_closure_invalid",
+      "run_id": "label-seek-v1-pytest-10356-001"
+    },
+    {
+      "excluded_from_counts": true,
+      "reason": "mandatory_memory_protocol_violation",
+      "run_id": "label-seek-v2-pylint-4551-002"
+    }
+  ],
+  "pairs": [
+    {
+      "arm_order": ["memoryos_full", "memoryos_minus_memory"],
+      "discordant_success": false,
+      "full": {
+        "cross_project_leaks": 0,
+        "hidden_test_success": true,
+        "input_tokens": 428026,
+        "latency_seconds": 236.126926,
+        "output_tokens": 6443,
+        "patch_sha256": "1588d1b25b759d36d4738c72610df0f6ee89577d8d890260959a08a49fe45fde",
+        "prompt_sha256": "1e94de69bae9af98b93aa4554425568d0c91bcac433d1712f36551bd37678c3c",
+        "protocol_valid": true,
+        "run_id": "label-seek-v1-pylint-4661-001-full",
+        "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+        "source_report_sha256": "bbe317942902e036fecfd45fec2081818e616ef23d461bc0acf5fd1789b3d1db",
+        "stale_memory_uses": 0,
+        "target_memory_selected": true
+      },
+      "minus": {
+        "cross_project_leaks": 0,
+        "hidden_test_success": true,
+        "input_tokens": 287945,
+        "latency_seconds": 160.01517,
+        "output_tokens": 5154,
+        "patch_sha256": "76807d76b752ca4dde4d82d828512e22a988b0ca8a7efaba9eb7925f727462cc",
+        "prompt_sha256": "1e94de69bae9af98b93aa4554425568d0c91bcac433d1712f36551bd37678c3c",
+        "protocol_valid": true,
+        "run_id": "label-seek-v1-pylint-4661-001-minus",
+        "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+        "source_report_sha256": "9864fab58bff05dbe91bcada7f8ec24b43c445bc55c0b37db2b67f546c2aac42",
+        "stale_memory_uses": 0,
+        "target_memory_selected": false
+      },
+      "partition": "train",
+      "repeat_id": "label-seek-v1-pylint-4661-001",
+      "repository_id": "pylint-dev-pylint",
+      "scorer_sha256": "18a0ab1946aa72468c6c38f8450a5611019e8cc3dbb6000479e0dc939859574e",
+      "target_memory_id": "pylint-persistent-stats-cache-contract",
+      "task_id": "pylint-pr-4661"
+    },
+    {
+      "arm_order": ["memoryos_full", "memoryos_minus_memory"],
+      "discordant_success": false,
+      "full": {
+        "cross_project_leaks": 0,
+        "hidden_test_success": false,
+        "input_tokens": 526201,
+        "latency_seconds": 212.154245,
+        "output_tokens": 7598,
+        "patch_sha256": "90af71c430543c3b0943fe93b97478ef17a7f2746e4258908007f7c3d0d83ade",
+        "prompt_sha256": "042344d8610fb01855f5491fc597fb5d67cc409fd50d6ab51b3f564e58dc6aac",
+        "protocol_valid": true,
+        "run_id": "label-seek-v2-pylint-4551-001-full",
+        "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+        "source_report_sha256": "caf10e764d4f2b5163e192f1c5108257058dc8392fedf97e00c2da816b6194c1",
+        "stale_memory_uses": 0,
+        "target_memory_selected": true
+      },
+      "minus": {
+        "cross_project_leaks": 0,
+        "hidden_test_success": false,
+        "input_tokens": 827300,
+        "latency_seconds": 304.0899,
+        "output_tokens": 9505,
+        "patch_sha256": "d64225da799f98377d58fce0d4ac551a8f1a447a4ab992b2cbd3cba7ee6f12cc",
+        "prompt_sha256": "042344d8610fb01855f5491fc597fb5d67cc409fd50d6ab51b3f564e58dc6aac",
+        "protocol_valid": true,
+        "run_id": "label-seek-v2-pylint-4551-001-minus",
+        "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+        "source_report_sha256": "a6b84105df370035934ce7ff230abdb3675e385317429bff0096edff5390edd6",
+        "stale_memory_uses": 0,
+        "target_memory_selected": false
+      },
+      "partition": "train",
+      "repeat_id": "label-seek-v2-pylint-4551-001",
+      "repository_id": "pylint-dev-pylint",
+      "scorer_sha256": "357ad55bdd698c04250a1f087258a5c667bba9cd29f47cbeda6c91be33adb79c",
+      "target_memory_id": "pylint-pyreverse-astroid-annotation-api",
+      "task_id": "pylint-pr-4551-api-memory"
+    },
+    {
+      "arm_order": ["memoryos_minus_memory", "memoryos_full"],
+      "discordant_success": false,
+      "full": {
+        "cross_project_leaks": 0,
+        "hidden_test_success": true,
+        "input_tokens": 355552,
+        "latency_seconds": 158.163511,
+        "output_tokens": 4812,
+        "patch_sha256": "1e424a1f331ff8752a2f2eb90d108e0ca0f4f19a381daa04d61d5aa0cb5d6b07",
+        "prompt_sha256": "8ff0f0e4f6afdbfb8cb7335601365ecb7907a3beec2d6f8bb1c2166ad2fd184f",
+        "protocol_valid": true,
+        "run_id": "label-seek-v2-pytest-10356-001-full",
+        "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+        "source_report_sha256": "8cfedbf084eaf2dab87cd8d4154c9f5c2725b2403dce4d704e38008737e0f37e",
+        "stale_memory_uses": 0,
+        "target_memory_selected": true
+      },
+      "minus": {
+        "cross_project_leaks": 0,
+        "hidden_test_success": true,
+        "input_tokens": 371715,
+        "latency_seconds": 142.348105,
+        "output_tokens": 5257,
+        "patch_sha256": "cf8bc16b5cc002e5a53bf4baa79604cc7c366e6678295fe1d22b5ec63af875b0",
+        "prompt_sha256": "8ff0f0e4f6afdbfb8cb7335601365ecb7907a3beec2d6f8bb1c2166ad2fd184f",
+        "protocol_valid": true,
+        "run_id": "label-seek-v2-pytest-10356-001-minus",
+        "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+        "source_report_sha256": "dde6af958a589e514cad500769a4102a061e67c2dd06cc97a81a985d8670b881",
+        "stale_memory_uses": 0,
+        "target_memory_selected": false
+      },
+      "partition": "train",
+      "repeat_id": "label-seek-v2-pytest-10356-001",
+      "repository_id": "pytest-dev-pytest",
+      "scorer_sha256": "88bffec2955d98f481235fc05077d4b88b60ce31f1b48095effd9cc678430b5e",
+      "target_memory_id": "pytest-mark-mro-read-write-contract-v2",
+      "task_id": "pytest-pr-10356-closure-v2"
+    },
+    {
+      "arm_order": ["memoryos_full", "memoryos_minus_memory"],
+      "discordant_success": false,
+      "full": {
+        "cross_project_leaks": 0,
+        "hidden_test_success": true,
+        "input_tokens": 325119,
+        "latency_seconds": 104.057057,
+        "output_tokens": 4382,
+        "patch_sha256": "36b57e99d6288ea936f53572c1cc929d5c2e2e1f3dd66c12a1ab3b174cf85720",
+        "prompt_sha256": "8ff0f0e4f6afdbfb8cb7335601365ecb7907a3beec2d6f8bb1c2166ad2fd184f",
+        "protocol_valid": true,
+        "run_id": "label-seek-v2-pytest-10356-005-full",
+        "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+        "source_report_sha256": "8b54d319ce22022f31fc71ebd8c3a65d908b2bf8e594039797b74bdcee3c0b21",
+        "stale_memory_uses": 0,
+        "target_memory_selected": true
+      },
+      "minus": {
+        "cross_project_leaks": 0,
+        "hidden_test_success": true,
+        "input_tokens": 422957,
+        "latency_seconds": 138.337866,
+        "output_tokens": 5292,
+        "patch_sha256": "1a1e3d56daf21d35125bed7583c44b61baeb2a7f5a23e9d741b4a14b337e327d",
+        "prompt_sha256": "8ff0f0e4f6afdbfb8cb7335601365ecb7907a3beec2d6f8bb1c2166ad2fd184f",
+        "protocol_valid": true,
+        "run_id": "label-seek-v2-pytest-10356-005-minus",
+        "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+        "source_report_sha256": "f4a52f1dd993b50f99ad1418f85f475fa2daf28e189d7453c9b3c68bcf25ab34",
+        "stale_memory_uses": 0,
+        "target_memory_selected": false
+      },
+      "partition": "train",
+      "repeat_id": "label-seek-v2-pytest-10356-005",
+      "repository_id": "pytest-dev-pytest",
+      "scorer_sha256": "88bffec2955d98f481235fc05077d4b88b60ce31f1b48095effd9cc678430b5e",
+      "target_memory_id": "pytest-mark-mro-read-write-contract-v2",
+      "task_id": "pytest-pr-10356-closure-v2"
+    }
+  ],
+  "production_eligible": false,
+  "production_weights_changed": false,
+  "published_at": "2026-08-12T15:51:32Z",
+  "runtime": {
+    "agent_version": "codex-cli/0.147.0+app-server-adapter/4",
+    "evidence_type": "real_coding_agent",
+    "image": "sha256:bbf463d0636258fe5f77cbb32f45465e942fc8ae059180491c28e8afe3eed1c1",
+    "mcp_image": "sha256:963f7855c80e86f9317c7a129127b8e394adbf79b982511488bca62b2831a620",
+    "model": "gpt-5.6-terra",
+    "provider": "openai-codex-chatgpt",
+    "runtime_file_sha256": "e9278b842a92f2e6f49349edebe16df4eb7e5652e2b5b7bdab7717992429f06d",
+    "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5"
+  },
+  "schema_version": "1.0",
+  "task_packs": [
+    {
+      "id": "label-seek-v1",
+      "manifest": {
+        "file_sha256": "e2c24f8a4698adc50da57e2b504888af439396483544d95f9960f6cf0986cbe9",
+        "manifest_digest": "c4a1f44055ce574cd39d5476f7ad400efb5e47ffa547d35e7f7c3789b309fe45",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v1/manifest.json"
+      },
+      "partition_lock": {
+        "file_sha256": "d983eb7808edba936cf5506703f4f7b31d13c4136a53d9df09bf27ca2a8dd221",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v1/partition-lock.json"
+      },
+      "post_run_audit": {
+        "file_sha256": "687e36af8ee25f328572ebedcae675c277a001a4d0fcddf35ac058566a2ed271",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v1/post-run-audit.json"
+      },
+      "provenance": {
+        "file_sha256": "4eaaa29533cb467c48475a1aa724b219ed542cd4781f0893b4ef638d676994ff",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v1/provenance.json"
+      },
+      "run_lock": {
+        "file_sha256": "b64755f1da799f9fe70b8a0742e65b9eb53438e00bc4887dcca710a9c086dc0d",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v1/run-lock.json"
+      },
+      "scorer_verification": {
+        "file_sha256": "00e3e016ef88a5de8661113cbaada8df04363d7a98fb5a68f2a8027bcf285805",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v1/scorer-verification.json"
+      }
+    },
+    {
+      "id": "label-seek-v2",
+      "manifest": {
+        "file_sha256": "032cf59a47d584a1c438ae2ec45a5432f89e3acdd5481f7c77015b40710c2ca3",
+        "manifest_digest": "bcf8a3d087596318dc79f5cfcab7f1c495d3af8a88a350cdb7db8763fbdb7439",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v2/manifest.json"
+      },
+      "partition_lock": {
+        "file_sha256": "13923d2bd5bb500d329b53a4330b7aae7e1684ea1fec5b0ce8a89228c54435c5",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v2/partition-lock.json"
+      },
+      "post_run_audit": {
+        "file_sha256": "277065fa3dca42763ada152758a9529789e621a689dda6c7332abfe3534f76d3",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v2/post-run-audit.json"
+      },
+      "provenance": {
+        "file_sha256": "48ef0a18c9f849554a64dc50f83a2245634aa25752038d19206c2ebe11c026af",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v2/provenance.json"
+      },
+      "run_lock": {
+        "file_sha256": "fbd172a30b15438f9b1f627a281d70a17fc33b3fdfe6892dc467d57d79249c6a",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v2/run-lock.json"
+      },
+      "scorer_verification": {
+        "file_sha256": "025ff5f8d78561a5bf413f30262e2a0b97c90778a213a74a38b467ec15e2565c",
+        "path": "benchmarks/real_workload/swebench_verified/label_seek_v2/scorer-verification.json"
+      }
+    }
+  ],
+  "training_observations": {
+    "by_partition": {
+      "dev": 0,
+      "train": 0
+    },
+    "real_executable_labels": 0
+  }
+}

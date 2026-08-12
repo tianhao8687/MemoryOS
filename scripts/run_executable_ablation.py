@@ -21,6 +21,7 @@ from memoryos.evaluation.executable_ablation import (
 from memoryos.evaluation.real_workload_models import ExperimentCondition
 from memoryos.evaluation.real_workload_report import RunMode
 from memoryos.evaluation.real_workload_runner import RealWorkloadRunner, load_runner_inputs
+from memoryos.evaluation.real_workload_workspace import RepositoryWorkspaceManager
 from memoryos.evaluation.retrieval_weight_calibration import (
     CalibrationPartition,
     observation_from_ablation_pair,
@@ -55,6 +56,14 @@ def main() -> None:
     )
     parser.add_argument("--order-seed", type=int, default=20260812)
     parser.add_argument("--work-root", type=Path, default=Path("build/real-workload"))
+    parser.add_argument(
+        "--reuse-repository-cache-without-fetch",
+        action="store_true",
+        help=(
+            "Use an existing origin-validated bare cache without refreshing its remote. "
+            "The run still requires every pinned task and solution commit in that cache."
+        ),
+    )
     parser.add_argument(
         "--output-root",
         type=Path,
@@ -91,7 +100,11 @@ def main() -> None:
     aggregate_dir = output_root / run_id
     if aggregate_dir.exists():
         raise ValueError(f"refusing to reuse ablation output directory: {aggregate_dir}")
-    runner = RealWorkloadRunner(arguments.work_root)
+    workspace_manager = RepositoryWorkspaceManager(
+        arguments.work_root / "repositories",
+        refresh_existing_cache=not arguments.reuse_repository_cache_without_fetch,
+    )
+    runner = RealWorkloadRunner(arguments.work_root, workspace_manager=workspace_manager)
     expected_runtime_sha256 = _canonical_sha256(runtime.model_dump(mode="json"))
     resumed_reports = {
         AblationArm.MEMORYOS_FULL: arguments.resume_full_report,

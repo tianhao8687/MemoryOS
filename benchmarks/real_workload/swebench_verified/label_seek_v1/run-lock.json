@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-12T14:44:00Z",
+  "locked_before_outcomes": true,
+  "manifest_sha256": "c4a1f44055ce574cd39d5476f7ad400efb5e47ffa547d35e7f7c3789b309fe45",
+  "runtime_sha256": "2e7eeb9c261787350125eb28bcbdad90391ed3ca925cdeafcc40d408f5ed1ac5",
+  "runtime_file_sha256": "e9278b842a92f2e6f49349edebe16df4eb7e5652e2b5b7bdab7717992429f06d",
+  "order_seed": 20260812,
+  "runs": [
+    {
+      "task_id": "pylint-pr-4661",
+      "memory_id": "pylint-persistent-stats-cache-contract",
+      "run_id": "label-seek-v1-pylint-4661-001",
+      "repeat_id": "label-seek-v1-pylint-4661-001",
+      "partition": "train",
+      "expected_arm_order": ["memoryos_full", "memoryos_minus_memory"]
+    },
+    {
+      "task_id": "pylint-pr-6528",
+      "memory_id": "pylint-recursive-ignore-boundary",
+      "run_id": "label-seek-v1-pylint-6528-003",
+      "repeat_id": "label-seek-v1-pylint-6528-003",
+      "partition": "train",
+      "expected_arm_order": ["memoryos_minus_memory", "memoryos_full"]
+    },
+    {
+      "task_id": "pytest-pr-6197",
+      "memory_id": "pytest-package-collection-must-stay-lazy",
+      "run_id": "label-seek-v1-pytest-6197-001",
+      "repeat_id": "label-seek-v1-pytest-6197-001",
+      "partition": "train",
+      "expected_arm_order": ["memoryos_minus_memory", "memoryos_full"]
+    },
+    {
+      "task_id": "pytest-pr-10356",
+      "memory_id": "pytest-mark-mro-read-write-contract",
+      "run_id": "label-seek-v1-pytest-10356-001",
+      "repeat_id": "label-seek-v1-pytest-10356-001",
+      "partition": "train",
+      "expected_arm_order": ["memoryos_full", "memoryos_minus_memory"]
+    }
+  ]
+}

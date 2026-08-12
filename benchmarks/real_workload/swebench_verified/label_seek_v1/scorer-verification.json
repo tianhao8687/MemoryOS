@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "verified_at": "2026-08-12T14:41:16Z",
+  "container_image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+  "network": "none",
+  "read_only_root": true,
+  "results": [
+    {
+      "task_id": "pylint-pr-4661",
+      "hidden_patch_sha256": "18a0ab1946aa72468c6c38f8450a5611019e8cc3dbb6000479e0dc939859574e",
+      "base_commit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+      "base_exit_code": 1,
+      "solution_commit": "ae6cbd1062c0a8e68d32a5cdc67c993da26d0f4a",
+      "solution_exit_code": 0
+    },
+    {
+      "task_id": "pylint-pr-6528",
+      "hidden_patch_sha256": "39151265d6bd66e7cc065326e89482d5a8938a776684ec32a8e42931d50aeda6",
+      "base_commit": "273a8b25620467c1e5686aa8d2a1dbb8c02c78d0",
+      "base_exit_code": 1,
+      "solution_commit": "6ad350fb0aee8ff532b860cf9426afb98760ff88",
+      "solution_exit_code": 0
+    },
+    {
+      "task_id": "pytest-pr-6197",
+      "hidden_patch_sha256": "367e426e8954070c2f7829dc2ff525da965d5cf87d5e0578a3b42fbb6b7153f8",
+      "base_commit": "e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+      "base_exit_code": 1,
+      "solution_commit": "19a15a94eeb403631f847fab5fe5073bc56e8bcc",
+      "solution_exit_code": 0
+    },
+    {
+      "task_id": "pytest-pr-10356",
+      "hidden_patch_sha256": "181877eb45bfc9f339126b3bc8cb78c605b340333f6b4cb4558db460da9800ab",
+      "base_commit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "base_exit_code": 1,
+      "solution_commit": "31df38f6a79b0734be3c1386eb7df6512b1a321b",
+      "solution_exit_code": 0
+    }
+  ]
+}

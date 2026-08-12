@@ -1,0 +1,151 @@
+{
+  "schema_version": "1.0",
+  "audited_at": "2026-08-12T15:49:12Z",
+  "status": "completed_no_directional_labels",
+  "scheduled_pairs": 4,
+  "protocol_valid_pairs": 3,
+  "invalid_pairs": 1,
+  "valid_same_outcome_pairs": 3,
+  "raw_training_observations": 0,
+  "eligible_training_observations": 0,
+  "production_effect_claim": false,
+  "production_weights_changed": false,
+  "frozen_inputs_sha256": {
+    "manifest": "032cf59a47d584a1c438ae2ec45a5432f89e3acdd5481f7c77015b40710c2ca3",
+    "partition_lock": "13923d2bd5bb500d329b53a4330b7aae7e1684ea1fec5b0ce8a89228c54435c5",
+    "provenance": "48ef0a18c9f849554a64dc50f83a2245634aa25752038d19206c2ebe11c026af",
+    "run_lock": "fbd172a30b15438f9b1f627a281d70a17fc33b3fdfe6892dc467d57d79249c6a",
+    "runtime": "e9278b842a92f2e6f49349edebe16df4eb7e5652e2b5b7bdab7717992429f06d",
+    "scorer_verification": "025ff5f8d78561a5bf413f30262e2a0b97c90778a213a74a38b467ec15e2565c"
+  },
+  "runs": [
+    {
+      "run_id": "label-seek-v2-pylint-4551-001",
+      "task_id": "pylint-pr-4551-api-memory",
+      "repository_id": "pylint-dev-pylint",
+      "arm_order": ["memoryos_full", "memoryos_minus_memory"],
+      "full_success": false,
+      "minus_success": false,
+      "full_latency_seconds": 212.154245,
+      "minus_latency_seconds": 304.0899,
+      "pair_status": "valid_same_outcome",
+      "training_observation_eligible": false,
+      "post_run_scorer_audit": "valid_failure_both_patches_omit_local_annotated_assignment_flow",
+      "artifact_sha256": {
+        "ablation_runs": "bbbc8d168cc8ada27e493b1e949055059df4b87baf6afebb106a6cb2cb642c2c",
+        "ablation_report": "ba1b7b3f4af4909a1238c6c9d7f621d503a99c5d7f1722f1d641fe3f43a698c4",
+        "summary": "62870b59497fadbde5385fb52465b4d90aa9e0771284caa266ecb7c09149b554",
+        "training_observations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "full_patch": "90af71c430543c3b0943fe93b97478ef17a7f2746e4258908007f7c3d0d83ade",
+        "minus_patch": "d64225da799f98377d58fce0d4ac551a8f1a447a4ab992b2cbd3cba7ee6f12cc"
+      }
+    },
+    {
+      "run_id": "label-seek-v2-pylint-4551-002",
+      "task_id": "pylint-pr-4551-api-memory",
+      "repository_id": "pylint-dev-pylint",
+      "arm_order": ["memoryos_minus_memory", "memoryos_full"],
+      "minus_success": false,
+      "minus_latency_seconds": 194.598356,
+      "pair_status": "invalid_agent_memory_protocol",
+      "training_observation_eligible": false,
+      "full_arm_started": false,
+      "invalidation_reason": "The minus arm completed code generation but made zero mandatory memory_context calls, so memory usage was invalid. This is an agent protocol violation rather than infrastructure failure and was not retried.",
+      "artifact_sha256": {
+        "source_report": "2cb4081d9053da9ce0bff561e724e12e6e2780f0f0e259014a6e30cbbb2e7c5d",
+        "run_metadata": "50665ba8d46c5b81e6f5c14daff4459f582fb22010fff4607eb6607f794bfc7a",
+        "minus_patch": "ea003f366d9974ce27e7716ac4c53235a2991584ec63f98bf4dfceca48e6f252"
+      }
+    },
+    {
+      "run_id": "label-seek-v2-pytest-10356-001",
+      "task_id": "pytest-pr-10356-closure-v2",
+      "repository_id": "pytest-dev-pytest",
+      "arm_order": ["memoryos_minus_memory", "memoryos_full"],
+      "full_success": true,
+      "minus_success": true,
+      "full_latency_seconds": 158.163511,
+      "minus_latency_seconds": 142.348105,
+      "pair_status": "valid_same_outcome",
+      "training_observation_eligible": false,
+      "post_run_scorer_audit": "valid_success_dependency_closure_and_behavior_checks_passed",
+      "artifact_sha256": {
+        "ablation_runs": "e4a42fb80cdcfd1a50fab9dac0f4f26e4798da9f1d8a7a336a4807a3462092a8",
+        "ablation_report": "47f5d2932c183a828d3bc2cc97e9e1cdee10374ce21f77a601fb68b09b7b2e4c",
+        "summary": "fe691532a66019939a78981c0fb4716794985ee3001f8b68ba44adbe6d38e29e",
+        "training_observations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "full_patch": "1e424a1f331ff8752a2f2eb90d108e0ca0f4f19a381daa04d61d5aa0cb5d6b07",
+        "minus_patch": "cf8bc16b5cc002e5a53bf4baa79604cc7c366e6678295fe1d22b5ec63af875b0"
+      }
+    },
+    {
+      "run_id": "label-seek-v2-pytest-10356-005",
+      "task_id": "pytest-pr-10356-closure-v2",
+      "repository_id": "pytest-dev-pytest",
+      "arm_order": ["memoryos_full", "memoryos_minus_memory"],
+      "full_success": true,
+      "minus_success": true,
+      "full_latency_seconds": 104.057057,
+      "minus_latency_seconds": 138.337866,
+      "pair_status": "valid_same_outcome",
+      "training_observation_eligible": false,
+      "post_run_scorer_audit": "valid_success_dependency_closure_and_behavior_checks_passed",
+      "artifact_sha256": {
+        "ablation_runs": "3892f71bfac5204d26bdd426ccd00d6c2c6280dc8b6a96068f082b683ab8f44b",
+        "ablation_report": "d75b34cb4feedea3278e99fe69b3acd870b7e2e410a64654205acb0ce6804edd",
+        "summary": "c7eafb3e14533c721f67f08eb7b2707033f268fc4e7570ff2b21cf5df22e62ab",
+        "training_observations": "e3b0c44298fc1c149afbf4f8996fb92427ae41e4649b934ca495991b7852b855",
+        "full_patch": "36b57e99d6288ea936f53572c1cc929d5c2e2e1f3dd66c12a1ab3b174cf85720",
+        "minus_patch": "1a1e3d56daf21d35125bed7583c44b61baeb2a7f5a23e9d741b4a14b337e327d"
+      }
+    }
+  ],
+  "task_level_labels": [
+    {
+      "task_id": "pylint-pr-4551-api-memory",
+      "eligible": false,
+      "reason": "No discordant valid repeat and one of the two predeclared repeats violated the mandatory memory protocol."
+    },
+    {
+      "task_id": "pytest-pr-10356-closure-v2",
+      "eligible": false,
+      "reason": "Both order-balanced protocol-valid repeats passed in both arms, so success direction is zero."
+    }
+  ],
+  "infrastructure_incidents": [
+    {
+      "stage": "pylint_second_arm_fetch",
+      "reason": "Windows Schannel TLS handshake failure",
+      "agent_outcome_observed": false,
+      "first_arm_reused_after_strict_identity_validation": true,
+      "preserved_under": "D:/MemoryOS-Lab/invalidated-infrastructure/label-seek-v2-pylint-4551-001-tls-before-minus"
+    },
+    {
+      "stage": "pytest_scoring_workspace_checkout",
+      "reason": "Git for Windows legacy path limit omitted a tracked fixture in the scoring workspace",
+      "agent_outcome_observed": true,
+      "hidden_outcome_observed": false,
+      "fixed_by": "repository-local core.longpaths=true with regression coverage",
+      "preserved_under": "D:/MemoryOS-Lab/invalidated-infrastructure/label-seek-v2-pytest-10356-001-windows-longpath"
+    },
+    {
+      "stage": "pytest_pre_agent_fetch",
+      "reason": "Windows Schannel TLS handshake failure",
+      "agent_outcome_observed": false,
+      "preserved_under": "D:/MemoryOS-Lab/invalidated-infrastructure/label-seek-v2-pytest-10356-001-tls-pre-agent"
+    },
+    {
+      "stage": "pytest_pre_agent_fetch",
+      "reason": "Repeated Windows Schannel TLS handshake failure before backend change",
+      "agent_outcome_observed": false,
+      "preserved_under": "D:/MemoryOS-Lab/invalidated-infrastructure/label-seek-v2-pytest-10356-001-schannel-retry"
+    },
+    {
+      "stage": "pytest_pre_agent_fetch",
+      "reason": "OpenSSL remote refresh ended with an unexpected TLS EOF",
+      "agent_outcome_observed": false,
+      "fixed_by": "explicit origin-validated offline cache reuse with pinned-commit checks",
+      "preserved_under": "D:/MemoryOS-Lab/invalidated-infrastructure/label-seek-v2-pytest-10356-001-openssl-eof"
+    }
+  ]
+}
