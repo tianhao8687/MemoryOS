@@ -95,7 +95,7 @@
           "benchmark_hidden_test.py"
         ],
         "hidden_patch": "pylint_pyreverse_annotations_hidden.patch",
-        "hidden_patch_sha256": "3fa7890f05d91505991d033eb20bab7bf8923fc6c99f7289b079b6fca014a2b0",
+        "hidden_patch_sha256": "1352261664c184a4f873eee5bbf234823a355a23ce79a53564d2ec3be8f29cef",
         "expected_exit_code": 0,
         "timeout_seconds": 30,
         "memory_mb": 256,

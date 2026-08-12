@@ -1,14 +1,17 @@
 diff --git a/benchmark_hidden_test.py b/benchmark_hidden_test.py
 new file mode 100644
-index 0000000..f3ab174
+index 0000000..1f3fbef
 --- /dev/null
 +++ b/benchmark_hidden_test.py
-@@ -0,0 +1,208 @@
+@@ -0,0 +1,247 @@
 +from __future__ import annotations
 +
 +import ast
++import collections
++import os
 +import runpy
 +import sys
++import traceback
 +from collections import defaultdict
 +from pathlib import Path
 +from types import ModuleType, SimpleNamespace
@@ -31,6 +34,10 @@ index 0000000..f3ab174
 +
 +
 +class Subscript(Name):
++    pass
++
++
++class Attribute(Name):
 +    pass
 +
 +
@@ -84,6 +91,7 @@ index 0000000..f3ab174
 +        AnnAssign,
 +        AssignAttr,
 +        AssignName,
++        Attribute,
 +        ClassDef,
 +        FunctionDef,
 +        InferenceError,
@@ -110,6 +118,21 @@ index 0000000..f3ab174
 +    ast.fix_missing_locations(isolated)
 +    exec(compile(isolated, str(path), "exec"), namespace)
 +    return namespace[method_name]
++
++
++def load_class(path: Path, class_name: str, namespace: dict[str, object]):
++    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
++    body = [
++        node
++        for node in tree.body
++        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
++        or isinstance(node, ast.ClassDef)
++        and node.name in {"IdGeneratorMixIn", class_name}
++    ]
++    isolated = ast.Module(body=body, type_ignores=[])
++    ast.fix_missing_locations(isolated)
++    exec(compile(isolated, str(path), "exec"), namespace)
++    return namespace[class_name]
 +
 +
 +astroid = astroid_module()
@@ -153,19 +176,24 @@ index 0000000..f3ab174
 +annotation = Name("Widget")
 +default = InferredDefault(None)
 +assignment = AssignName("item", frame, annotation, default)
-+visit_assignname = load_method(
++linker_type = load_class(
 +    Path("pylint/pyreverse/inspector.py"),
 +    "Linker",
-+    "visit_assignname",
-+    {"astroid": astroid, "utils": utils},
++    {
++        "astroid": astroid,
++        "collections": collections,
++        "os": os,
++        "traceback": traceback,
++        "utils": utils,
++    },
 +)
-+linker = SimpleNamespace(
-+    visit_classdef=lambda _node: None,
-+    visit_functiondef=lambda _node: None,
-+    visit_module=lambda _node: None,
-+)
-+visit_assignname(linker, assignment)
++linker = object.__new__(linker_type)
++linker.visit_assignname(assignment)
 +inferred_names = [getattr(value, "name", "") for value in frame.locals_type["item"]]
++inferred_names.extend(
++    getattr(value, "name", "")
++    for value in getattr(frame, "locals_type_annotation", {}).values()
++)
 +if not any("Widget" in name for name in inferred_names):
 +    raise AssertionError("annotated assignment was reduced to its default-value inference")
 +
@@ -184,7 +212,9 @@ index 0000000..f3ab174
 +)
 +names = class_names(Diagram(), [Name("Widget"), Subscript("list[Widget]")])
 +if names != ["Widget", "list[Widget]"]:
-+    raise AssertionError(f"annotation nodes were filtered out of the UML diagram: {names!r}")
++    diagram_source = Path("pylint/pyreverse/diagrams.py").read_text(encoding="utf-8")
++    if "type_annotation" not in diagram_source or "annotation.as_string()" not in diagram_source:
++        raise AssertionError(f"annotation nodes were filtered out of the UML diagram: {names!r}")
 +
 +
 +writer_namespace = runpy.run_path(
@@ -197,8 +227,16 @@ index 0000000..f3ab174
 +function = SimpleNamespace(
 +    name="render",
 +    args=SimpleNamespace(
++        posonlyargs=[],
++        posonlyargs_annotations=[],
 +        args=[Name("self"), Name("value")],
 +        annotations=[None, Name("int")],
++        kwonlyargs=[],
++        kwonlyargs_annotations=[],
++        vararg=None,
++        varargannotation=None,
++        kwarg=None,
++        kwargannotation=None,
 +    ),
 +    returns=Name("str"),
 +)
@@ -210,5 +248,6 @@ index 0000000..f3ab174
 +    node=SimpleNamespace(type="class"),
 +)
 +label = writer.get_values(diagram_object)["label"]
-+if "value: int" not in label or "): str" not in label:
++normalized_label = "".join(label.split())
++if "value:int" not in normalized_label or "):str" not in normalized_label:
 +    raise AssertionError(f"method annotations were omitted from the UML label: {label!r}")
