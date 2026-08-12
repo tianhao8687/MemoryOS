@@ -3,6 +3,10 @@
 This frozen public-replay pack adds three SWE-bench Verified tasks from three repositories. It is
 designed to supplement, not replace, the Requests proxy-auth pilot.
 
+The source dataset is the public
+[SWE-bench Verified](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified) release;
+the exact dataset revision and Parquet SHA-256 are pinned in `provenance.json`.
+
 The repository-level split was locked before any agent arm ran: Pylint and pytest are training
 repositories, while Seaborn is development-only. Together with the existing Requests training
 task, this reaches the calibration protocol's three-training-repository topology without allowing

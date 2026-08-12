@@ -1,5 +1,7 @@
 {
   "dataset": "princeton-nlp/SWE-bench_Verified",
+  "dataset_guide_url": "https://www.swebench.com/SWE-bench/guides/datasets/",
+  "dataset_page_url": "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified",
   "dataset_revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
   "dataset_file_sha256": "a45b1fe4e2f0c8390b2b2938ac83e92ed5979000856808f3679c07812e9e6dcd",
   "gold_patch_used_by_agent": false,
