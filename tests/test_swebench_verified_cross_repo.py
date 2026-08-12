@@ -44,7 +44,7 @@ def test_cross_repository_public_replay_assets_are_pinned_and_disjoint() -> None
     development_repositories = {
         item["repository_id"]
         for item in partition_lock["assignments"]
-        if item["partition"] == "development"
+        if item["partition"] == "dev"
     }
     assert train_repositories == {"pylint-dev-pylint", "pytest-dev-pytest"}
     assert development_repositories == {"mwaskom-seaborn"}

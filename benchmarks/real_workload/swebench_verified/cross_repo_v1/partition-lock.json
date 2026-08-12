@@ -21,7 +21,7 @@
       "instance_id": "mwaskom__seaborn-3069",
       "repository_id": "mwaskom-seaborn",
       "task_id": "seaborn-pr-3069",
-      "partition": "development"
+      "partition": "dev"
     }
   ]
 }

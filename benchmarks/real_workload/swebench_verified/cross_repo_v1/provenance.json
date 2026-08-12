@@ -44,7 +44,7 @@
       "solution_merge_commit": "a767d666d45a6f105177e4720669b85c92ee2432",
       "solution_merged_at": "2022-10-12T00:41:33Z",
       "cutoff": "2022-10-10T00:00:00Z",
-      "partition": "development",
+      "partition": "dev",
       "hidden_test_design": "AST-isolated Plotter finalization runs against dependency-free axis doubles and verifies categorical limits, y inversion, and grid suppression."
     }
   ]
