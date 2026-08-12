@@ -19,7 +19,7 @@ MemoryOS V2.1 是面向编码 Agent 的本地优先 Reality Intelligence 层。�
 - 明确冲突由规则处理；只有不确定 claim pair 可进入 bounded model judge。判断、弃权、失败、provider fingerprint、prompt version 与 evidence hash 都进入 Possible Conflict 审计队列。
 - Source Anchor 使用 Tree-sitter 解析 Python、TypeScript、JavaScript、Rust 的相关 symbol；其他语言使用 bounded snippet/context hash。
 - Git freshness 状态机识别 `fresh / moved / suspect / stale / unknown`，lazy + HEAD cache；refresh 只产生 replacement candidate，不改写原记忆。
-- Retrieval 2.0 使用 FTS/vector/graph/temporal candidate union、RRF、freshness/scope/evidence filter、可选 top-N reranker 和 MMR，并持久化逐项 trace。
+- Retrieval 2.0 将 candidate retrieval、fusion、governance scoring、rerank 与 diversity 拆成显式阶段。生产继续使用冻结的 FTS/vector/graph/temporal 基线；显式 Shadow 可从 allowlist 选择查询配方，并为精确代码查询增加结构化 Source Anchor 通道。请求、实际执行、降级通道、阶段耗时及分数契约全部持久化。
 - sqlite-vec 按 provider/model/dimension 建立持久化实时 namespace，支持 doctor、状态和重建；Exact NumPy 是明确降级路径，扩展缺失不会阻止启动。
 - Context Compiler 按 task intent、coverage、truth/freshness、utility/cost 和预算选择最小证据集；未决冲突强制呈现双方。
 - Grounded consolidation 校验 supporting/counter memory IDs 与独立来源；离线 extractive fallback 明确标注。所有抽象与 distillation 只生成 candidate，永不自动激活。
@@ -143,6 +143,9 @@ train/dev input SHA-256 into the candidate profile.
 .\.venv\Scripts\python.exe scripts\validate_ai_calibration.py
 .\.venv\Scripts\python.exe scripts\run_executable_ablation.py --help
 .\.venv\Scripts\python.exe scripts\run_weight_shadow.py --help
+.\.venv\Scripts\python.exe scripts\build_retrieval_routing_shadow.py --help
+.\.venv\Scripts\python.exe scripts\run_routing_shadow.py --help
+.\.venv\Scripts\python.exe scripts\analyze_routing_shadow.py --help
 .\.venv\Scripts\python.exe scripts\ai_calibration.py --help
 ```
 

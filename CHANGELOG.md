@@ -44,6 +44,23 @@
 - Paired success/safety/cost/latency bootstrap reports with strict dry-run truthfulness and confirmatory diversity, accounting, image, prompt-parity, and egress gates.
 - A deterministic container fixture and pinned MarkupSafe public-history smoke dataset for infrastructure validation only.
 - Explicit task publication timestamps, memory-only cross-project repository validation, and a hard `real_coding_agent` evidence-type gate for confirmatory claims.
+- A declarative retrieval-plan candidate architecture with immutable allowlisted recipes, a
+  deterministic query router, channel-specific retrieval, RRF fusion, optional bounded
+  cross-encoder reranking, recipe-controlled MMR, safe fallback, and persisted execution traces.
+  Routing remains explicit diagnostic Shadow only; the production service executes the unchanged
+  all-channel frozen baseline and the router cannot emit free-form weights.
+- Retrieval execution is now split into candidate, fusion, governance, rerank, and diversity
+  stages. Exact-code Shadow routes use persisted Source Anchors as a separate structured channel;
+  every route records requested versus attempted/executed/contributing/degraded capabilities,
+  actual reranker mode, fusion inputs, and per-stage latency.
+- Router v2 removes query-time confidence thresholds and invented route-confidence constants.
+  The rule planner emits stable intent-reason codes instead of uncalibrated pseudo-probabilities;
+  unclassified queries fail closed to the frozen safe recipe. Routed RRF uses a bounded normalized
+  fusion contract, which Context Compiler validates.
+- A hash-bound routing promotion analyzer aggregates at task level and requires sealed public
+  real-agent evidence, a complete task/agent/repeat matrix, positive paired success confidence,
+  non-regression in worst repository/agent/recipe slices, no task safety regression, and bounded
+  complete latency/cost evidence. Passing never activates production automatically.
 
 ### Changed
 

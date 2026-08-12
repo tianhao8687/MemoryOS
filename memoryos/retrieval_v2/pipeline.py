@@ -2,18 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
-from typing import Any, Protocol
+from typing import Any
 
-from sqlalchemy import func, or_, select
-from sqlalchemy.orm import noload
+from sqlalchemy import func, select
 
 from memoryos.db.models import (
     ClaimEvidenceRow,
-    ClaimRelationRow,
     ClaimRow,
-    EntityRow,
     MemoryFeedbackRow,
     MemoryHealthRow,
     MemoryRow,
@@ -28,12 +26,15 @@ from memoryos.domain.schemas import (
     QueryIntent,
     SearchRequest,
 )
-from memoryos.errors import ProviderError
 from memoryos.health import MemoryHealthService
 from memoryos.retrieval.search import RetrievalEngine
-from memoryos.retrieval_v2.diversity import mmr_select
-from memoryos.retrieval_v2.fusion import reciprocal_rank_fusion
-from memoryos.retrieval_v2.planner import QueryPlan, plan_query
+from memoryos.retrieval_v2.planner import plan_query
+from memoryos.retrieval_v2.routing import (
+    APPROVED_RETRIEVAL_RECIPES,
+    SAFE_RECIPE_ID,
+    RetrievalRecipe,
+    RetrievalRoutingShadowProfile,
+)
 from memoryos.retrieval_v2.rrf_shadow import (
     FROZEN_MMR_LAMBDA,
     FROZEN_RRF_K,
@@ -41,15 +42,14 @@ from memoryos.retrieval_v2.rrf_shadow import (
     RRFChannelShadowProfile,
 )
 from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
+from memoryos.retrieval_v2.stages import (
+    CandidateRetrievalStage,
+    DiversityStage,
+    FusionStage,
+    Reranker,
+    RerankStage,
+)
 from memoryos.temporal.intervals import as_of, is_known_at
-
-
-class Reranker(Protocol):
-    @property
-    def name(self) -> str: ...
-
-    def rerank(self, query: str, candidates: list[dict[str, Any]]) -> dict[str, float]: ...
-
 
 RRF_WEIGHTS = FROZEN_RRF_WEIGHTS
 RRF_K = FROZEN_RRF_K
@@ -65,8 +65,15 @@ def retrieval_config_hash(
     scoring_profile: ShadowRetrievalProfile | None = None,
     *,
     rrf_channel_profile: RRFChannelShadowProfile | None = None,
+    routing_profile: RetrievalRoutingShadowProfile | None = None,
 ) -> str:
-    if scoring_profile is not None and rrf_channel_profile is not None:
+    if (
+        sum(
+            profile is not None
+            for profile in (scoring_profile, rrf_channel_profile, routing_profile)
+        )
+        > 1
+    ):
         raise ValueError("retrieval can use only one shadow profile at a time")
     config_payload: dict[str, Any] = {
         "rrf": RRF_WEIGHTS,
@@ -77,6 +84,8 @@ def retrieval_config_hash(
         config_payload["shadow_profile"] = scoring_profile.model_dump(mode="json")
     if rrf_channel_profile is not None:
         config_payload["rrf_channel_shadow_profile"] = rrf_channel_profile.model_dump(mode="json")
+    if routing_profile is not None:
+        config_payload["retrieval_routing_shadow_profile"] = routing_profile.model_dump(mode="json")
     return hashlib.sha256(json.dumps(config_payload, sort_keys=True).encode("utf-8")).hexdigest()
 
 
@@ -89,17 +98,29 @@ class RetrievalPipeline:
         *,
         scoring_profile: ShadowRetrievalProfile | None = None,
         rrf_channel_profile: RRFChannelShadowProfile | None = None,
+        routing_profile: RetrievalRoutingShadowProfile | None = None,
     ) -> None:
-        if scoring_profile is not None and rrf_channel_profile is not None:
+        if (
+            sum(
+                profile is not None
+                for profile in (scoring_profile, rrf_channel_profile, routing_profile)
+            )
+            > 1
+        ):
             raise ValueError("retrieval can use only one shadow profile at a time")
         self.database = database
         self.baseline = baseline
-        self.reranker = reranker
         self.scoring_profile = scoring_profile
         self.rrf_channel_profile = rrf_channel_profile
+        self.routing_profile = routing_profile
+        self.candidate_stage = CandidateRetrievalStage(database, baseline)
+        self.fusion_stage = FusionStage()
+        self.rerank_stage = RerankStage(reranker)
+        self.diversity_stage = DiversityStage()
         self.config_hash = retrieval_config_hash(
             scoring_profile,
             rrf_channel_profile=rrf_channel_profile,
+            routing_profile=routing_profile,
         )
 
     def search(
@@ -123,65 +144,41 @@ class RetrievalPipeline:
             as_of_valid_time=request.as_of_valid_time,
             as_known_at=request.as_known_at,
         )
-        baseline_request = request.model_copy(
-            update={
-                "limit": min(1000, max(80, request.offset + request.limit)),
-                "offset": 0,
-            }
+        recommended_recipe = APPROVED_RETRIEVAL_RECIPES[plan.routing.recommended_recipe_id]
+        execution_recipe: RetrievalRecipe = (
+            recommended_recipe
+            if self.routing_profile is not None
+            else APPROVED_RETRIEVAL_RECIPES[SAFE_RECIPE_ID]
         )
-        baseline = self.baseline.search(baseline_request, allowed_scopes=allowed_scopes)
-        by_id = {str(item["memory"]["id"]): item for item in baseline["items"]}
-        lexical = sorted(
-            by_id,
-            key=lambda item_id: float(by_id[item_id].get("lexical_score", 0.0)),
-            reverse=True,
+        candidate_result = self.candidate_stage.execute(
+            request,
+            plan,
+            execution_recipe,
+            allowed_scopes=allowed_scopes,
+            memory_allowed=self._memory_allowed,
         )
-        semantic = [
-            item_id
-            for item_id in sorted(
-                by_id,
-                key=lambda identity: float(by_id[identity].get("semantic_score", 0.0)),
-                reverse=True,
-            )
-            if float(by_id[item_id].get("semantic_score", 0.0)) > 0
-        ]
+        baseline = candidate_result.baseline
+        by_id = candidate_result.by_id
+        rankings = candidate_result.rankings
+        rrf_weights = (
+            RRF_WEIGHTS
+            if self.rrf_channel_profile is None
+            else self.rrf_channel_profile.channel_weights
+        )
+        fusion_weights = dict(rrf_weights)
+        if "source_anchor" in execution_recipe.channels:
+            fusion_weights["source_anchor"] = rrf_weights["fts"]
+        rrf_k = RRF_K if self.rrf_channel_profile is None else self.rrf_channel_profile.rrf_k
+        fusion_result = self.fusion_stage.execute(
+            rankings,
+            weights=fusion_weights,
+            k=rrf_k,
+            normalized=self.routing_profile is not None,
+        )
+        fused = fusion_result.scores
+        rank_traces = fusion_result.rank_traces
         with self.database.session() as session:
-            graph_ids, temporal_ids = self._claim_candidates(session, plan)
-            extra_ids = (set(graph_ids) | set(temporal_ids)) - set(by_id)
-            if extra_ids:
-                extras = list(
-                    session.scalars(
-                        select(MemoryRow)
-                        .options(noload(MemoryRow.sources))
-                        .where(MemoryRow.id.in_(extra_ids))
-                    )
-                )
-                for row in extras:
-                    if not self._memory_allowed(row, request, allowed_scopes):
-                        continue
-                    by_id[row.id] = {
-                        "memory": self.baseline._serialize(row),
-                        "score": 0.0,
-                        "lexical_score": 0.0,
-                        "semantic_score": 0.0,
-                    }
-            rankings = {
-                "fts": [identity for identity in lexical if identity in by_id],
-                "vector": [identity for identity in semantic if identity in by_id],
-                "graph": [identity for identity in graph_ids if identity in by_id],
-                "temporal": [identity for identity in temporal_ids if identity in by_id],
-            }
-            rrf_weights = (
-                RRF_WEIGHTS
-                if self.rrf_channel_profile is None
-                else self.rrf_channel_profile.channel_weights
-            )
-            rrf_k = RRF_K if self.rrf_channel_profile is None else self.rrf_channel_profile.rrf_k
-            fused, rank_traces = reciprocal_rank_fusion(
-                rankings,
-                weights=rrf_weights,
-                k=rrf_k,
-            )
+            governance_started = time.perf_counter()
             claim_rows = list(
                 session.scalars(select(ClaimRow).where(ClaimRow.memory_id.in_(list(by_id))))
             )
@@ -227,7 +224,7 @@ class RetrievalPipeline:
                 ranks = rank_traces.get(memory_id, {})
                 reasons = [
                     channel
-                    for channel in ("fts", "vector", "graph", "temporal")
+                    for channel in ("fts", "vector", "source_anchor", "graph", "temporal")
                     if channel in ranks
                 ]
                 if freshness == "suspect":
@@ -254,6 +251,8 @@ class RetrievalPipeline:
                     "reranker_score": None,
                     "final_reason": reasons or ["baseline fallback"],
                 }
+                if "source_anchor" in execution_recipe.channels:
+                    trace["source_anchor_rank"] = ranks.get("source_anchor")
                 final_score = (
                     base_fused * freshness_factor * feedback_factor * scope_factor
                     if self.scoring_profile is None
@@ -270,30 +269,21 @@ class RetrievalPipeline:
                     }
                 )
             candidates.sort(key=lambda item: float(item["fused_score"]), reverse=True)
-            reranker_mode = "disabled"
-            if self.reranker is not None and request.query.strip():
-                try:
-                    reranked = self.reranker.rerank(request.query, candidates[:40])
-                    for item in candidates[:40]:
-                        identity = str(item["memory"]["id"])
-                        if identity in reranked:
-                            value = reranked[identity]
-                            item["trace"]["reranker_score"] = value
-                            item["fused_score"] = (
-                                float(item["fused_score"]) * 0.7 + value * 0.3
-                                if self.scoring_profile is None
-                                else self.scoring_profile.score(item["trace"])
-                            )
-                            if self.scoring_profile is not None:
-                                item["score"] = round(float(item["fused_score"]), 8)
-                    candidates.sort(key=lambda item: float(item["fused_score"]), reverse=True)
-                    reranker_mode = self.reranker.name
-                except ProviderError:
-                    reranker_mode = "provider-fallback"
-            total = max(int(baseline["total"]), len(candidates))
-            diverse = mmr_select(
+            governance_duration = round((time.perf_counter() - governance_started) * 1000.0, 3)
+            rerank_result = self.rerank_stage.execute(
                 candidates,
-                limit=min(total, request.offset + request.limit),
+                query=request.query,
+                recipe=execution_recipe,
+                routed=self.routing_profile is not None,
+                scoring_profile=self.scoring_profile,
+            )
+            candidates = rerank_result.candidates
+            total = max(int(baseline["total"]), len(candidates))
+            selection_limit = min(total, request.offset + request.limit)
+            diversity_result = self.diversity_stage.execute(
+                candidates,
+                recipe=execution_recipe,
+                limit=selection_limit,
                 lambda_relevance=(
                     self.scoring_profile.mmr_lambda
                     if self.scoring_profile is not None
@@ -302,7 +292,64 @@ class RetrievalPipeline:
                     else self.rrf_channel_profile.mmr_lambda
                 ),
             )
-            selected = diverse[request.offset : request.offset + request.limit]
+            selected = diversity_result.candidates[request.offset : request.offset + request.limit]
+            channel_execution = [item.as_dict() for item in candidate_result.channel_execution]
+            executed_channels = [
+                item.channel for item in candidate_result.channel_execution if item.executed
+            ]
+            contributing_channels = [
+                item.channel
+                for item in candidate_result.channel_execution
+                if item.executed and item.eligible_candidate_count > 0
+            ]
+            degraded_channels = [
+                item.channel
+                for item in candidate_result.channel_execution
+                if item.status in {"unavailable", "provider_fallback"}
+            ]
+            plan_payload = plan.model_dump()
+            plan_payload["routing"].update(
+                {
+                    "execution_mode": (
+                        "candidate_shadow"
+                        if self.routing_profile is not None
+                        else "frozen_production_baseline"
+                    ),
+                    "executed_recipe_id": execution_recipe.recipe_id,
+                    "executed_recipe_sha256": execution_recipe.digest(),
+                    "active_channels": list(execution_recipe.channels),
+                    "requested_channels": list(execution_recipe.channels),
+                    "executed_channels": executed_channels,
+                    "contributing_channels": contributing_channels,
+                    "degraded_channels": degraded_channels,
+                    "channel_execution": channel_execution,
+                    "fusion": execution_recipe.fusion,
+                    "fusion_weights": {
+                        channel: fusion_weights[channel] for channel in execution_recipe.channels
+                    },
+                    "rrf_k": rrf_k,
+                    "score_contract": fusion_result.score_contract,
+                    "source_anchor_weight_policy": (
+                        self.routing_profile.source_anchor_weight_policy
+                        if self.routing_profile is not None
+                        else None
+                    ),
+                    "reranker_policy": execution_recipe.reranker_policy,
+                    "reranker_mode": rerank_result.mode,
+                    "diversity_policy": execution_recipe.diversity_policy,
+                    "candidate_pool_min": execution_recipe.candidate_pool_min,
+                    "candidate_pool_max": execution_recipe.candidate_pool_max,
+                    "rerank_window": execution_recipe.rerank_window,
+                    "fallback_recipe_id": SAFE_RECIPE_ID,
+                    "stage_timings_ms": {
+                        "candidate_retrieval": candidate_result.duration_ms,
+                        "fusion": fusion_result.duration_ms,
+                        "governance_scoring": governance_duration,
+                        "rerank": rerank_result.duration_ms,
+                        "diversity": diversity_result.duration_ms,
+                    },
+                }
+            )
             if record_retrieval:
                 MemoryHealthService.record_retrieval(
                     session,
@@ -311,7 +358,10 @@ class RetrievalPipeline:
             run = RetrievalRunRow(
                 query=request.query,
                 task=task,
-                scope_json={"allowed": sorted(allowed_scopes or [])},
+                scope_json={
+                    "allowed": sorted(allowed_scopes or []),
+                    "retrieval_plan": plan_payload,
+                },
                 selected_memory_ids=[str(item["memory"]["id"]) for item in selected],
                 candidate_features=[
                     {"memory_id": item["memory"]["id"], **item["trace"]} for item in candidates
@@ -330,10 +380,12 @@ class RetrievalPipeline:
                     if self.scoring_profile is not None
                     else f"rrf-channel-shadow-{baseline['mode']}"
                     if self.rrf_channel_profile is not None
+                    else f"routing-shadow-{execution_recipe.route.value}-{baseline['mode']}"
+                    if self.routing_profile is not None
                     else f"rrf-{baseline['mode']}"
                 ),
-                "reranker": reranker_mode,
-                "query_plan": plan.model_dump(),
+                "reranker": rerank_result.mode,
+                "query_plan": plan_payload,
                 "retrieval_run_id": run.id,
                 "config_hash": self.config_hash,
                 "scoring_profile_sha256": (
@@ -342,6 +394,9 @@ class RetrievalPipeline:
                     else self.rrf_channel_profile.digest()
                     if self.rrf_channel_profile is not None
                     else None
+                ),
+                "routing_profile_sha256": (
+                    self.routing_profile.digest() if self.routing_profile is not None else None
                 ),
             }
 
@@ -383,54 +438,6 @@ class RetrievalPipeline:
         ):
             return False
         return request.as_known_at is None or is_known_at(row.created_at, request.as_known_at)
-
-    @staticmethod
-    def _claim_candidates(session: Any, plan: QueryPlan) -> tuple[list[str], list[str]]:
-        if not plan.entities and plan.intent is not QueryIntent.HISTORICAL_AS_OF:
-            return [], []
-        statement = select(ClaimRow, EntityRow).join(
-            EntityRow, EntityRow.id == ClaimRow.subject_entity_id
-        )
-        claims = session.execute(statement.limit(5000)).all()
-        seed_claims = []
-        temporal = []
-        for claim, entity in claims:
-            object_text = str(claim.object_value or "").lower()
-            entity_match = any(
-                token in entity.normalized_name or token in object_text for token in plan.entities
-            )
-            if entity_match:
-                seed_claims.append(claim)
-            if plan.intent is QueryIntent.HISTORICAL_AS_OF and claim.status in {
-                ClaimStatus.ACCEPTED,
-                ClaimStatus.SUPERSEDED,
-                ClaimStatus.HISTORICAL,
-            }:
-                temporal.append(claim.memory_id)
-        graph = [claim.memory_id for claim in seed_claims]
-        if seed_claims:
-            seed_ids = [claim.id for claim in seed_claims]
-            relations = list(
-                session.scalars(
-                    select(ClaimRelationRow).where(
-                        or_(
-                            ClaimRelationRow.from_claim_id.in_(seed_ids),
-                            ClaimRelationRow.to_claim_id.in_(seed_ids),
-                        )
-                    )
-                )
-            )
-            related_ids = {
-                relation.to_claim_id
-                if relation.from_claim_id in seed_ids
-                else relation.from_claim_id
-                for relation in relations
-            }
-            if related_ids:
-                graph.extend(
-                    session.scalars(select(ClaimRow.memory_id).where(ClaimRow.id.in_(related_ids)))
-                )
-        return list(dict.fromkeys(graph)), list(dict.fromkeys(temporal))
 
     @staticmethod
     def _freshness(claims: list[ClaimRow]) -> str:

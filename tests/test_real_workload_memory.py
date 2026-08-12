@@ -22,6 +22,7 @@ from memoryos.evaluation.real_workload_models import (
     MemorySeedSpec,
     WorkloadTaskSpec,
 )
+from memoryos.retrieval_v2.routing import RetrievalRoutingShadowProfile
 from memoryos.retrieval_v2.rrf_shadow import RRFChannelShadowProfile
 from memoryos.retrieval_v2.scoring import CALIBRATABLE_FEATURES, ShadowRetrievalProfile
 
@@ -198,6 +199,8 @@ async def test_three_memory_conditions_use_real_tools_and_temporal_scope(tmp_pat
     assert helpful_trace["trace"]["scope_match"] == "repository"
     assert helpful_trace["trace"]["memory_confidence"] == 0.9
     assert helpful_trace["trace"]["memory_importance"] == 0.7
+    assert memoryos_usage.retrieval_routes[0]["execution_mode"] == "frozen_production_baseline"
+    assert memoryos_usage.retrieval_routes[0]["executed_recipe_id"] == "safe-hybrid-v1"
 
     weights = {name: 0.0 for name in CALIBRATABLE_FEATURES}
     weights["fts_reciprocal_rank"] = 1.0
@@ -290,6 +293,7 @@ def test_rrf_shadow_runtime_is_model_bound_and_nonproduction(tmp_path: Path) -> 
     )
 
     assert runtime.scoring_profile_sha256 == profile.digest()
+    assert runtime.routing_profile_sha256 is None
     assert runtime.embedding_model == "BAAI/bge-small-en-v1.5"
     assert ("MEMORYOS_ANN_ENABLED", "false") in runtime.server_environment
     assert "--rrf-channel-profile" in runtime.server_arguments
@@ -304,4 +308,42 @@ def test_rrf_shadow_runtime_is_model_bound_and_nonproduction(tmp_path: Path) -> 
             rrf_channel_profile=profile,
             embedding_base_url="http://host.docker.internal:8877/v1",
             embedding_model="other-model",
+        )
+
+
+@pytest.mark.asyncio
+async def test_routing_shadow_runtime_is_explicit_and_memoryos_only(tmp_path: Path) -> None:
+    builder = MemoryRuntimeBuilder()
+    profile = RetrievalRoutingShadowProfile()
+    runtime = builder.prepare(
+        ExperimentCondition.MEMORYOS,
+        _task(),
+        _seeds(),
+        tmp_path / "routing-shadow",
+        routing_profile=profile,
+    )
+
+    assert runtime.routing_profile_sha256 == profile.digest()
+    assert runtime.scoring_profile_sha256 is None
+    assert "--routing-profile" in runtime.server_arguments
+    assert runtime.expected_retrieval_config_hash is not None
+    result = await _call_context(runtime)
+    assert result["ok"] is True
+    assert result["result"]["retrieval_mode"].startswith("routing-shadow-")
+    assert result["result"]["debug"]["routing_profile_sha256"] == profile.digest()
+    usage = builder.validate_usage(runtime)
+    assert usage.valid is True
+    assert usage.routing_profile_sha256 == profile.digest()
+    assert usage.retrieval_routes[0]["execution_mode"] == "candidate_shadow"
+    assert (
+        usage.retrieval_routes[0]["recommended_recipe_id"]
+        == usage.retrieval_routes[0]["executed_recipe_id"]
+    )
+    with pytest.raises(MemoryRuntimeError, match="valid only for MemoryOS"):
+        builder.prepare(
+            ExperimentCondition.FLAT_MEMORY,
+            _task(),
+            _seeds(),
+            tmp_path / "routing-flat",
+            routing_profile=profile,
         )

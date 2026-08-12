@@ -22,6 +22,11 @@ from memoryos.evaluation.real_workload_report import RunMode
 from memoryos.evaluation.real_workload_runner import RealWorkloadRunner
 from memoryos.evaluation.real_workload_scoring import HiddenTestResult
 from memoryos.retrieval_v2.pipeline import retrieval_config_hash
+from memoryos.retrieval_v2.routing import (
+    APPROVED_RETRIEVAL_RECIPES,
+    ROUTER_VERSION,
+    SAFE_RECIPE_ID,
+)
 
 IMAGE = "fixture@sha256:" + "a" * 64
 MCP_IMAGE = "fixture-mcp@sha256:" + "b" * 64
@@ -73,12 +78,34 @@ class FixtureAgentExecutor:
         if memory.data_dir is not None:  # type: ignore[attr-defined]
             database = Database(settings_for(memory.data_dir))  # type: ignore[attr-defined]
             generated = memory.generated_memory_ids  # type: ignore[attr-defined]
+            recipe = APPROVED_RETRIEVAL_RECIPES[SAFE_RECIPE_ID]
             with database.session() as session:
                 session.add(
                     RetrievalRunRow(
                         query="fixture",
                         task="fixture",
-                        scope_json={},
+                        scope_json={
+                            "retrieval_plan": {
+                                "routing": {
+                                    "route": "safe_fallback",
+                                    "recommended_recipe_id": SAFE_RECIPE_ID,
+                                    "recommended_recipe_sha256": recipe.digest(),
+                                    "fallback_used": True,
+                                    "router_version": ROUTER_VERSION,
+                                    "execution_mode": "frozen_production_baseline",
+                                    "executed_recipe_id": SAFE_RECIPE_ID,
+                                    "executed_recipe_sha256": recipe.digest(),
+                                    "active_channels": list(recipe.channels),
+                                    "fusion": recipe.fusion,
+                                    "reranker_policy": recipe.reranker_policy,
+                                    "diversity_policy": recipe.diversity_policy,
+                                    "candidate_pool_min": recipe.candidate_pool_min,
+                                    "candidate_pool_max": recipe.candidate_pool_max,
+                                    "rerank_window": recipe.rerank_window,
+                                    "fallback_recipe_id": SAFE_RECIPE_ID,
+                                }
+                            }
+                        },
                         selected_memory_ids=[generated["decision"]],
                         candidate_features=[
                             {
@@ -275,6 +302,9 @@ def test_runner_executes_three_isolated_conditions_and_writes_truthful_report(
     assert memoryos_record["retrieval_candidate_features"][0]["seed_id"] == "decision"
     assert memoryos_record["retrieval_candidate_features"][0]["selected"] is True
     assert "content" not in memoryos_record["retrieval_candidate_features"][0]["trace"]
+    assert memoryos_record["retrieval_routes"][0]["execution_mode"] == (
+        "frozen_production_baseline"
+    )
     assert (tmp_path / "evidence" / "fixture-run" / "report.json").exists()
     assert (tmp_path / "evidence" / "fixture-run" / "run-metadata.json").exists()
     assert report["temporal_validation"][0]["checked_task_ids"] == ("set-value",)

@@ -17,6 +17,8 @@
 - Model-only blind review（2026-08-12）：两名有效隔离子 Agent 完成 1,922×2 判断，第三方角色逐条仲裁 527 个核心分歧，最终 provisional artifact SHA-256 `0c836306283ae750521b5526b844c8b0a0ef6c0a05137bcb5f846dcd558e83e1`。相关性 raw agreement 75.70%，但 Cohen's κ 仅 0.203；安全判断 agreement 97.66%、κ 0.834。原 reviewer-A 轮次因自报越界代码搜索被整轮作废并替换。该结果仅用于 rubric/主动学习诊断，不改变 `pilot_unlabeled`，不批准生产权重。
 - AI-only executable calibration（2026-08-12）：已冻结 `memoryos-ai-executable-calibration-v1` 协议，实现三 provider/三模型家族双顺序 AI Jury、运行时/提示/响应哈希绑定、概率弱监督、真实 full/minus-memory 消融、符号约束 pairwise 权重训练、dev 数据选择正则强度、显式 shadow scoring、仓库 holdout 和 sealed promotion gate；训练命令拒绝 test、fixture 与重复 observation，要求 AI Jury + real executable 两种标签都位于 train 分区，并把完整 train/dev 输入哈希绑定到候选 profile；晋级 CI 按 task 聚类且要求完整 task×agent 矩阵。新增 SWE-bench Verified `psf__requests-6028`：2 个协议有效 real-agent pair 中 1 个 full 成功/minus 失败并生成真实 TRAIN label，另 1 个双臂均成功；full 相对 minus 的平均耗时差为 -170.10 秒。readiness 现为真实消融对 2、有效 jury provider/模型家族 1、sealed promotion tasks 0；单仓库输入被训练器按最低 3 仓库规则拒绝，生产权重保持冻结，且不存在自动激活路径。
 - Public BGE retrieval bootstrap（2026-08-13）：SWE-Gym 1,942 条可用查询、仓库级 train/dev/test 和真实 `BAAI/bge-small-en-v1.5` 产生 19.25% FTS / 80.75% vector 的非生产先验；仅投影 FTS/vector 相对 RRF 比例，graph/temporal/K/MMR 及安全门全部冻结。真实 MemoryOS 同候选池 52-query 回放的仓库宏平均 NDCG@10 为 0.49611→0.51330、required Recall@5 为 0.11538→0.17308，但 NDCG 95% CI 跨零，且 Pandas 两指标回退。机器门禁结论为 `retain_frozen_baseline`；一组 pytest 真实 Agent full/minus-memory 显示记忆有帮助，但不识别该权重比例。生产权重未变。
+- Query-adaptive retrieval（2026-08-13）：已实现声明式 `RetrievalPlan` 候选架构和 router v2。执行链拆为 candidate/fusion/governance/rerank/diversity；精确查询可用独立 Source Anchor 通道；请求与实际通道能力、降级、reranker、融合参数、阶段耗时和 bounded score contract 均进入证据。路由决策只使用离散信号和原因码，不再生成或阈值化伪概率。聚合器按 task 而非重复运行 bootstrap，并设 worst repository/agent/recipe、安全、成本和时延门禁。该能力只能显式 Shadow 启用；默认生产仍执行冻结 safe-hybrid，当前没有真实 Agent 因果数据支持激活。
+- Routing hardening 本地验证（2026-08-13）：全仓 Ruff/format PASS，`memoryos` 106 个源码文件 Mypy 0 error；后端全量 262 passed、0 failed（1 条上游 Starlette/httpx 弃用 warning）。这是实现回归证据，不是路由效果证据。
 
 MemoryOS V2.1 发布快照中的 A47 因当时未提供真实 coding-agent endpoint 与凭据而走 `external_blocker` 路径；该历史验收记录保持不变。2026-08-12 当前开发环境已接入隔离的真实 Codex runtime 并取得上述 2 个 full/minus pair，但仍不足以回写旧版 50-task 验收或作 confirmatory 产品效果声明。50-task fixture 仍只证明 harness/metrics/CI plumbing。
 
@@ -34,6 +36,7 @@ MemoryOS V2.1 发布快照中的 A47 因当时未提供真实 coding-agent endpo
 | Model review exercise | 双模型盲评、527 条第三方仲裁、全链哈希与银标后验诊断 | Provisional only; no weight promotion |
 | AI-only weight calibration | 3+ 模型家族双顺序 Jury、真实单记忆消融、受约束学习、sealed 多 Agent 晋级门禁 | 2 real pairs / 1 TRAIN label; fitting blocked by evidence gates; weights frozen |
 | Public retrieval prior | SWE-Gym 仓库 holdout、真实 BGE、同候选池 RRF Shadow、分层 bootstrap 与最差仓库门禁 | 52-query diagnostic positive point estimate; gate failed; frozen baseline retained |
+| Query-adaptive retrieval | allowlisted recipes、五阶段执行、Source Anchor exact channel、实际能力遥测、bounded score contract、task-level promotion gate | Candidate Shadow complete; production frozen; sealed causal matrix pending |
 | Agent A/B | V2.1 ≥50 paired fixture；V2.2 已完成 Requests 真实模型 2 次 full/minus repeat；50+ confirmatory 样本与多模型仍未完成 | Exploratory real evidence only |
 | Consolidation | 严格 support/counter 白名单、独立来源、provider/prompt、offline fallback、candidate-only | Complete |
 | Memory Health | Hot/Warm/Cold/Archived、解释分数、可逆 archive、唯一 truth 保护、candidate distillation | Complete |
@@ -87,6 +90,7 @@ Playwright 的 7 个 skip 是明确的设备矩阵不适用项：移动布局断
 
 - 当前已有一个可放入隔离容器的真实 Codex runtime，但仍缺至少两个独立 provider/模型家族、短期凭据与 allowlisted gateway、完整 cost 计量、跨仓库 train/dev 证据，以及 50-task × 2 unseen-agent sealed promotion 矩阵；现有 Requests 结果只作探索性校准证据。
 - Public RRF Shadow 只覆盖两个 public test 仓库，bootstrap 区间跨零且存在 Pandas 域回退；不能用其 19/81 比例替换生产 50/50 基线。下一轮需增加独立仓库，并直接做 frozen-baseline 与 candidate-weight 的成对 Agent Shadow，而不是重复同标签生成器的数据。
+- router v2 已删除 query-time confidence 阈值和虚构概率，规则分类只输出原因码，但 recipe 选择仍是确定性候选；它解决执行拓扑和可观测性问题，没有证明“哪个 recipe 对真实 Agent 最好”。80/1000 pool、40 rerank window、冻结 RRF/MMR 等结构参数仍是版本化启发式基线。在跨仓库、跨模型成对 Shadow 与 sealed promotion 通过前，不得接入默认服务。
 - Pytest 的 FastAPI/Starlette TestClient 与 Python 3.12 sqlite datetime adapter 发出弃用 warning；所有测试通过。
 - PyInstaller 报告未安装可选 `tzdata`、`pysqlite2`、`MySQLdb`；MemoryOS 使用内置 SQLite，实际冻结包迁移与功能 smoke 已通过。
 - 冻结 MCP 子进程有一条 `pydantic-settings` forward-reference warning；协议初始化、12 个工具和跨进程读写均通过。
