@@ -188,7 +188,7 @@ def validate_ai_calibration_assets(
             raise ValueError(f"evidence artifact is missing: {artifact.path}")
         if _file_sha256(artifact_path) != artifact.file_sha256:
             raise ValueError(f"evidence artifact hash is stale: {artifact.path}")
-        _validate_evidence_semantics(artifact, artifact_path)
+        _validate_evidence_semantics(artifact, artifact_path, root)
     if readiness.gates.effective_jury_model_families != max(
         (item.effective_model_families for item in readiness.evidence),
         default=0,
@@ -216,6 +216,7 @@ def _file_sha256(path: Path) -> str:
 def _validate_evidence_semantics(
     artifact: CalibrationEvidenceItem,
     artifact_path: Path,
+    repository_root: Path,
 ) -> None:
     try:
         payload = json.loads(artifact_path.read_bytes())
@@ -242,44 +243,190 @@ def _validate_evidence_semantics(
             raise ValueError("fixture readiness evidence unexpectedly used a real agent")
         if payload.get("effect_claim") != "none":
             raise ValueError("fixture readiness evidence must not claim an effect")
-    elif artifact.artifact_id == "requests-6028-real-agent-ablation-v1":
-        runtime = payload.get("runtime")
-        pairs = payload.get("pairs")
-        aggregate = payload.get("aggregate")
-        training = payload.get("training_observation")
-        if not isinstance(runtime, dict) or runtime.get("evidence_type") != "real_coding_agent":
-            raise ValueError("real-agent ablation evidence has invalid runtime metadata")
-        if not isinstance(pairs, list) or len(pairs) != artifact.executable_ablation_pairs:
-            raise ValueError("real-agent ablation pair count is stale")
-        if artifact.records != 2 * len(pairs) or artifact.real_agent_tasks != 1:
-            raise ValueError("real-agent ablation record or task count is stale")
-        for pair in pairs:
-            if not isinstance(pair, dict):
-                raise ValueError("real-agent ablation pair must be an object")
-            full = pair.get("full")
-            minus = pair.get("minus")
-            if not isinstance(full, dict) or not isinstance(minus, dict):
-                raise ValueError("real-agent ablation pair is missing an arm")
-            if full.get("protocol_valid") is not True or minus.get("protocol_valid") is not True:
-                raise ValueError("published real-agent ablation arms must be protocol-valid")
-            if full.get("target_memory_selected") is not True:
-                raise ValueError("published full arm did not select the target memory")
-            if minus.get("target_memory_selected") is not False:
-                raise ValueError("published minus arm selected the excluded target memory")
-            if full.get("prompt_sha256") != minus.get("prompt_sha256"):
-                raise ValueError("published real-agent ablation pair changed its prompt")
-            if full.get("runtime_sha256") != minus.get("runtime_sha256"):
-                raise ValueError("published real-agent ablation pair changed its runtime")
-        if not isinstance(aggregate, dict) or aggregate.get("safety_worsened_pairs") != 0:
-            raise ValueError("real-agent ablation aggregate failed its safety gate")
-        if aggregate.get("production_eligible") is not False:
-            raise ValueError("real-agent ablation evidence cannot be promotion evidence")
-        if not isinstance(training, dict) or training.get("real_executable_labels") != 1:
-            raise ValueError("real-agent training-observation count is stale")
-        if payload.get("production_weights_changed") is not False:
-            raise ValueError("real-agent evidence must not claim production activation")
+    elif artifact.artifact_id in {
+        "requests-6028-real-agent-ablation-v1",
+        "swebench-cross-repository-real-agent-ablation-v1",
+    }:
+        _validate_real_agent_ablation_evidence(artifact, payload, repository_root)
     else:
         raise ValueError(f"unknown checked-in evidence artifact: {artifact.artifact_id}")
+
+
+def _validate_real_agent_ablation_evidence(
+    artifact: CalibrationEvidenceItem,
+    payload: dict[str, object],
+    repository_root: Path,
+) -> None:
+    if artifact.artifact_id == "requests-6028-real-agent-ablation-v1":
+        _validate_pinned_evidence_file(payload.get("manifest"), repository_root)
+    else:
+        task_pack = payload.get("task_pack")
+        if not isinstance(task_pack, dict):
+            raise ValueError("cross-repository evidence is missing its task-pack bindings")
+        for key in ("manifest", "partition_lock", "provenance", "scorer_verification"):
+            _validate_pinned_evidence_file(task_pack.get(key), repository_root)
+
+    runtime = payload.get("runtime")
+    pairs = payload.get("pairs")
+    aggregate = payload.get("aggregate")
+    training = payload.get("training_observations", payload.get("training_observation"))
+    if not isinstance(runtime, dict) or runtime.get("evidence_type") != "real_coding_agent":
+        raise ValueError("real-agent ablation evidence has invalid runtime metadata")
+    if not isinstance(pairs, list) or len(pairs) != artifact.executable_ablation_pairs:
+        raise ValueError("real-agent ablation pair count is stale")
+    if artifact.records != 2 * len(pairs):
+        raise ValueError("real-agent ablation record count is stale")
+
+    task_ids: set[str] = set()
+    discordant_pairs = 0
+    helped_pairs = 0
+    harmed_pairs = 0
+    for pair in pairs:
+        if not isinstance(pair, dict):
+            raise ValueError("real-agent ablation pair must be an object")
+        pair_task = pair.get("task_id")
+        if pair_task is not None:
+            if not isinstance(pair_task, str) or not pair_task:
+                raise ValueError("real-agent ablation pair has an invalid task ID")
+            task_ids.add(pair_task)
+        partition = pair.get("partition")
+        if partition is not None and partition not in {"train", "dev"}:
+            raise ValueError("published real-agent ablation pair has an invalid partition")
+        scorer_hash = pair.get("scorer_sha256")
+        if scorer_hash is not None and not _is_sha256(scorer_hash):
+            raise ValueError("published real-agent ablation pair has an invalid scorer hash")
+        full = pair.get("full")
+        minus = pair.get("minus")
+        if not isinstance(full, dict) or not isinstance(minus, dict):
+            raise ValueError("real-agent ablation pair is missing an arm")
+        if full.get("protocol_valid") is not True or minus.get("protocol_valid") is not True:
+            raise ValueError("published real-agent ablation arms must be protocol-valid")
+        if full.get("target_memory_selected") is not True:
+            raise ValueError("published full arm did not select the target memory")
+        if minus.get("target_memory_selected") is not False:
+            raise ValueError("published minus arm selected the excluded target memory")
+        if full.get("prompt_sha256") != minus.get("prompt_sha256"):
+            raise ValueError("published real-agent ablation pair changed its prompt")
+        if full.get("runtime_sha256") != minus.get("runtime_sha256"):
+            raise ValueError("published real-agent ablation pair changed its runtime")
+        for arm in (full, minus):
+            for field in (
+                "patch_sha256",
+                "prompt_sha256",
+                "runtime_sha256",
+                "source_report_sha256",
+            ):
+                if not _is_sha256(arm.get(field)):
+                    raise ValueError(f"published real-agent arm has an invalid {field}")
+            if arm.get("cross_project_leaks", 0) != 0 or arm.get("stale_memory_uses", 0) != 0:
+                raise ValueError("published real-agent ablation arm failed a safety gate")
+        full_success = full.get("hidden_test_success")
+        minus_success = minus.get("hidden_test_success")
+        if not isinstance(full_success, bool) or not isinstance(minus_success, bool):
+            raise ValueError("published real-agent ablation arm omitted its outcome")
+        discordant = full_success != minus_success
+        if pair.get("discordant_success") is not discordant:
+            raise ValueError("published real-agent ablation discordance flag is stale")
+        discordant_pairs += int(discordant)
+        helped_pairs += int(full_success and not minus_success)
+        harmed_pairs += int(minus_success and not full_success)
+
+    if task_ids:
+        if len(task_ids) != artifact.real_agent_tasks:
+            raise ValueError("real-agent ablation task count is stale")
+    elif artifact.real_agent_tasks != 1:
+        raise ValueError("single-task real-agent evidence has a stale task count")
+    if not isinstance(aggregate, dict) or aggregate.get("safety_worsened_pairs") != 0:
+        raise ValueError("real-agent ablation aggregate failed its safety gate")
+    if aggregate.get("attempted_pairs") != len(pairs):
+        raise ValueError("real-agent ablation aggregate attempted-pair count is stale")
+    if aggregate.get("valid_pairs") != len(pairs):
+        raise ValueError("real-agent ablation aggregate valid-pair count is stale")
+    if aggregate.get("helped_pairs") != helped_pairs:
+        raise ValueError("real-agent ablation aggregate helped-pair count is stale")
+    if aggregate.get("harmed_pairs") != harmed_pairs:
+        raise ValueError("real-agent ablation aggregate harmed-pair count is stale")
+    if aggregate.get("unchanged_pairs") != len(pairs) - discordant_pairs:
+        raise ValueError("real-agent ablation aggregate unchanged-pair count is stale")
+    if aggregate.get("production_eligible") is not False:
+        raise ValueError("real-agent ablation evidence cannot be promotion evidence")
+    if not isinstance(training, dict):
+        raise ValueError("real-agent training-observation summary is missing")
+    if training.get("real_executable_labels") != discordant_pairs:
+        raise ValueError("real-agent training-observation count is stale")
+
+    invalidated = payload.get("invalidated_attempts", [])
+    if not isinstance(invalidated, list):
+        raise ValueError("real-agent invalidated-attempt register must be a list")
+    for attempt in invalidated:
+        if not isinstance(attempt, dict):
+            raise ValueError("real-agent invalidated attempt must be an object")
+        if attempt.get("excluded_from_counts") is not True:
+            raise ValueError("invalidated real-agent attempt was not excluded from counts")
+        if attempt.get("reason") != "scorer_invalid":
+            raise ValueError("real-agent attempt has an unsupported invalidation reason")
+        old_hash = attempt.get("old_scorer_sha256")
+        corrected_hash = attempt.get("corrected_scorer_sha256")
+        if not _is_sha256(old_hash) or not _is_sha256(corrected_hash) or old_hash == corrected_hash:
+            raise ValueError("real-agent scorer invalidation hashes are malformed")
+        checks = attempt.get("corrected_scorer_checks")
+        if not isinstance(checks, dict):
+            raise ValueError("real-agent scorer invalidation lacks corrected checks")
+        if checks.get("base_exit_code") == 0 or checks.get("solution_exit_code") != 0:
+            raise ValueError("corrected scorer does not separate the base and solution")
+        captured_exits = checks.get("captured_arm_exit_codes")
+        if not isinstance(captured_exits, dict) or not captured_exits:
+            raise ValueError("scorer invalidation lacks captured-arm rechecks")
+        if set(captured_exits) - {"full", "minus"} or any(
+            value not in {0, 1} for value in captured_exits.values()
+        ):
+            raise ValueError("scorer invalidation has malformed captured-arm rechecks")
+        misclassified_arms = attempt.get("misclassified_arms")
+        if (
+            not isinstance(misclassified_arms, list)
+            or not misclassified_arms
+            or any(arm not in captured_exits for arm in misclassified_arms)
+            or any(captured_exits[arm] != 0 for arm in misclassified_arms)
+        ):
+            raise ValueError("scorer invalidation does not identify a corrected false negative")
+
+    non_evidence = payload.get("non_evidence_attempts", [])
+    if not isinstance(non_evidence, list):
+        raise ValueError("real-agent non-evidence attempt register must be a list")
+    for attempt in non_evidence:
+        if not isinstance(attempt, dict):
+            raise ValueError("real-agent non-evidence attempt must be an object")
+        if attempt.get("excluded_from_counts") is not True:
+            raise ValueError("incomplete real-agent attempt was not excluded from counts")
+        if not isinstance(attempt.get("run_id"), str) or not isinstance(attempt.get("reason"), str):
+            raise ValueError("incomplete real-agent attempt lacks an identity or reason")
+    if payload.get("production_weights_changed") is not False:
+        raise ValueError("real-agent evidence must not claim production activation")
+
+
+def _is_sha256(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def _validate_pinned_evidence_file(value: object, repository_root: Path) -> None:
+    if not isinstance(value, dict):
+        raise ValueError("real-agent evidence file binding must be an object")
+    relative = value.get("path")
+    expected_hash = value.get("file_sha256")
+    if not isinstance(relative, str) or not _is_sha256(expected_hash):
+        raise ValueError("real-agent evidence file binding is malformed")
+    relative_path = Path(relative)
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise ValueError("real-agent evidence file binding is unsafe")
+    resolved = (repository_root / relative_path).resolve()
+    if not resolved.is_relative_to(repository_root) or not resolved.is_file():
+        raise ValueError("real-agent evidence file binding is missing")
+    if _file_sha256(resolved) != expected_hash:
+        raise ValueError("real-agent evidence file binding hash is stale")
 
 
 __all__ = [

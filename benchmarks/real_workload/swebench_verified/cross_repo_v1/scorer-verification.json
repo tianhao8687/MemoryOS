@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "verified_at": "2026-08-12T13:18:26Z",
+  "container_image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+  "network": "none",
+  "read_only_root": true,
+  "results": [
+    {
+      "task_id": "pylint-pr-4551",
+      "hidden_patch_sha256": "357ad55bdd698c04250a1f087258a5c667bba9cd29f47cbeda6c91be33adb79c",
+      "base_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "base_exit_code": 1,
+      "solution_commit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+      "solution_exit_code": 0
+    },
+    {
+      "task_id": "pytest-pr-5787",
+      "hidden_patch_sha256": "b80cae280f0570bf2a43fc20be717b11e5b2b4e3b9ab59d6c820ca4776ff1a7e",
+      "base_commit": "955e54221008aba577ecbaefa15679f6777d3bf8",
+      "base_exit_code": 1,
+      "solution_commit": "01082fea12649384aab44306f49503de1374c4a1",
+      "solution_exit_code": 0
+    },
+    {
+      "task_id": "seaborn-pr-3069",
+      "hidden_patch_sha256": "c7eddfb75aec2898df4dff1c9bfec1e222621e22a4b4548e361113b693e775fc",
+      "base_commit": "54cab15bdacfaa05a88fbc5502a5b322d99f148e",
+      "base_exit_code": 1,
+      "solution_commit": "a767d666d45a6f105177e4720669b85c92ee2432",
+      "solution_exit_code": 0
+    }
+  ]
+}

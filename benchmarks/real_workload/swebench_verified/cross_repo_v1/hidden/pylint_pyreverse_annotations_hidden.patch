@@ -1,0 +1,256 @@
+diff --git a/benchmark_hidden_test.py b/benchmark_hidden_test.py
+new file mode 100644
+index 0000000..1f3fbef
+--- /dev/null
++++ b/benchmark_hidden_test.py
+@@ -0,0 +1,250 @@
++from __future__ import annotations
++
++import ast
++import collections
++import os
++import runpy
++import sys
++import traceback
++from collections import defaultdict
++from pathlib import Path
++from types import ModuleType, SimpleNamespace
++
++
++class InferenceError(Exception):
++    pass
++
++
++class Node:
++    pass
++
++
++class Name(Node):
++    def __init__(self, name: str) -> None:
++        self.name = name
++
++    def as_string(self) -> str:
++        return self.name
++
++    def infer(self):
++        yield ClassDef(self.name)
++
++
++class Subscript(Name):
++    pass
++
++
++class Attribute(Name):
++    pass
++
++
++class Instance(Node):
++    def __init__(self, proxied: Node) -> None:
++        self._proxied = proxied
++
++
++class ClassDef(Name):
++    pass
++
++
++class FunctionDef(Name):
++    pass
++
++
++class AnnAssign(Node):
++    def __init__(self, annotation: Node) -> None:
++        self.annotation = annotation
++
++
++class Assign(Node):
++    pass
++
++
++class Arguments(Node):
++    pass
++
++
++class AssignName(Name):
++    def __init__(self, name: str, frame: object, annotation: Node | None, default: object) -> None:
++        super().__init__(name)
++        self._frame = frame
++        self.parent = AnnAssign(annotation) if annotation is not None else Node()
++        self._default = default
++
++    def frame(self) -> object:
++        return self._frame
++
++    def root(self) -> object:
++        return self._frame
++
++    def infer(self):
++        yield self._default
++
++    def assign_type(self) -> Node:
++        return self.parent
++
++
++class AssignAttr(Name):
++    pass
++
++
++class InferredDefault:
++    def __init__(self, value: object) -> None:
++        self.value = value
++
++
++def astroid_module() -> ModuleType:
++    module = ModuleType("astroid")
++    for value in (
++        AnnAssign,
++        Arguments,
++        Assign,
++        AssignAttr,
++        AssignName,
++        Attribute,
++        ClassDef,
++        FunctionDef,
++        InferenceError,
++        Instance,
++        Name,
++        Subscript,
++    ):
++        setattr(module, value.__name__, value)
++    module.Uninferable = object()
++    return module
++
++
++def load_method(path: Path, class_name: str, method_name: str, namespace: dict[str, object]):
++    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
++    class_node = next(
++        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == class_name
++    )
++    method = next(
++        node
++        for node in class_node.body
++        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == method_name
++    )
++    method.decorator_list = []
++    isolated = ast.Module(body=[method], type_ignores=[])
++    ast.fix_missing_locations(isolated)
++    exec(compile(isolated, str(path), "exec"), namespace)
++    return namespace[method_name]
++
++
++def load_class(path: Path, class_name: str, namespace: dict[str, object]):
++    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
++    body = [
++        node
++        for node in tree.body
++        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
++        or isinstance(node, ast.ClassDef)
++        and node.name in {"IdGeneratorMixIn", class_name}
++    ]
++    isolated = ast.Module(body=body, type_ignores=[])
++    ast.fix_missing_locations(isolated)
++    exec(compile(isolated, str(path), "exec"), namespace)
++    return namespace[class_name]
++
++
++astroid = astroid_module()
++sys.modules["astroid"] = astroid
++utils_namespace = runpy.run_path(
++    "pylint/pyreverse/utils.py",
++    run_name="pylint.pyreverse.utils",
++)
++utils = ModuleType("pylint.pyreverse.utils")
++utils.__dict__.update(utils_namespace)
++
++pylint_package = ModuleType("pylint")
++pylint_package.__path__ = []
++pyreverse_package = ModuleType("pylint.pyreverse")
++pyreverse_package.__path__ = []
++graph = ModuleType("pylint.graph")
++graph.DotBackend = type("DotBackend", (), {})
++vcgutils = ModuleType("pylint.pyreverse.vcgutils")
++vcgutils.VCGPrinter = type("VCGPrinter", (), {})
++sys.modules.update(
++    {
++        "pylint": pylint_package,
++        "pylint.graph": graph,
++        "pylint.pyreverse": pyreverse_package,
++        "pylint.pyreverse.utils": utils,
++        "pylint.pyreverse.vcgutils": vcgutils,
++    }
++)
++
++
++class Frame:
++    def __init__(self) -> None:
++        self.locals_type: defaultdict[str, list[object]] = defaultdict(list)
++
++    @staticmethod
++    def __contains__(_: str) -> bool:
++        return True
++
++
++frame = Frame()
++annotation = Name("Widget")
++default = InferredDefault(None)
++assignment = AssignName("item", frame, annotation, default)
++linker_type = load_class(
++    Path("pylint/pyreverse/inspector.py"),
++    "Linker",
++    {
++        "astroid": astroid,
++        "collections": collections,
++        "os": os,
++        "traceback": traceback,
++        "utils": utils,
++    },
++)
++linker = object.__new__(linker_type)
++linker.visit_assignname(assignment)
++inferred_names = [getattr(value, "name", "") for value in frame.locals_type["item"]]
++inferred_names.extend(
++    getattr(value, "name", "")
++    for value in getattr(frame, "locals_type_annotation", {}).values()
++)
++if not any("Widget" in name for name in inferred_names):
++    raise AssertionError("annotated assignment was reduced to its default-value inference")
++
++plain_default = InferredDefault(1)
++plain_assignment = AssignName("plain", frame, None, plain_default)
++linker.visit_assignname(plain_assignment)
++if plain_default not in frame.locals_type["plain"]:
++    raise AssertionError("unannotated assignment lost its inferred-type fallback")
++
++writer_namespace = runpy.run_path(
++    "pylint/pyreverse/writer.py",
++    run_name="benchmark_writer",
++)
++dot_writer_type = writer_namespace["DotWriter"]
++writer = object.__new__(dot_writer_type)
++writer.config = SimpleNamespace(only_classnames=False)
++function = SimpleNamespace(
++    name="render",
++    args=SimpleNamespace(
++        posonlyargs=[],
++        posonlyargs_annotations=[],
++        args=[Name("self"), Name("value")],
++        annotations=[None, Name("int")],
++        kwonlyargs=[],
++        kwonlyargs_annotations=[],
++        vararg=None,
++        varargannotation=None,
++        kwarg=None,
++        kwargannotation=None,
++    ),
++    returns=Name("str"),
++)
++diagram_object = SimpleNamespace(
++    title="Example",
++    shape="class",
++    attrs=[],
++    methods=[function],
++    node=SimpleNamespace(type="class"),
++)
++label = writer.get_values(diagram_object)["label"]
++normalized_label = "".join(label.split())
++if "value:int" not in normalized_label or "):str" not in normalized_label:
++    raise AssertionError(f"method annotations were omitted from the UML label: {label!r}")

@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-12T12:00:00Z",
+  "locked_before_outcomes": true,
+  "dataset_revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
+  "policy": "Repository-level partition assignment is immutable after the first agent arm starts.",
+  "assignments": [
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "repository_id": "pylint-dev-pylint",
+      "task_id": "pylint-pr-4551",
+      "partition": "train"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5787",
+      "repository_id": "pytest-dev-pytest",
+      "task_id": "pytest-pr-5787",
+      "partition": "train"
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3069",
+      "repository_id": "mwaskom-seaborn",
+      "task_id": "seaborn-pr-3069",
+      "partition": "dev"
+    }
+  ]
+}
