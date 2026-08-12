@@ -21,6 +21,7 @@ from memoryos.evaluation.real_workload_models import ExperimentCondition, RealWo
 from memoryos.evaluation.real_workload_report import RunMode
 from memoryos.evaluation.real_workload_runner import RealWorkloadRunner
 from memoryos.evaluation.real_workload_scoring import HiddenTestResult
+from memoryos.retrieval_v2.pipeline import retrieval_config_hash
 
 IMAGE = "fixture@sha256:" + "a" * 64
 MCP_IMAGE = "fixture-mcp@sha256:" + "b" * 64
@@ -79,9 +80,27 @@ class FixtureAgentExecutor:
                         task="fixture",
                         scope_json={},
                         selected_memory_ids=[generated["decision"]],
-                        candidate_features=[],
+                        candidate_features=[
+                            {
+                                "memory_id": generated["decision"],
+                                "fts_rank": 1,
+                                "vector_rank": None,
+                                "graph_rank": None,
+                                "temporal_rank": 1,
+                                "freshness": "fresh",
+                                "scope_match": "repository",
+                                "truth_state": "resolved",
+                                "evidence_count": 1,
+                                "helpful_feedback_count": 0,
+                                "unhelpful_feedback_count": 0,
+                                "memory_confidence": 0.9,
+                                "memory_importance": 0.8,
+                                "reranker_score": None,
+                                "content": "must-not-leave-local-memory-state",
+                            }
+                        ],
                         context_manifest=[],
-                        config_hash="d" * 64,
+                        config_hash=retrieval_config_hash(),
                     )
                 )
             database.close()
@@ -246,9 +265,16 @@ def test_runner_executes_three_isolated_conditions_and_writes_truthful_report(
     assert report["effect_claim"] == "none"
     assert report["sample_size"] == 1
     assert report["condition_run_count"] == 3
+    assert len(report["runtime_spec_sha256"]) == 64
     assert len({record["prompt_sha256"] for record in report["records"]}) == 1
     assert report["aggregates"]["flat_memory"]["memory_tool_calls"] == 1
     assert report["aggregates"]["memoryos"]["retrieval_runs"] == 1
+    memoryos_record = next(
+        record for record in report["records"] if record["condition"] == "memoryos"
+    )
+    assert memoryos_record["retrieval_candidate_features"][0]["seed_id"] == "decision"
+    assert memoryos_record["retrieval_candidate_features"][0]["selected"] is True
+    assert "content" not in memoryos_record["retrieval_candidate_features"][0]["trace"]
     assert (tmp_path / "evidence" / "fixture-run" / "report.json").exists()
     assert (tmp_path / "evidence" / "fixture-run" / "run-metadata.json").exists()
     assert report["temporal_validation"][0]["checked_task_ids"] == ("set-value",)

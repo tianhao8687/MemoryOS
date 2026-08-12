@@ -11,13 +11,14 @@ from sqlalchemy import select
 
 from memoryos.config import settings_for
 from memoryos.db import Database
-from memoryos.db.models import MemoryRow
+from memoryos.db.models import MemoryRow, RetrievalRunRow
 from memoryos.evaluation.real_workload_memory import MemoryRuntime, MemoryRuntimeBuilder
 from memoryos.evaluation.real_workload_models import (
     ExperimentCondition,
     MemorySeedSpec,
     WorkloadTaskSpec,
 )
+from memoryos.retrieval_v2.scoring import CALIBRATABLE_FEATURES, ShadowRetrievalProfile
 
 IMAGE = "python:3.12-slim@sha256:" + "a" * 64
 
@@ -171,6 +172,47 @@ async def test_three_memory_conditions_use_real_tools_and_temporal_scope(tmp_pat
     assert memoryos_usage.tool_calls == 1
     assert memoryos_usage.retrieval_runs == 1
     assert memoryos_usage.selected_seed_ids == ("helpful",)
+    helpful_trace = next(
+        item for item in memoryos_usage.candidate_features if item["seed_id"] == "helpful"
+    )
+    assert helpful_trace["selected"] is True
+    assert helpful_trace["trace"]["scope_match"] == "repository"
+    assert helpful_trace["trace"]["memory_confidence"] == 0.9
+    assert helpful_trace["trace"]["memory_importance"] == 0.7
+
+    weights = {name: 0.0 for name in CALIBRATABLE_FEATURES}
+    weights["fts_reciprocal_rank"] = 1.0
+    profile = ShadowRetrievalProfile(
+        source_profile_sha256="a" * 64,
+        training_protocol_sha256="b" * 64,
+        weights=weights,
+        mmr_lambda=0.78,
+    )
+    shadow = builder.prepare(
+        ExperimentCondition.MEMORYOS,
+        task,
+        seeds,
+        tmp_path / "memoryos-shadow",
+        scoring_profile=profile,
+    )
+    shadow_result = await _call_context(shadow)
+    assert shadow_result["ok"] is True
+    assert shadow_result["result"]["retrieval_mode"].startswith("shadow-profile-")
+    shadow_usage = builder.validate_usage(shadow)
+    assert shadow_usage.valid is True
+    assert shadow_usage.scoring_profile_sha256 == profile.digest()
+    assert shadow_usage.retrieval_config_hashes != memoryos_usage.retrieval_config_hashes
+
+    assert shadow.data_dir is not None
+    shadow_database = Database(settings_for(shadow.data_dir))
+    with shadow_database.session() as session:
+        shadow_run = session.scalar(select(RetrievalRunRow))
+        assert shadow_run is not None
+        shadow_run.config_hash = "0" * 64
+    shadow_database.close()
+    tampered_usage = builder.validate_usage(shadow)
+    assert tampered_usage.valid is False
+    assert "does not match" in " ".join(tampered_usage.errors)
 
     assert memoryos.data_dir is not None
     database = Database(settings_for(memoryos.data_dir))

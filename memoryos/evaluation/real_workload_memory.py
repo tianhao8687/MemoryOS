@@ -29,6 +29,26 @@ from memoryos.evaluation.real_workload_models import (
     MemorySeedSpec,
     WorkloadTaskSpec,
 )
+from memoryos.retrieval_v2.pipeline import retrieval_config_hash
+from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
+
+_PUBLISHABLE_RETRIEVAL_FEATURES = frozenset(
+    {
+        "fts_rank",
+        "vector_rank",
+        "graph_rank",
+        "temporal_rank",
+        "scope_match",
+        "freshness",
+        "truth_state",
+        "evidence_count",
+        "helpful_feedback_count",
+        "unhelpful_feedback_count",
+        "memory_confidence",
+        "memory_importance",
+        "reranker_score",
+    }
+)
 
 
 class MemoryRuntimeError(RuntimeError):
@@ -43,6 +63,8 @@ class MemoryRuntime:
     data_dir: Path | None
     seed_ids: tuple[str, ...]
     generated_memory_ids: dict[str, str]
+    scoring_profile_sha256: str | None
+    expected_retrieval_config_hash: str | None
     server_arguments: tuple[str, ...]
 
 
@@ -53,6 +75,9 @@ class MemoryUsageEvidence:
     tool_calls: int
     retrieval_runs: int
     selected_seed_ids: tuple[str, ...]
+    candidate_features: tuple[dict[str, Any], ...]
+    retrieval_config_hashes: tuple[str, ...]
+    scoring_profile_sha256: str | None
     errors: tuple[str, ...]
 
     def as_dict(self) -> dict[str, Any]:
@@ -76,11 +101,14 @@ class MemoryRuntimeBuilder:
         path_mapper: Callable[[Path], str] = str,
         python_path: str | None = None,
         http_url: str | None = None,
+        scoring_profile: ShadowRetrievalProfile | None = None,
     ) -> MemoryRuntime:
         destination = run_dir.resolve()
         destination.mkdir(parents=True, exist_ok=False)
         config_path = destination / "mcp.json"
         selected = _select_seeds(task, seeds)
+        if scoring_profile is not None and condition is not ExperimentCondition.MEMORYOS:
+            raise MemoryRuntimeError("shadow scoring profiles are valid only for MemoryOS")
         if condition is ExperimentCondition.NO_MEMORY:
             _write_json(config_path, {"mcpServers": {}})
             return MemoryRuntime(
@@ -90,6 +118,8 @@ class MemoryRuntimeBuilder:
                 data_dir=None,
                 seed_ids=tuple(seed.id for seed in selected),
                 generated_memory_ids={},
+                scoring_profile_sha256=None,
+                expected_retrieval_config_hash=None,
                 server_arguments=(),
             )
 
@@ -119,6 +149,10 @@ class MemoryRuntimeBuilder:
             data_dir = destination / "memoryos-data"
             generated = seed_memoryos(data_dir, selected)
             common_arguments.extend(["--data-dir", path_mapper(data_dir)])
+            if scoring_profile is not None:
+                profile_path = destination / "shadow-retrieval-profile.json"
+                _write_json(profile_path, scoring_profile.model_dump(mode="json"))
+                common_arguments.extend(["--weight-profile", path_mapper(profile_path)])
         else:  # pragma: no cover - enum exhaustiveness guard
             raise MemoryRuntimeError(f"unsupported memory condition: {condition}")
 
@@ -144,6 +178,12 @@ class MemoryRuntimeBuilder:
             data_dir=data_dir,
             seed_ids=tuple(seed.id for seed in selected),
             generated_memory_ids=generated,
+            scoring_profile_sha256=(None if scoring_profile is None else scoring_profile.digest()),
+            expected_retrieval_config_hash=(
+                retrieval_config_hash(scoring_profile)
+                if condition is ExperimentCondition.MEMORYOS
+                else None
+            ),
             server_arguments=tuple(common_arguments),
         )
 
@@ -155,6 +195,9 @@ class MemoryRuntimeBuilder:
                 tool_calls=0,
                 retrieval_runs=0,
                 selected_seed_ids=(),
+                candidate_features=(),
+                retrieval_config_hashes=(),
+                scoring_profile_sha256=None,
                 errors=(),
             )
         errors: list[str] = []
@@ -171,6 +214,8 @@ class MemoryRuntimeBuilder:
             if isinstance(seed_id, str)
         }
         retrieval_runs = 0
+        candidate_features: list[dict[str, Any]] = []
+        retrieval_config_hashes: set[str] = set()
         if runtime.condition is ExperimentCondition.MEMORYOS:
             if runtime.data_dir is None:
                 errors.append("MemoryOS runtime has no data directory")
@@ -182,15 +227,54 @@ class MemoryRuntimeBuilder:
                     reverse_ids = {
                         value: key for key, value in runtime.generated_memory_ids.items()
                     }
-                    for run in runs:
+                    memory_rows = {
+                        memory_id: session.get(MemoryRow, memory_id)
+                        for memory_id in runtime.generated_memory_ids.values()
+                    }
+                    for retrieval_index, run in enumerate(runs):
+                        retrieval_config_hashes.add(run.config_hash)
                         selected.update(
                             reverse_ids[memory_id]
                             for memory_id in run.selected_memory_ids
                             if memory_id in reverse_ids
                         )
+                        for item in run.candidate_features:
+                            memory_id = str(item.get("memory_id", ""))
+                            seed_id = reverse_ids.get(memory_id)
+                            if seed_id is None:
+                                continue
+                            trace = {
+                                str(key): value
+                                for key, value in item.items()
+                                if key in _PUBLISHABLE_RETRIEVAL_FEATURES
+                            }
+                            memory_row = memory_rows.get(memory_id)
+                            if memory_row is not None:
+                                trace.setdefault(
+                                    "memory_confidence",
+                                    float(memory_row.confidence),
+                                )
+                                trace.setdefault(
+                                    "memory_importance",
+                                    float(memory_row.importance),
+                                )
+                            candidate_features.append(
+                                {
+                                    "seed_id": seed_id,
+                                    "retrieval_index": retrieval_index,
+                                    "selected": memory_id in run.selected_memory_ids,
+                                    "trace": trace,
+                                }
+                            )
                 database.close()
             if retrieval_runs == 0:
                 errors.append("MemoryOS condition produced no RetrievalRunRow")
+            if runtime.expected_retrieval_config_hash is None or retrieval_config_hashes != {
+                runtime.expected_retrieval_config_hash
+            }:
+                errors.append(
+                    "MemoryOS RetrievalRun config hash does not match its scoring profile"
+                )
         if not successful:
             errors.append("memory condition produced no successful MCP tool audit event")
         return MemoryUsageEvidence(
@@ -199,6 +283,9 @@ class MemoryRuntimeBuilder:
             tool_calls=len(audit),
             retrieval_runs=retrieval_runs,
             selected_seed_ids=tuple(sorted(selected)),
+            candidate_features=tuple(candidate_features),
+            retrieval_config_hashes=tuple(sorted(retrieval_config_hashes)),
+            scoring_profile_sha256=runtime.scoring_profile_sha256,
             errors=tuple(errors),
         )
 

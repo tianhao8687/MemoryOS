@@ -4,6 +4,41 @@
 
 ### Added
 
+- A pinned public Git silver retrieval-calibration dataset with 300 repository-held-out queries,
+  3,656 commit-memory candidates, 9,600 graded judgments, future/cross-scope guards, separate
+  runtime/qrels artifacts, license hashes, and deterministic offline rebuilds.
+- Strict calibration schemas, public-source materialization, first-parent temporal mining, artifact
+  integrity/reference validation, and build/validate CLIs with deterministic fixture tests.
+- A 61-case blind human-review pilot with 1,922 candidate judgments per reviewer, deterministic
+  repository/time sampling, sealed-test enforcement, independently shuffled dual assignments,
+  blank response templates, scorer-only source mapping, adjudication validation, and artifact hashes.
+- A machine-readable coupling audit that exposes source concentration and repository overlap,
+  preserves named source slices, and prepares leave-one-source-out evaluation without claiming that
+  pending labels are gold.
+- A hash-pinned model-only blind-review exercise with two effective 1,922-row reviews, complete
+  third-party resolution of 527 disagreements, a reproducible final provisional artifact,
+  chance-adjusted agreement, protocol-incident auditing, and post-adjudication silver diagnostics.
+- A frozen AI-only executable calibration protocol with three-family order-swapped pairwise jury
+  aggregation, entropy-weighted weak supervision, raw retrieval features, non-learned safety gates,
+  non-negative regularized weight fitting, repository holdouts, and an explicit no-auto-activation
+  promotion decision.
+- A randomized full/minus-memory real-workload runner, exact prompt/runtime pairing, causal-label
+  extraction from discordant executable outcomes, sealed multi-agent promotion checks, and a
+  SHA-256-pinned readiness inventory that fails closed while real evidence is incomplete.
+- An explicit candidate-only scoring projection and randomized baseline/candidate real-agent shadow
+  runner. The training CLI rejects sealed test inputs, profile/evaluation/runtime hashes are bound
+  end-to-end, and the normal production service keeps the byte-compatible frozen baseline config.
+- The frozen trainer rejects deterministic-fixture labels and requires both multi-family AI weak
+  supervision and real executable label tiers; promotion rejects any fixture-trained profile.
+- AI-jury inputs now require three providers as well as three canonical model families and bind
+  provider/model revision/runtime/prompt/response identities; runtime relabeling fails closed.
+- Candidate profiles now bind the canonical SHA-256 of every train/dev observation; duplicate IDs
+  fail closed, and all required evidence tiers must occur in the training partition itself.
+- A pinned SWE-bench Verified Requests proxy-auth task, dependency-free semantic hidden scorer,
+  strict full/minus arm resume checks, and two real `gpt-5.6-sol` ablation repeats. One repeat
+  produced a discordant executable TRAIN label; both selected-memory runs were faster, while the
+  underpowered one-repository dataset was correctly rejected for fitting and production stayed
+  frozen.
 - V2.2 repository-level real-workload manifests with public/private/fixture tiers, license and source provenance, temporal Git validation, solution-leak rejection, and digest-pinned hidden tests.
 - Three-condition `no_memory / flat_memory / memoryos` execution with sanitized base-only repositories, isolated MCP sidecars, real Retrieval 2.0 usage gates, bounded non-root agent containers, fresh scoring checkouts, networkless hidden tests, and canary leakage scans.
 - Paired success/safety/cost/latency bootstrap reports with strict dry-run truthfulness and confirmatory diversity, accounting, image, prompt-parity, and egress gates.
@@ -12,6 +47,13 @@
 
 ### Changed
 
+- Fixed scoring constants are now explicitly treated as heuristic baselines; the silver dataset is
+  retrieval evidence only and does not authorize automatic truth or health decisions.
+- Human-review data cannot be called human gold until two independent human reviews and independent
+  human adjudication cover every pair. Human gold is optional; the active no-human promotion route
+  instead requires diverse AI weak supervision plus external sealed executable evidence.
+- Model-only adjudication remains a rubric and active-learning diagnostic even when complete; it
+  cannot by itself approve production weights or satisfy the new multi-family pairwise jury gate.
 - Historical search/context no longer mutates current expiration state, and recency ranking is evaluated relative to the requested valid-time snapshot.
 - Agent patches are captured from the pinned base even after agent commits; post-agent host Git rejects control-plane tampering and runs with hooks and external configuration disabled.
 - Agent adapters receive only a pre-created structured-result file, while bounded stdout/stderr remain outside the agent mount; POSIX writable binds enforce non-root UID compatibility.

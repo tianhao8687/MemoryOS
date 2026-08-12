@@ -1,0 +1,238 @@
+{
+  "artifacts": {
+    "candidates": {
+      "path": "candidates.jsonl",
+      "rows": 3656,
+      "sha256": "66508fcd28a12d6ff8e81b3542f269e5172cabc6468969581d56fbd54b57cd48"
+    },
+    "dev": {
+      "qrels": {
+        "path": "dev/qrels.jsonl",
+        "rows": 1600,
+        "sha256": "688616651e4137b147f9af1ca3ab336fd0daa7763ed7775972e7d401854a0ad8"
+      },
+      "queries": {
+        "path": "dev/queries.jsonl",
+        "rows": 50,
+        "sha256": "3d4154d3ee16418323bd18dc02b98ae0e7b8fedf5253c890675b1544081a07d6"
+      }
+    },
+    "test": {
+      "qrels": {
+        "path": "test/qrels.jsonl",
+        "rows": 1600,
+        "sha256": "5e869abc1ada0933a4f7278a66e45a8befaf2bf506a22ebc3413b9d267f14231"
+      },
+      "queries": {
+        "path": "test/queries.jsonl",
+        "rows": 50,
+        "sha256": "adaf2e42437cccefed6a47b7835ed819f95118245a1c25bbb89934f26bc5d9e4"
+      }
+    },
+    "train": {
+      "qrels": {
+        "path": "train/qrels.jsonl",
+        "rows": 6400,
+        "sha256": "545e0d462cd1833f37dce3de086bc1102708dfeb730479aab1e5dc55186ffeb5"
+      },
+      "queries": {
+        "path": "train/queries.jsonl",
+        "rows": 200,
+        "sha256": "3e3e451564b0cb45f3738bee3f1e6753f3ce1a788d01cf3819c248893a286eea"
+      }
+    }
+  },
+  "build_checks": {
+    "artifact_hashes_recorded": true,
+    "exact_path_positive_present_per_query": true,
+    "future_solution_not_in_runtime_payload": true,
+    "git_first_parent_cutoff_enforced": true,
+    "guard_repository_has_no_queries": true,
+    "licenses_pinned_and_hashed": true,
+    "qrels_separate_from_runtime_queries": true,
+    "repository_held_out_splits": true
+  },
+  "dataset_id": "memoryos-git-silver-v1",
+  "generated_at": "2026-08-12T08:00:00Z",
+  "generator_source_sha256": "2b1cde57f0bb0e6d2b46188be656d645fe125d77b4e9245976c41c3314eceaae",
+  "generator_version": "git-silver-v1",
+  "label_policy": [
+    "relevance=3 and required=true only when candidate and target touch an exact path",
+    "only the nearest exact-path ancestor is required; other exact-path ancestors remain relevance=3",
+    "relevance=2 when candidate and target share an immediate parent directory",
+    "relevance=1 when candidate and target share a top-level path and file suffix",
+    "relevance=0 when no structural relationship above is present",
+    "eligible candidates are first-parent ancestors of cutoff_commit",
+    "future_guard candidates are first-parent descendants hidden behind the cutoff",
+    "cross_scope_guard candidates come only from guard_only public repositories"
+  ],
+  "label_tier": "silver",
+  "limitations": [
+    "Silver relevance is a deterministic Git path-overlap proxy, not human judgment.",
+    "Commit subjects proxy task queries and may not match issue or agent wording.",
+    "This dataset calibrates retrieval only; it cannot validate truth-judge or health weights.",
+    "Source code and diffs are not redistributed; candidates contain commit subjects and paths.",
+    "The test split is repository-held-out but public, so it is confirmatory rather than secret."
+  ],
+  "repositories": [
+    {
+      "clone_url": "https://github.com/encode/httpx.git",
+      "id": "encode-httpx",
+      "language": "python",
+      "license_path": "LICENSE.md",
+      "license_sha256": "4ec59d544f12b5f539a3a716fd321ac58ccd8030b465221f2c880200cdf28d8d",
+      "license_spdx": "BSD-3-Clause",
+      "license_url": "https://github.com/encode/httpx/blob/b5addb64f0161ff6bfe94c124ef76f6a1fba5254/LICENSE.md",
+      "mined_commits": 800,
+      "role": "query_source",
+      "snapshot_commit": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+      "snapshot_committed_at": "2026-02-23T10:40:42Z",
+      "snapshot_tree": "31ba94512339180efacceacc0646b56ee15eba63",
+      "source_url": "https://github.com/encode/httpx",
+      "split": "train"
+    },
+    {
+      "clone_url": "https://github.com/expressjs/express.git",
+      "id": "expressjs-express",
+      "language": "javascript",
+      "license_path": "LICENSE",
+      "license_sha256": "95a5762890e5c1c9808921cef095661fc482c5e1f0bba31446ac85595df6237c",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/expressjs/express/blob/a3714473feb3d2908add734d340e7755fd85e0a3/LICENSE",
+      "mined_commits": 800,
+      "role": "query_source",
+      "snapshot_commit": "a3714473feb3d2908add734d340e7755fd85e0a3",
+      "snapshot_committed_at": "2026-07-27T21:54:23Z",
+      "snapshot_tree": "134de344af9d2e7785aae9a991d02fd85b404bcf",
+      "source_url": "https://github.com/expressjs/express",
+      "split": "train"
+    },
+    {
+      "clone_url": "https://github.com/jesseduffield/lazygit.git",
+      "id": "jesseduffield-lazygit",
+      "language": "go",
+      "license_path": "LICENSE",
+      "license_sha256": "52d2fee59711a3373bea27d637831b5ab234443d3cf1d68ec076a37d0ed3c333",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/jesseduffield/lazygit/blob/ddceff696286811d2adc02e27bad1b275b9b1c75/LICENSE",
+      "mined_commits": 800,
+      "role": "query_source",
+      "snapshot_commit": "ddceff696286811d2adc02e27bad1b275b9b1c75",
+      "snapshot_committed_at": "2026-08-08T15:59:43Z",
+      "snapshot_tree": "aa7049ef7d18135e0e71b34c3b89cd98254680b9",
+      "source_url": "https://github.com/jesseduffield/lazygit",
+      "split": "test"
+    },
+    {
+      "clone_url": "https://github.com/pallets/itsdangerous.git",
+      "id": "pallets-itsdangerous-guard",
+      "language": "python",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "63af09891b6be8ad1a4252ed43af0f4efba7fc948e228367bed7f3c5ae0b09d7",
+      "license_spdx": "BSD-3-Clause",
+      "license_url": "https://github.com/pallets/itsdangerous/blob/672971d66a2ef9f85151e53283113f33d642dabd/LICENSE.txt",
+      "mined_commits": 369,
+      "role": "guard_only",
+      "snapshot_commit": "672971d66a2ef9f85151e53283113f33d642dabd",
+      "snapshot_committed_at": "2025-06-14T20:35:42Z",
+      "snapshot_tree": "ef4287f82d8234404b58c7b29d38197e1f38e207",
+      "source_url": "https://github.com/pallets/itsdangerous"
+    },
+    {
+      "clone_url": "https://github.com/pallets/markupsafe.git",
+      "id": "pallets-markupsafe",
+      "language": "python",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea",
+      "license_spdx": "BSD-3-Clause",
+      "license_url": "https://github.com/pallets/markupsafe/blob/b2e4d9c7687be25695fffbe93a37622302b24fb1/LICENSE.txt",
+      "mined_commits": 404,
+      "role": "query_source",
+      "snapshot_commit": "b2e4d9c7687be25695fffbe93a37622302b24fb1",
+      "snapshot_committed_at": "2025-09-27T18:45:34Z",
+      "snapshot_tree": "df410ce10bcaed949e0090476273e0e70f3ff3b9",
+      "source_url": "https://github.com/pallets/markupsafe",
+      "split": "train"
+    },
+    {
+      "clone_url": "https://github.com/tokio-rs/bytes.git",
+      "id": "tokio-bytes",
+      "language": "rust",
+      "license_path": "LICENSE",
+      "license_sha256": "45f522cacecb1023856e46df79ca625dfc550c94910078bd8aec6e02880b3d42",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/tokio-rs/bytes/blob/d5c8ad3227afe459c09f1d0d85455abf00f0381a/LICENSE",
+      "mined_commits": 522,
+      "role": "query_source",
+      "snapshot_commit": "d5c8ad3227afe459c09f1d0d85455abf00f0381a",
+      "snapshot_committed_at": "2026-07-16T10:19:37Z",
+      "snapshot_tree": "ab2eb5fbd28708be356724974a8ea5de84b30f53",
+      "source_url": "https://github.com/tokio-rs/bytes",
+      "split": "dev"
+    },
+    {
+      "clone_url": "https://github.com/vitejs/vite.git",
+      "id": "vitejs-vite",
+      "language": "typescript",
+      "license_path": "LICENSE",
+      "license_sha256": "692057af3d664cbb79ac38293eb50aa3c4987f8182e2a440136e59e08f1b4a54",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/vitejs/vite/blob/b4d66fee14d970f45b8a6f3d7d6aee73ca9b88ab/LICENSE",
+      "mined_commits": 800,
+      "role": "query_source",
+      "snapshot_commit": "b4d66fee14d970f45b8a6f3d7d6aee73ca9b88ab",
+      "snapshot_committed_at": "2026-08-11T10:27:53Z",
+      "snapshot_tree": "e4622f551acbbb5faf485b07ae44f831f6072c4d",
+      "source_url": "https://github.com/vitejs/vite",
+      "split": "train"
+    }
+  ],
+  "schema_version": "1.0",
+  "settings": {
+    "candidate_pool_size": 32,
+    "cross_scope_guards_per_query": 1,
+    "future_guards_per_query": 1,
+    "history_limit": 800,
+    "lexical_negative_candidates": 8,
+    "lookback_commits": 240,
+    "max_candidate_paths": 24,
+    "max_positive_candidates": 12,
+    "max_queries_per_repository": 50,
+    "max_target_paths": 12,
+    "min_queries_per_repository": 35,
+    "min_query_tokens": 3,
+    "recent_negative_candidates": 8
+  },
+  "source_config_sha256": "eeda4578bcd5d5fcc87241a76a19385844eeb5e69c439f7652c2fc0904748090",
+  "summary": {
+    "candidates": 3656,
+    "eligibility_counts": {
+      "cross_scope_guard": 300,
+      "eligible": 9000,
+      "future_guard": 300
+    },
+    "judgments": 9600,
+    "queries": 300,
+    "queries_by_repository": {
+      "encode-httpx": 50,
+      "expressjs-express": 50,
+      "jesseduffield-lazygit": 50,
+      "pallets-markupsafe": 50,
+      "tokio-bytes": 50,
+      "vitejs-vite": 50
+    },
+    "queries_by_split": {
+      "dev": 50,
+      "test": 50,
+      "train": 200
+    },
+    "query_repositories": 6,
+    "relevance_counts": {
+      "0": 6076,
+      "1": 171,
+      "2": 506,
+      "3": 2847
+    },
+    "repositories": 7
+  }
+}

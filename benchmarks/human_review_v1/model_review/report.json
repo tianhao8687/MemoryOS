@@ -1,0 +1,357 @@
+{
+  "adjudicated_distribution": {
+    "must_retrieve": {
+      "false": 1855,
+      "true": 67
+    },
+    "rows": 1922,
+    "safety_disposition": {
+      "allow": 1756,
+      "exclude": 61,
+      "uncertain": 105
+    },
+    "semantic_relevance": {
+      "0": 1608,
+      "1": 178,
+      "2": 92,
+      "3": 44
+    }
+  },
+  "adjudicator_id": "model-third-party-root-v1",
+  "agreement": {
+    "full_decision_agreements": 1395,
+    "full_decision_rate": 0.7258064516129032,
+    "must_retrieve_cohen_kappa": 0.5628854141034528,
+    "pairs": 1922,
+    "relevance_cohen_kappa": 0.20263061343965227,
+    "relevance_exact_agreements": 1455,
+    "relevance_exact_rate": 0.7570239334027055,
+    "relevance_linear_weighted_kappa": 0.3216548804770111,
+    "relevance_quadratic_weighted_kappa": 0.42391143097434203,
+    "safety_cohen_kappa": 0.8341537122224632,
+    "safety_exact_agreements": 1877,
+    "safety_exact_rate": 0.9765868886576483
+  },
+  "artifacts": {
+    "adjudicated": {
+      "path": "adjudicated-provisional.jsonl",
+      "rows": 1922,
+      "sha256": "0c836306283ae750521b5526b844c8b0a0ef6c0a05137bcb5f846dcd558e83e1"
+    },
+    "adjudication_policy": {
+      "path": "ADJUDICATION_POLICY.md",
+      "rows": 1,
+      "sha256": "7b3197bcb6a49b8aeba6de6ce479d43d9307b2392f6db08fad42c8ce40793797"
+    },
+    "decision_plan": {
+      "path": "decision-plan.json",
+      "rows": 1,
+      "sha256": "58e34c06cb3edec80109800e4c72605fae574b1f0e04df0a497af75525bba69d"
+    },
+    "disagreement_packet": {
+      "path": "disagreement-packet.jsonl",
+      "rows": 527,
+      "sha256": "1770de0605d6411b41ac2a559baf518799b17927cce2f49012fde80144fcd0bd"
+    },
+    "protocol_audit": {
+      "path": "protocol-audit.json",
+      "rows": 1,
+      "sha256": "0b99d1b3f924f46f398ff75601ccb869a04599c635c0821de022fdeffe407564"
+    },
+    "resolutions": {
+      "path": "resolutions.jsonl",
+      "rows": 527,
+      "sha256": "d243ef60abad9ae0a91ed475d2df7304763a3cc2531ec79e39c6de53e904556a"
+    },
+    "reviewer_a": {
+      "path": "reviewer-a2.responses.jsonl",
+      "rows": 1922,
+      "sha256": "036a899db93a96ae885135acfe80880cb1c3a77c602b1316f260c54cebecf534"
+    },
+    "reviewer_b": {
+      "path": "reviewer-b.responses.jsonl",
+      "rows": 1922,
+      "sha256": "3742114c3bbbfc4d54367dd20056b48c0bc2b4bde7123d43c6d74ea1d01a80d0"
+    }
+  },
+  "build_checks": {
+    "adjudication_covers_every_pair": true,
+    "disagreement_packet_reproduced": true,
+    "final_adjudication_reproduced": true,
+    "human_gold_claim_is_false": true,
+    "plan_reproduces_every_resolution": true,
+    "review_assignments_and_ids_are_distinct": true
+  },
+  "core_disagreements_adjudicated": 527,
+  "dataset_digest": "ecf532c8ebbe7b3f9866623eab0e9fb53cd979abe486fb29359cb9ca7f20729f",
+  "dataset_id": "memoryos-human-review-v1-pilot",
+  "human_gold_claim": false,
+  "label_tier": "model_adjudicated_provisional",
+  "limitations": [
+    "Both effective reviewers and the adjudicator are language models, not humans.",
+    "High raw relevance agreement is affected by the dominant relevance=0 class.",
+    "The only real-workload case overlaps a Git-history repository and is diagnostic.",
+    "This artifact must not fit or approve production retrieval weights."
+  ],
+  "partition_slices": {
+    "calibration": {
+      "must_retrieve": {
+        "false": 1485,
+        "true": 51
+      },
+      "rows": 1536,
+      "safety_disposition": {
+        "allow": 1402,
+        "exclude": 48,
+        "uncertain": 86
+      },
+      "semantic_relevance": {
+        "0": 1296,
+        "1": 136,
+        "2": 75,
+        "3": 29
+      }
+    },
+    "diagnostic": {
+      "must_retrieve": {
+        "false": 1,
+        "true": 1
+      },
+      "rows": 2,
+      "safety_disposition": {
+        "allow": 1,
+        "exclude": 1
+      },
+      "semantic_relevance": {
+        "0": 1,
+        "3": 1
+      }
+    },
+    "validation": {
+      "must_retrieve": {
+        "false": 369,
+        "true": 15
+      },
+      "rows": 384,
+      "safety_disposition": {
+        "allow": 353,
+        "exclude": 12,
+        "uncertain": 19
+      },
+      "semantic_relevance": {
+        "0": 311,
+        "1": 42,
+        "2": 17,
+        "3": 14
+      }
+    }
+  },
+  "protocol_audit": {
+    "adjudication_controls": {
+      "adjudication_policy_frozen_before_decision_review": true,
+      "all_disagreement_rows_reviewed": true,
+      "control_source_map_opened_after_final_adjudication_hash": true,
+      "qrels_opened_after_final_adjudication_hash": true,
+      "silver_comparison_role": "post_adjudication_diagnostic_only"
+    },
+    "effective_reviews": [
+      {
+        "assignment_id": "reviewer-a",
+        "isolation_basis": "reviewer_self_report",
+        "reviewer_id": "model-reviewer-a2-v1",
+        "status": "accepted_replacement"
+      },
+      {
+        "assignment_id": "reviewer-b",
+        "isolation_basis": "reviewer_self_report",
+        "reviewer_id": "model-reviewer-b-v1",
+        "status": "accepted"
+      }
+    ],
+    "human_gold_claim": false,
+    "independence_limits": [
+      "The two effective reviewers and adjudicator ran as separate agents in one Codex task, not as independent human annotators.",
+      "Isolation claims about files not opened are reviewer self-reports; output coverage, assignment separation, reviewer IDs, and artifact hashes are machine-validated.",
+      "Reviewer confidence values were mechanically normalized into the rubric's high/medium/low enum without changing any relevance, safety, must-retrieve, issue-tag, or rationale decision."
+    ],
+    "invalidated_attempts": [
+      {
+        "control_or_qrels_reported_exposed": false,
+        "data_used_in_effective_review_or_adjudication": false,
+        "details": "The initial reviewer A used project-wide text search to locate response enumeration and validator entry points. It self-reported the breach before submitting an effective review and was stopped and replaced.",
+        "reason": "The blind-review contract allowed only the rubric, one blind assignment, and its response template.",
+        "reviewer_slot": "reviewer-a",
+        "status": "invalidated"
+      }
+    ],
+    "label_tier": "model_adjudicated_provisional",
+    "protocol_date": "2026-08-12",
+    "schema_version": "1.0",
+    "status": "completed_with_replacement"
+  },
+  "resolution_outcomes": {
+    "neither_exactly": 98,
+    "reviewer_a": 163,
+    "reviewer_b": 266
+  },
+  "reviewer_distributions": {
+    "reviewer_a": {
+      "must_retrieve": {
+        "false": 1854,
+        "true": 68
+      },
+      "reviewer_confidence": {
+        "high": 1484,
+        "medium": 438
+      },
+      "rows": 1922,
+      "safety_disposition": {
+        "allow": 1801,
+        "exclude": 61,
+        "uncertain": 60
+      },
+      "semantic_relevance": {
+        "0": 1418,
+        "1": 257,
+        "2": 170,
+        "3": 77
+      }
+    },
+    "reviewer_b": {
+      "must_retrieve": {
+        "false": 1845,
+        "true": 77
+      },
+      "reviewer_confidence": {
+        "high": 1877,
+        "medium": 45
+      },
+      "rows": 1922,
+      "safety_disposition": {
+        "allow": 1756,
+        "exclude": 61,
+        "uncertain": 105
+      },
+      "semantic_relevance": {
+        "0": 1794,
+        "1": 51,
+        "2": 59,
+        "3": 18
+      }
+    }
+  },
+  "reviewer_ids": [
+    "model-reviewer-a2-v1",
+    "model-reviewer-b-v1"
+  ],
+  "schema_version": "1.0",
+  "silver_diagnostic": {
+    "comparison_role": "post_adjudication_proxy_diagnostic_not_ground_truth",
+    "interpretation": "Silver labels measure Git path overlap; adjudicated model labels measure visible downstream utility. Divergence is evidence against treating the proxy as human gold, not proof that either label source is correct.",
+    "must_retrieve_by_silver_required": {
+      "false": {
+        "false": 1804,
+        "true": 56
+      },
+      "true": {
+        "false": 50,
+        "true": 10
+      }
+    },
+    "relevance_confusion_silver_to_adjudicated": {
+      "0": {
+        "0": 1139,
+        "1": 54,
+        "2": 29,
+        "3": 12
+      },
+      "1": {
+        "0": 36,
+        "1": 2,
+        "2": 2
+      },
+      "2": {
+        "0": 59,
+        "1": 6,
+        "3": 1
+      },
+      "3": {
+        "0": 373,
+        "1": 116,
+        "2": 61,
+        "3": 30
+      }
+    },
+    "repository_slices": {
+      "encode-httpx": {
+        "binary_relevance_at_2_agreement": 0.6478494623655914,
+        "exact_relevance_rate": 0.5752688172043011,
+        "mean_absolute_error": 0.9435483870967742,
+        "rows": 372
+      },
+      "expressjs-express": {
+        "binary_relevance_at_2_agreement": 0.6317204301075269,
+        "exact_relevance_rate": 0.5806451612903226,
+        "mean_absolute_error": 1.0591397849462365,
+        "rows": 372
+      },
+      "pallets-itsdangerous-guard": {
+        "binary_relevance_at_2_agreement": 1.0,
+        "exact_relevance_rate": 1.0,
+        "mean_absolute_error": 0.0,
+        "rows": 60
+      },
+      "pallets-markupsafe": {
+        "binary_relevance_at_2_agreement": 0.7043010752688172,
+        "exact_relevance_rate": 0.5994623655913979,
+        "mean_absolute_error": 0.9059139784946236,
+        "rows": 372
+      },
+      "tokio-bytes": {
+        "binary_relevance_at_2_agreement": 0.6397849462365591,
+        "exact_relevance_rate": 0.5913978494623656,
+        "mean_absolute_error": 1.0134408602150538,
+        "rows": 372
+      },
+      "vitejs-vite": {
+        "binary_relevance_at_2_agreement": 0.771505376344086,
+        "exact_relevance_rate": 0.6397849462365591,
+        "mean_absolute_error": 0.7096774193548387,
+        "rows": 372
+      }
+    },
+    "reviewer_comparison": {
+      "adjudicated": {
+        "binary_relevance_at_2_agreement": 0.6890625,
+        "exact_relevance_rate": 0.6098958333333333,
+        "mean_absolute_error": 0.8973958333333333
+      },
+      "reviewer_a": {
+        "binary_relevance_at_2_agreement": 0.6947916666666667,
+        "exact_relevance_rate": 0.5744791666666667,
+        "mean_absolute_error": 0.8901041666666667
+      },
+      "reviewer_b": {
+        "binary_relevance_at_2_agreement": 0.6833333333333333,
+        "exact_relevance_rate": 0.634375,
+        "mean_absolute_error": 0.9385416666666667
+      }
+    },
+    "rows": 1920,
+    "safety_by_silver_eligibility": {
+      "cross_scope_guard": {
+        "exclude": 60
+      },
+      "eligible": {
+        "allow": 1755,
+        "uncertain": 45
+      },
+      "future_guard": {
+        "uncertain": 60
+      }
+    }
+  },
+  "status": "model_adjudicated_provisional",
+  "test_split_sealed": true,
+  "total_rows": 1922
+}

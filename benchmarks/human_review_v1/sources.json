@@ -1,0 +1,26 @@
+{
+  "assignment_ids": [
+    "reviewer-a",
+    "reviewer-b"
+  ],
+  "dataset_id": "memoryos-human-review-v1-pilot",
+  "generated_at": "2026-08-12T12:00:00Z",
+  "git_sources": [
+    {
+      "dataset_root": "benchmarks/calibration_v1/data",
+      "samples_per_repository": 12,
+      "splits": [
+        "train",
+        "dev"
+      ]
+    }
+  ],
+  "real_workload_sources": [
+    {
+      "manifest_path": "benchmarks/real_workload/public_smoke/real_agent_manifest.json"
+    }
+  ],
+  "rubric_version": "retrieval-utility-v1",
+  "sampling_seed": "memoryos-human-review-v1-time-stratified",
+  "schema_version": "1.0"
+}

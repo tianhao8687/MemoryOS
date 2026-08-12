@@ -21,6 +21,7 @@ from memoryos.retrieval.search import RetrievalEngine
 from memoryos.retrieval_v2 import RetrievalPipeline
 from memoryos.retrieval_v2.diversity import mmr_select
 from memoryos.retrieval_v2.fusion import reciprocal_rank_fusion
+from memoryos.retrieval_v2.scoring import CALIBRATABLE_FEATURES, ShadowRetrievalProfile
 
 
 class FailingEmbeddingProvider:
@@ -95,8 +96,16 @@ def test_a23_retrieval_trace_and_context_manifest_are_persisted(
         "temporal_rank",
         "fused_score",
         "scope_match",
+        "scope_factor",
         "freshness",
+        "freshness_factor",
+        "truth_state",
         "evidence_count",
+        "feedback_factor",
+        "helpful_feedback_count",
+        "unhelpful_feedback_count",
+        "memory_confidence",
+        "memory_importance",
         "reranker_score",
         "final_reason",
     }
@@ -121,6 +130,59 @@ def test_a24_rrf_and_provider_failure_fall_back_without_database_pollution(
     assert "fallback" in result["mode"]
     with database.session() as session:
         assert session.scalar(select(func.count()).select_from(EmbeddingRow)) == 0
+
+
+@pytest.mark.v2
+def test_candidate_profile_runs_only_as_explicit_shadow_scoring(
+    database: Database, service: MemoryService, make_memory: Any
+) -> None:
+    low = service.propose(
+        make_memory(
+            title="Shadow ranking low importance",
+            content="shadow ranking decision",
+            key="shadow.low",
+        ).model_copy(update={"importance": 0.1}),
+        actor="test",
+    )
+    high = service.propose(
+        make_memory(
+            title="Shadow ranking high importance",
+            content="shadow ranking decision",
+            key="shadow.high",
+        ).model_copy(update={"importance": 0.9}),
+        actor="test",
+    )
+    weights = {name: 0.0 for name in CALIBRATABLE_FEATURES}
+    weights["memory_importance"] = 8.0
+    profile = ShadowRetrievalProfile(
+        source_profile_sha256="a" * 64,
+        training_protocol_sha256="b" * 64,
+        weights=weights,
+        mmr_lambda=1.0,
+    )
+    shadow = RetrievalPipeline(
+        database,
+        RetrievalEngine(database),
+        scoring_profile=profile,
+    )
+
+    result = shadow.search(
+        SearchRequest(
+            query="shadow ranking decision",
+            scope_type=ScopeType.REPOSITORY,
+            scope_key="repo-a",
+            limit=2,
+        )
+    )
+
+    assert result["pipeline_mode"].startswith("shadow-profile-")
+    assert result["scoring_profile_sha256"] == profile.digest()
+    assert [item["memory"]["id"] for item in result["items"]] == [high["id"], low["id"]]
+    assert service.retrieval_v2.scoring_profile is None
+    assert service.retrieval_v2.config_hash == (
+        "34997d5d67ff5bf408da02eeb5e7922eb71b51e1f671e97e1ee25589d495c452"
+    )
+    assert shadow.config_hash != service.retrieval_v2.config_hash
 
 
 @pytest.mark.v2

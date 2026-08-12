@@ -1,0 +1,89 @@
+diff --git a/benchmark_hidden_test.py b/benchmark_hidden_test.py
+new file mode 100644
+--- /dev/null
++++ b/benchmark_hidden_test.py
+@@ -0,0 +1,84 @@
++from __future__ import annotations
++
++import ast
++from pathlib import Path
++from urllib.parse import urlsplit, urlunparse
++
++
++class ParsedURL:
++    def __init__(
++        self,
++        *,
++        scheme: str,
++        auth: str | None,
++        host: str,
++        path: str,
++        query: str,
++        fragment: str,
++    ) -> None:
++        self.scheme = scheme
++        self.auth = auth
++        self.host = host
++        self.port = None
++        self.path = path
++        self.query = query
++        self.fragment = fragment
++
++    @property
++    def netloc(self) -> str:
++        # urllib3's parser deliberately exposes auth separately from netloc.
++        return self.host
++
++    def __iter__(self):
++        return iter(
++            (
++                self.scheme,
++                self.auth,
++                self.host,
++                self.port,
++                self.path,
++                self.query,
++                self.fragment,
++            )
++        )
++
++
++def parse_url(value: str) -> ParsedURL:
++    parsed = urlsplit(value)
++    auth, separator, host = parsed.netloc.rpartition("@")
++    return ParsedURL(
++        scheme=parsed.scheme,
++        auth=auth if separator else None,
++        host=host if separator else parsed.netloc,
++        path=parsed.path,
++        query=parsed.query,
++        fragment=parsed.fragment,
++    )
++
++
++def load_prepend_scheme_if_needed():
++    source_path = Path("requests/utils.py")
++    module = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
++    function = next(
++        node
++        for node in module.body
++        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
++        and node.name == "prepend_scheme_if_needed"
++    )
++    isolated = ast.Module(body=[function], type_ignores=[])
++    ast.fix_missing_locations(isolated)
++    namespace = {"parse_url": parse_url, "urlunparse": urlunparse}
++    exec(compile(isolated, str(source_path), "exec"), namespace)
++    return namespace["prepend_scheme_if_needed"]
++
++
++prepend_scheme_if_needed = load_prepend_scheme_if_needed()
++for authenticated_url in (
++    "http://user:pass@example.com/path?query",
++    "http://user@example.com/path?query",
++):
++    actual = prepend_scheme_if_needed(authenticated_url, "http")
++    if actual != authenticated_url:
++        raise AssertionError(
++            f"proxy authentication was lost: expected {authenticated_url!r}, got {actual!r}"
++        )

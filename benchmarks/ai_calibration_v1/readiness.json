@@ -1,0 +1,86 @@
+{
+  "blockers": [
+    "Need order-swapped pairwise votes from at least three genuinely distinct model families and providers.",
+    "Need a repository-held-out candidate profile trained without safety-gate leakage.",
+    "Need paired real-agent frozen-baseline/candidate shadow runs bound to that profile.",
+    "Need at least 50 sealed tasks across three repositories, ten sequences, and two unseen agent models with complete paired cost data.",
+    "Need a passing explicit promotion decision before any atomic activation can be considered."
+  ],
+  "evidence": [
+    {
+      "artifact_id": "model-review-provisional-v1",
+      "candidate_training_eligible": false,
+      "effective_model_families": 1,
+      "effective_providers": 1,
+      "executable_ablation_pairs": 0,
+      "file_sha256": "b756f5a259a4378badee50e6c11027c2bd86416bd5dc4f578c2b484b5d370f8b",
+      "limitations": [
+        "All reviewer roles came from one Codex model family.",
+        "The judgments are pointwise rubric labels, not order-swapped pairwise comparisons.",
+        "Relevance agreement was weak after chance correction, so this remains diagnostic only."
+      ],
+      "path": "benchmarks/human_review_v1/model_review/report.json",
+      "promotion_eligible": false,
+      "real_agent_tasks": 0,
+      "records": 1922,
+      "role": "ai_weak_supervision"
+    },
+    {
+      "artifact_id": "markupsafe-deterministic-public-smoke",
+      "candidate_training_eligible": false,
+      "effective_model_families": 0,
+      "effective_providers": 0,
+      "executable_ablation_pairs": 0,
+      "file_sha256": "09fcde26aabe653e3e7100d86ea261ee81ea5edb002449335316a1a653ad12d9",
+      "limitations": [
+        "The runtime is a deterministic fixture rather than a coding model.",
+        "The run covers one task and three retrieval conditions, not a selected-memory ablation.",
+        "Its declared effect claim is none."
+      ],
+      "path": "docs/verification/v2.2/markupsafe-public-smoke/report.json",
+      "promotion_eligible": false,
+      "real_agent_tasks": 0,
+      "records": 3,
+      "role": "fixture_plumbing"
+    },
+    {
+      "artifact_id": "requests-6028-real-agent-ablation-v1",
+      "candidate_training_eligible": false,
+      "effective_model_families": 0,
+      "effective_providers": 0,
+      "executable_ablation_pairs": 2,
+      "file_sha256": "9162a992bc62b8386bb6adc49aa0e38d593a32c7bac00d18600b44c8b58899db",
+      "limitations": [
+        "The two pairs cover one SWE-bench Verified task, one repository, and one coding-agent model.",
+        "One discordant pair produced a real TRAIN label; this summary is not itself a training JSONL input.",
+        "Provider cost was unavailable, and no candidate profile or promotion claim is made."
+      ],
+      "path": "benchmarks/ai_calibration_v1/evidence/requests-6028-real-agent-ablation-v1.json",
+      "promotion_eligible": false,
+      "real_agent_tasks": 1,
+      "records": 4,
+      "role": "real_agent_ablation"
+    }
+  ],
+  "gates": {
+    "candidate_profile_available": false,
+    "complete_cost_pairs": 0,
+    "distinct_promotion_agent_models": 0,
+    "effective_jury_model_families": 1,
+    "effective_jury_providers": 1,
+    "order_swapped_pairwise_comparisons": 0,
+    "promotion_approved": false,
+    "real_agent_ablation_pairs": 2,
+    "sealed_promotion_repositories": 0,
+    "sealed_promotion_sequences": 0,
+    "sealed_promotion_tasks": 0
+  },
+  "human_review_required": false,
+  "production_profile_active": false,
+  "production_weights_frozen": true,
+  "protocol_file_sha256": "478686fe6e23b6a279e3036cff93af7366d002a80555b6af0965e83d331e9b89",
+  "protocol_id": "memoryos-ai-executable-calibration-v1",
+  "protocol_sha256": "9114422c4305da73cad730f120434fabf9bf234a68a1ae115bd5ce7facab75d2",
+  "schema_version": "1.0",
+  "status": "protocol_ready_evidence_pending"
+}

@@ -63,6 +63,7 @@ class TaskAwareContextCompiler:
         )
         candidates = list(result["items"])
         intent = QueryIntent(result["query_plan"]["intent"])
+        shadow_profile_active = result.get("scoring_profile_sha256") is not None
         metadata = self._metadata(candidates)
         manifest = []
         prepared = []
@@ -75,12 +76,9 @@ class TaskAwareContextCompiler:
             freshness_factor = {"fresh": 1.0, "unknown": 0.82, "suspect": 0.3, "stale": 0.0}[
                 freshness
             ]
-            utility = (
-                max(float(item["score"]), 0.000001)
-                * confidence
-                * evidence_factor
-                * freshness_factor
-            )
+            utility = max(float(item["score"]), 0.000001)
+            if not shadow_profile_active:
+                utility *= confidence * evidence_factor * freshness_factor
             prefix = "CONTESTED: " if item["truth_state"] == "contested" else ""
             if freshness == "suspect":
                 prefix += "SUSPECT: "
@@ -252,6 +250,7 @@ class TaskAwareContextCompiler:
             "text": text,
             "debug": {
                 "config_hash": result["config_hash"],
+                "scoring_profile_sha256": result.get("scoring_profile_sha256"),
                 "reranker": result["reranker"],
                 "candidates": manifest,
             },

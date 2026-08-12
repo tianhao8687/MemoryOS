@@ -22,6 +22,7 @@ from memoryos.evaluation.real_workload_models import (
     ExperimentCondition,
     MemorySeedSpec,
 )
+from memoryos.retrieval_v2.scoring import load_shadow_retrieval_profile
 
 TOKEN_RE = re.compile(r"[\w.]+", re.UNICODE)
 
@@ -145,10 +146,24 @@ class FlatMemoryBackend:
 class MemoryOSBackend:
     name = ExperimentCondition.MEMORYOS.value
 
-    def __init__(self, data_dir: Path, repository: str, cutoff: datetime) -> None:
+    def __init__(
+        self,
+        data_dir: Path,
+        repository: str,
+        cutoff: datetime,
+        *,
+        weight_profile: Path | None = None,
+    ) -> None:
         self.database = Database(settings_for(data_dir))
         self.database.initialize()
-        self.service = MemoryService(self.database, self.database.settings)
+        scoring_profile = (
+            None if weight_profile is None else load_shadow_retrieval_profile(weight_profile)
+        )
+        self.service = MemoryService(
+            self.database,
+            self.database.settings,
+            retrieval_scoring_profile=scoring_profile,
+        )
         self.repository = repository
         self.cutoff = cutoff
         with self.database.session() as session:
@@ -363,6 +378,7 @@ def main() -> None:
     parser.add_argument("--audit-file", type=Path, required=True)
     parser.add_argument("--seed-file", type=Path)
     parser.add_argument("--data-dir", type=Path)
+    parser.add_argument("--weight-profile", type=Path)
     parser.add_argument(
         "--transport",
         choices=["stdio", "streamable-http"],
@@ -375,11 +391,18 @@ def main() -> None:
     if arguments.backend == ExperimentCondition.FLAT_MEMORY.value:
         if arguments.seed_file is None:
             parser.error("--seed-file is required for flat_memory")
+        if arguments.weight_profile is not None:
+            parser.error("--weight-profile is only valid for memoryos")
         backend: ReadOnlyMemoryBackend = _load_flat_backend(arguments.seed_file, cutoff)
     else:
         if arguments.data_dir is None:
             parser.error("--data-dir is required for memoryos")
-        backend = MemoryOSBackend(arguments.data_dir, arguments.repository, cutoff)
+        backend = MemoryOSBackend(
+            arguments.data_dir,
+            arguments.repository,
+            cutoff,
+            weight_profile=arguments.weight_profile,
+        )
     auditor = ToolAuditor(arguments.audit_file, backend=arguments.backend)
     create_benchmark_mcp(
         backend,

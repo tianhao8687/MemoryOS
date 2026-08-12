@@ -85,3 +85,67 @@ They are implementation commitments, not future proposals.
     model mode is evidence only when an endpoint actually executed; absence is `external_blocker`.
 33. Require V2.1 release evidence to be produced after merge from a clean `main` checkout, including
     packaged 0001→0003 migration and restart smoke.
+34. Treat all existing retrieval, confidence, feedback, and health coefficients as heuristic
+    baselines unless a versioned calibration profile names its dataset, objective, code revision,
+    and holdout result. Use pinned public Git history only for an explicitly silver retrieval set:
+    runtime queries and qrels remain physically separate, query repositories are held out by split,
+    source/License artifacts are hashed, and future/cross-scope guards remain non-tunable safety
+    constraints. Silver labels cannot authorize truth-state mutation or health automation.
+35. Do not solve silver-label coupling by adding more samples from the same label generator. Build
+    human retrieval gold from runtime-only inputs: never load silver qrels during sampling, keep the
+    existing test repository sealed, randomize candidate order independently for at least two blind
+    reviewers, and require a separate adjudicator. Preserve Git history, real workloads, repository,
+    and time strata as named slices; report source concentration, overlap, leave-one-source-out, and
+    worst-slice results instead of approving weights from one pooled average. An overlapping real
+    workload is diagnostic only, and pending or model-authored labels cannot be called human gold.
+36. Treat multi-agent blind review as a provisional rubric stress test, not a substitute for human
+    annotation. Invalidate an entire reviewer attempt after any isolation breach and replace it
+    before adjudication; preserve the incident even when no control label was exposed. Freeze the
+    adjudication policy before reading decisions, adjudicate every core disagreement, hash the
+    complete chain, and open silver qrels only afterward for a clearly labeled proxy diagnostic.
+    Report chance-adjusted agreement beside raw agreement, and prohibit model-only labels from
+    fitting or approving production retrieval weights.
+37. Make human annotation optional rather than a production dependency. The active AI-only route
+    requires order-swapped pairwise votes from at least three genuinely distinct model families and
+    treats their probabilistic consensus as downweighted weak supervision. Calibrate model-family
+    reliability only against executable anchors. Learn only raw retrieval utility features with
+    non-negative regularization and repository-level holdouts; archive, privacy, temporal, stale,
+    and cross-scope exclusions remain hard gates. A causal label requires a protocol-valid,
+    runtime-identical real-agent full/minus-memory pair with a discordant outcome. Promotion then
+    requires sealed outcomes across at least 50 tasks, three repositories, ten sequences, and two
+    unseen agent models, with positive success CI, no safety/worst-repository regression, complete
+    costs, and bounded latency/cost. Passing creates an activation candidate only; it never changes
+    frozen production weights automatically.
+38. Never inspect sealed promotion/test observations inside candidate fitting or hyperparameter
+    selection: fit on train and select regularization on repository-held-out development only.
+    Project learned weights into a strict candidate-only shadow scorer and exercise that scorer
+    through the actual RetrievalPipeline and ContextCompiler, with randomized frozen-baseline versus
+    candidate agent runs. Bind each executable row to the learned-profile hash, shadow-profile hash,
+    exact task prompt, full runtime digest, repository commit, and retrieval config. The production
+    MemoryService continues to construct RetrievalPipeline without a profile; there is no implicit
+    activation via settings, CLI, HTTP, or MCP.
+39. Treat tasks, not repeated agent executions, as the independent promotion sample. Require a
+    complete task-by-agent matrix, aggregate each task across agents/repeats before bootstrapping,
+    and separately reject worst-agent regression. Verify the profile was actually executed by
+    deriving the expected RetrievalRun config hash from its full payload; a declared profile SHA
+    without the matching database run hash is invalid.
+40. Keep deterministic fixtures out of learned production candidates. The frozen trainer requires
+    both AI-jury weak supervision and real executable outcomes, rejects fixture observations before
+    optimization, and records label-tier counts in the candidate hash. Promotion independently
+    rejects any profile whose lineage contains a fixture label.
+41. Count AI diversity by both canonical model family and provider. Require at least three of each,
+    bind every vote to provider-reported model revision plus runtime/prompt/response hashes, reject
+    one runtime claiming multiple identities, and cap each canonical family at one contribution.
+    These are provenance controls, not cryptographic proof of provider honesty; executable anchors
+    and sealed agent outcomes remain the correctness backstop.
+42. Bind learned weights to their exact inputs, not only their protocol and aggregate counts.
+    Reject duplicate observation IDs, require every mandatory evidence tier inside the train
+    partition, canonicalize all train/dev observations independent of file order, and include that
+    SHA-256 in the candidate profile hash. This makes stale, substituted, or accidentally repeated
+    calibration inputs detectable before shadow evaluation.
+43. Publish every protocol-valid real-agent ablation repeat, including unchanged outcomes, rather
+    than selecting only favorable runs. Only a discordant functional outcome may become a causal
+    TRAIN label; latency and token reductions remain descriptive until a separately frozen utility
+    objective exists. An interrupted experiment may reuse a completed arm only after its derived
+    manifest and full runtime digests match and its individual protocol gates pass. Published
+    summaries exclude credentials and raw logs, and no such evidence changes production weights.

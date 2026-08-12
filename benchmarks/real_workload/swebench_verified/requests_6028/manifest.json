@@ -1,0 +1,71 @@
+{
+  "schema_version": "2.2",
+  "name": "requests-proxy-auth-ablation",
+  "tier": "public_replay",
+  "generated_at": "2026-08-12T00:00:00Z",
+  "repositories": [
+    {
+      "id": "psf-requests",
+      "clone_url": "https://github.com/psf/requests.git",
+      "source_url": "https://github.com/psf/requests",
+      "license_spdx": "Apache-2.0",
+      "license_url": "https://github.com/psf/requests/blob/0192aac24123735b3eaf9b08df46429bb770c283/LICENSE"
+    }
+  ],
+  "memories": [
+    {
+      "id": "proxy-url-auth-regression-risk",
+      "repository_id": "psf-requests",
+      "memory_type": "project",
+      "category": "regression-risk",
+      "title": "URL parser migration separates proxy authentication",
+      "content": "The prepend_scheme_if_needed migration from urllib.parse.urlparse to urllib3.util.parse_url unpacks auth separately from host and rebuilds the URL from parsed.netloc. The previous implementation kept credentials inside netloc. When rebuilding a parsed proxy URL, preserve the separately parsed authentication component as well as host, path, query, and fragment.",
+      "captured_at": "2021-12-29T04:12:00Z",
+      "valid_from": "2021-12-29T04:12:00Z",
+      "source_commit": "ef59aa0227bf463f0ed3d752b26db9b3acc64afb",
+      "source_ref": "https://github.com/psf/requests/commit/ef59aa0227bf463f0ed3d752b26db9b3acc64afb",
+      "expectation": "helpful",
+      "confidence": 0.95,
+      "importance": 0.9
+    }
+  ],
+  "tasks": [
+    {
+      "id": "requests-pr-6028",
+      "repository_id": "psf-requests",
+      "sequence_id": "requests-proxy-auth",
+      "sequence_index": 1,
+      "base_commit": "0192aac24123735b3eaf9b08df46429bb770c283",
+      "solution_commit": "8fa9724398c4f44090997ff430a1dd3e935a9057",
+      "cutoff": "2022-01-03T23:00:00Z",
+      "source_url": "https://github.com/psf/requests/issues/6027",
+      "source_published_at": "2022-01-03T22:12:00Z",
+      "prompt": "Fix the Requests 2.27 regression where an authenticated proxy returns HTTP 407 while Requests 2.26 succeeds. Add focused regression coverage without making live network calls.",
+      "memory_seed_ids": [
+        "proxy-url-auth-regression-risk"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": [
+          "python",
+          "benchmark_hidden_test.py"
+        ],
+        "hidden_patch": "requests_proxy_auth_hidden.patch",
+        "hidden_patch_sha256": "422e08d986fd1846805bcad6e0d2cc144069010063c4c5f62ab32a78fbc8a52a",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": [
+        "python",
+        "proxy",
+        "authentication",
+        "swebench-verified"
+      ]
+    }
+  ]
+}
