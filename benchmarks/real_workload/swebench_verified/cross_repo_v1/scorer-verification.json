@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "verified_at": "2026-08-12T12:10:00Z",
+  "container_image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+  "network": "none",
+  "read_only_root": true,
+  "results": [
+    {
+      "task_id": "pylint-pr-4551",
+      "base_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "base_exit_code": 1,
+      "solution_commit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+      "solution_exit_code": 0
+    },
+    {
+      "task_id": "pytest-pr-5787",
+      "base_commit": "955e54221008aba577ecbaefa15679f6777d3bf8",
+      "base_exit_code": 1,
+      "solution_commit": "01082fea12649384aab44306f49503de1374c4a1",
+      "solution_exit_code": 0
+    },
+    {
+      "task_id": "seaborn-pr-3069",
+      "base_commit": "54cab15bdacfaa05a88fbc5502a5b322d99f148e",
+      "base_exit_code": 1,
+      "solution_commit": "a767d666d45a6f105177e4720669b85c92ee2432",
+      "solution_exit_code": 0
+    }
+  ]
+}

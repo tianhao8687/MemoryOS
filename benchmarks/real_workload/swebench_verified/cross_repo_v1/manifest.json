@@ -1,0 +1,189 @@
+{
+  "schema_version": "2.2",
+  "name": "swebench-cross-repository-ablation-v1",
+  "tier": "public_replay",
+  "generated_at": "2026-08-12T12:00:00Z",
+  "repositories": [
+    {
+      "id": "pylint-dev-pylint",
+      "clone_url": "https://github.com/pylint-dev/pylint.git",
+      "source_url": "https://github.com/pylint-dev/pylint",
+      "license_spdx": "GPL-2.0-only",
+      "license_url": "https://github.com/pylint-dev/pylint/blob/99589b08de8c5a2c6cc61e13a37420a868c80599/LICENSE"
+    },
+    {
+      "id": "pytest-dev-pytest",
+      "clone_url": "https://github.com/pytest-dev/pytest.git",
+      "source_url": "https://github.com/pytest-dev/pytest",
+      "license_spdx": "MIT",
+      "license_url": "https://github.com/pytest-dev/pytest/blob/955e54221008aba577ecbaefa15679f6777d3bf8/LICENSE"
+    },
+    {
+      "id": "mwaskom-seaborn",
+      "clone_url": "https://github.com/mwaskom/seaborn.git",
+      "source_url": "https://github.com/mwaskom/seaborn",
+      "license_spdx": "BSD-3-Clause",
+      "license_url": "https://github.com/mwaskom/seaborn/blob/54cab15bdacfaa05a88fbc5502a5b322d99f148e/LICENSE.md"
+    }
+  ],
+  "memories": [
+    {
+      "id": "pyreverse-type-flow-architecture",
+      "repository_id": "pylint-dev-pylint",
+      "memory_type": "project",
+      "category": "architecture",
+      "title": "Pyreverse type information crosses three stages",
+      "content": "Pyreverse collects assignment types in Linker-owned locals_type and instance_attrs_type lists, filters collected type nodes when building a class diagram, and formats attributes and methods in the diagram writer. A type-hint change must preserve inferred-type fallback and inference-error tolerance while carrying annotation nodes through all three stages; changing only the final label formatter leaves annotated assignments unavailable to the diagram.",
+      "captured_at": "2021-06-22T06:20:00Z",
+      "valid_from": "2021-06-22T06:20:00Z",
+      "source_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "source_ref": "https://github.com/pylint-dev/pylint/commit/99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "expectation": "helpful",
+      "confidence": 0.94,
+      "importance": 0.9
+    },
+    {
+      "id": "pytest-exception-chain-representation",
+      "repository_id": "pytest-dev-pytest",
+      "memory_type": "project",
+      "category": "architecture",
+      "title": "ExceptionChainRepr owns the complete traceback chain",
+      "content": "Pytest represents a chained failure as ExceptionChainRepr.chain, an ordered list of (reprtraceback, reprcrash, description) triples. Its reprtraceback and reprcrash attributes expose only the outermost exception for compatibility. Any report transport that serializes only those compatibility attributes silently loses inner causes and contexts; the chain and report sections need an explicit round trip while the single-exception representation remains supported.",
+      "captured_at": "2016-03-19T22:03:00Z",
+      "valid_from": "2016-03-19T22:03:00Z",
+      "source_commit": "fbc5ba08d969adafd71ecb6fce25a1cad76bb983",
+      "source_ref": "https://github.com/pytest-dev/pytest/commit/fbc5ba08d969adafd71ecb6fce25a1cad76bb983",
+      "expectation": "helpful",
+      "confidence": 0.97,
+      "importance": 0.94
+    },
+    {
+      "id": "seaborn-categorical-axis-contract",
+      "repository_id": "mwaskom-seaborn",
+      "memory_type": "project",
+      "category": "design-contract",
+      "title": "Categorical axes have a presentation contract",
+      "content": "Classic seaborn categorical plots finalize category axes by disabling the axis grid and placing limits at -0.5 and n-0.5; categorical y axes use the reversed orientation. The objects interface should attach those presentation rules to nominal scale semantics during figure finalization, after ticks exist, without overriding explicit user limits.",
+      "captured_at": "2021-01-19T22:00:00Z",
+      "valid_from": "2021-01-19T22:00:00Z",
+      "source_commit": "a809747dad5f60be3260b3bdbb2cbc8d6135284a",
+      "source_ref": "https://github.com/mwaskom/seaborn/commit/a809747dad5f60be3260b3bdbb2cbc8d6135284a",
+      "expectation": "helpful",
+      "confidence": 0.96,
+      "importance": 0.91
+    }
+  ],
+  "tasks": [
+    {
+      "id": "pylint-pr-4551",
+      "repository_id": "pylint-dev-pylint",
+      "sequence_id": "pylint-pyreverse-annotations",
+      "sequence_index": 1,
+      "base_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "solution_commit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+      "cutoff": "2021-06-22T07:00:00Z",
+      "source_url": "https://github.com/pylint-dev/pylint/issues/1548",
+      "source_published_at": "2017-06-22T11:40:07Z",
+      "prompt": "Update pyreverse UML generation so Python type hints are represented. For example, an __init__ argument annotated as str and assigned to self.a should produce a typed attribute, and method argument and return annotations should appear in generated labels. Preserve existing inferred-type behavior and add focused regression coverage.",
+      "memory_seed_ids": [
+        "pyreverse-type-flow-architecture"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": [
+          "python",
+          "benchmark_hidden_test.py"
+        ],
+        "hidden_patch": "pylint_pyreverse_annotations_hidden.patch",
+        "hidden_patch_sha256": "3fa7890f05d91505991d033eb20bab7bf8923fc6c99f7289b079b6fca014a2b0",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": [
+        "python",
+        "type-hints",
+        "uml",
+        "swebench-verified"
+      ]
+    },
+    {
+      "id": "pytest-pr-5787",
+      "repository_id": "pytest-dev-pytest",
+      "sequence_id": "pytest-report-serialization",
+      "sequence_index": 1,
+      "base_commit": "955e54221008aba577ecbaefa15679f6777d3bf8",
+      "solution_commit": "01082fea12649384aab44306f49503de1374c4a1",
+      "cutoff": "2019-08-28T12:00:00Z",
+      "source_url": "https://github.com/pytest-dev/pytest/issues/5786",
+      "source_published_at": "2019-01-08T14:37:18Z",
+      "prompt": "Fix pytest report serialization and deserialization so explicit and implicit chained exceptions survive a TestReport or CollectReport round trip, including transport used by distributed test execution. Preserve report sections and existing single-exception behavior, and add regression coverage.",
+      "memory_seed_ids": [
+        "pytest-exception-chain-representation"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": [
+          "python",
+          "benchmark_hidden_test.py"
+        ],
+        "hidden_patch": "pytest_exception_chain_hidden.patch",
+        "hidden_patch_sha256": "b80cae280f0570bf2a43fc20be717b11e5b2b4e3b9ab59d6c820ca4776ff1a7e",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": [
+        "python",
+        "serialization",
+        "exceptions",
+        "swebench-verified"
+      ]
+    },
+    {
+      "id": "seaborn-pr-3069",
+      "repository_id": "mwaskom-seaborn",
+      "sequence_id": "seaborn-nominal-axis",
+      "sequence_index": 1,
+      "base_commit": "54cab15bdacfaa05a88fbc5502a5b322d99f148e",
+      "solution_commit": "a767d666d45a6f105177e4720669b85c92ee2432",
+      "cutoff": "2022-10-10T00:00:00Z",
+      "source_url": "https://github.com/mwaskom/seaborn/issues/2967",
+      "source_published_at": "2022-08-20T20:48:28Z",
+      "prompt": "Make seaborn.objects Nominal axes use categorical presentation: place automatic limits half a unit outside the first and last ticks, hide the grid, and invert a nominal y axis. Explicit user limits must still take precedence. Add focused x-axis and y-axis regression coverage.",
+      "memory_seed_ids": [
+        "seaborn-categorical-axis-contract"
+      ],
+      "hidden_test": {
+        "image": "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+        "command": [
+          "python",
+          "benchmark_hidden_test.py"
+        ],
+        "hidden_patch": "seaborn_nominal_axis_hidden.patch",
+        "hidden_patch_sha256": "3b932d4ea69ceb1ea9f9f766e9402fc142b5bd8cec7993ecb13b31c1401b9c95",
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": [
+        "python",
+        "visualization",
+        "categorical-scale",
+        "swebench-verified"
+      ]
+    }
+  ]
+}

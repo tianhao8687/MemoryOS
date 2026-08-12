@@ -1,0 +1,105 @@
+diff --git a/benchmark_hidden_test.py b/benchmark_hidden_test.py
+new file mode 100644
+index 0000000..ed13bea
+--- /dev/null
++++ b/benchmark_hidden_test.py
+@@ -0,0 +1,99 @@
++from __future__ import annotations
++
++import ast
++from pathlib import Path
++from types import SimpleNamespace
++
++
++class Nominal:
++    pass
++
++
++class Axis:
++    def __init__(self) -> None:
++        self.grid_calls: list[tuple[bool, str | None]] = []
++
++    def grid(self, visible: bool, which: str | None = None) -> None:
++        self.grid_calls.append((visible, which))
++
++    @staticmethod
++    def get_major_ticks() -> list[object]:
++        return [object(), object(), object()]
++
++    @staticmethod
++    def convert_units(value: object) -> object:
++        return value
++
++
++class Axes:
++    def __init__(self) -> None:
++        self.xaxis = Axis()
++        self.yaxis = Axis()
++        self.xlim: tuple[float, float] | None = None
++        self.ylim: tuple[float, float] | None = None
++
++    def set_xlim(self, low: float, high: float, **_: object) -> None:
++        self.xlim = (low, high)
++
++    def set_ylim(self, low: float, high: float, **_: object) -> None:
++        self.ylim = (low, high)
++
++    def set(self, **values: tuple[float, float]) -> None:
++        if "xlim" in values:
++            self.xlim = values["xlim"]
++        if "ylim" in values:
++            self.ylim = values["ylim"]
++
++
++class Figure:
++    @staticmethod
++    def get_constrained_layout() -> bool:
++        return False
++
++    @staticmethod
++    def set_tight_layout(_: bool) -> None:
++        return None
++
++
++def load_method(path: Path, class_name: str, method_name: str):
++    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
++    class_node = next(
++        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == class_name
++    )
++    method = next(
++        node
++        for node in class_node.body
++        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == method_name
++    )
++    method.decorator_list = []
++    isolated = ast.Module(body=[method], type_ignores=[])
++    ast.fix_missing_locations(isolated)
++    namespace = {
++        "Nominal": Nominal,
++        "Plot": object,
++        "cast": lambda _type, value: value,
++        "set_layout_engine": lambda _figure, _engine: None,
++    }
++    exec(compile(isolated, str(path), "exec"), namespace)
++    return namespace[method_name]
++
++
++source = Path("seaborn/_core/plot.py")
++finalize = load_method(source, "Plotter", "_finalize_figure")
++axes = Axes()
++plotter = SimpleNamespace(
++    _subplots=[{"ax": axes, "x": "category_x", "y": "category_y"}],
++    _scales={"category_x": Nominal(), "category_y": Nominal()},
++    _figure=Figure(),
++)
++plot = SimpleNamespace(_limits={}, _target=None, _layout_spec={})
++finalize(plotter, plot)
++
++if axes.xlim != (-0.5, 2.5):
++    raise AssertionError(f"nominal x limits were not categorical: {axes.xlim!r}")
++if axes.ylim != (2.5, -0.5):
++    raise AssertionError(f"nominal y limits were not inverted: {axes.ylim!r}")
++if (False, "both") not in axes.xaxis.grid_calls:
++    raise AssertionError("nominal x grid was not disabled")
++if (False, "both") not in axes.yaxis.grid_calls:
++    raise AssertionError("nominal y grid was not disabled")

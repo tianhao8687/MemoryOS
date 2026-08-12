@@ -1,0 +1,51 @@
+{
+  "dataset": "princeton-nlp/SWE-bench_Verified",
+  "dataset_revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
+  "dataset_file_sha256": "a45b1fe4e2f0c8390b2b2938ac83e92ed5979000856808f3679c07812e9e6dcd",
+  "gold_patch_used_by_agent": false,
+  "partition_lock": "partition-lock.json",
+  "tasks": [
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "issue_url": "https://github.com/pylint-dev/pylint/issues/1548",
+      "issue_created_at": "2017-06-22T11:40:07Z",
+      "source_memory_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "source_memory_commit_at": "2021-06-22T06:19:06Z",
+      "base_commit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "base_commit_at": "2021-06-22T06:19:06Z",
+      "solution_merge_commit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+      "solution_merged_at": "2021-06-26T18:36:10Z",
+      "cutoff": "2021-06-22T07:00:00Z",
+      "partition": "train",
+      "hidden_test_design": "Dependency-shimmed behavioral checks execute the Linker assignment path, annotation-node diagram filtering, and DotWriter method-label formatting."
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5787",
+      "issue_url": "https://github.com/pytest-dev/pytest/issues/5786",
+      "issue_created_at": "2019-01-08T14:37:18Z",
+      "source_memory_commit": "fbc5ba08d969adafd71ecb6fce25a1cad76bb983",
+      "source_memory_commit_at": "2016-03-19T22:02:17Z",
+      "base_commit": "955e54221008aba577ecbaefa15679f6777d3bf8",
+      "base_commit_at": "2019-08-28T11:44:16Z",
+      "solution_merge_commit": "01082fea12649384aab44306f49503de1374c4a1",
+      "solution_merged_at": "2019-08-30T10:29:49Z",
+      "cutoff": "2019-08-28T12:00:00Z",
+      "partition": "train",
+      "hidden_test_design": "Dependency-shimmed report objects verify that two chained traceback/crash triples, descriptions, and report sections survive serialization and deserialization."
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3069",
+      "issue_url": "https://github.com/mwaskom/seaborn/issues/2967",
+      "issue_created_at": "2022-08-20T20:48:28Z",
+      "source_memory_commit": "a809747dad5f60be3260b3bdbb2cbc8d6135284a",
+      "source_memory_commit_at": "2021-01-19T21:59:36Z",
+      "base_commit": "54cab15bdacfaa05a88fbc5502a5b322d99f148e",
+      "base_commit_at": "2022-10-09T23:31:38Z",
+      "solution_merge_commit": "a767d666d45a6f105177e4720669b85c92ee2432",
+      "solution_merged_at": "2022-10-12T00:41:33Z",
+      "cutoff": "2022-10-10T00:00:00Z",
+      "partition": "development",
+      "hidden_test_design": "AST-isolated Plotter finalization runs against dependency-free axis doubles and verifies categorical limits, y inversion, and grid suppression."
+    }
+  ]
+}
