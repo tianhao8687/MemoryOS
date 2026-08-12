@@ -107,6 +107,26 @@ def test_cross_repository_hidden_scorers_separate_base_and_fix(
     assert fixed.returncode == 0, fixed.stderr
 
 
+def test_seaborn_hidden_scorer_accepts_equivalent_axes_tick_api(tmp_path: Path) -> None:
+    manifest = load_real_workload_manifest(TASK_ROOT / "manifest.json")
+    task = next(task for task in manifest.tasks if task.id == "seaborn-pr-3069")
+    assert task.hidden_test.hidden_patch is not None
+    source = _added_file_source(TASK_ROOT / "hidden" / task.hidden_test.hidden_patch)
+    (tmp_path / "benchmark_hidden_test.py").write_text(
+        source,
+        encoding="utf-8",
+        newline="\n",
+    )
+    _write_files(
+        tmp_path,
+        {"seaborn/_core/plot.py": _seaborn_source(fixed=True, use_axes_ticks=True)},
+    )
+
+    result = _run_scorer(tmp_path)
+
+    assert result.returncode == 0, result.stderr
+
+
 def _run_scorer(root: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "benchmark_hidden_test.py"],
@@ -132,17 +152,23 @@ def _added_file_source(path: Path) -> str:
     return "\n".join(line[1:] for line in lines[start:] if line.startswith("+")) + "\n"
 
 
-def _seaborn_source(*, fixed: bool) -> str:
+def _seaborn_source(*, fixed: bool, use_axes_ticks: bool = False) -> str:
+    grid_call = "axis_obj.grid(False)" if use_axes_ticks else 'axis_obj.grid(False, which="both")'
+    tick_count = (
+        'len(getattr(ax, f"get_{axis}ticks")())'
+        if use_axes_ticks
+        else "len(axis_obj.get_major_ticks())"
+    )
     behavior = (
-        """
+        f"""
                 elif isinstance(self._scales.get(axis_key), Nominal):
-                    axis_obj = getattr(ax, f"{axis}axis")
-                    axis_obj.grid(False, which="both")
-                    count = len(axis_obj.get_major_ticks())
+                    axis_obj = getattr(ax, f"{{axis}}axis")
+                    {grid_call}
+                    count = {tick_count}
                     low, high = -0.5, count - 0.5
                     if axis == "y":
                         low, high = high, low
-                    getattr(ax, f"set_{axis}lim")(low, high, auto=None)
+                    getattr(ax, f"set_{{axis}}lim")(low, high, auto=None)
 """
         if fixed
         else ""
