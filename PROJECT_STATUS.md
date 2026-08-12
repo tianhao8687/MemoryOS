@@ -15,12 +15,12 @@
 - Retrieval calibration（2026-08-12）：首版 `memoryos-git-silver-v1` 已从 7 个固定公开仓库生成，包含 6 个查询仓库、5 种语言、300 queries、3,656 candidates、9,600 judgments；train/dev/test=200/50/50，manifest digest `52e670691d4c723680f7d2c67efcce31701001c88218bd3d915c82de5013eb3a`。标签明确为 Git path-overlap silver，不冒充人工 gold。
 - Human review pilot（2026-08-12）：`memoryos-human-review-v1-pilot` 已生成 61 个盲标案例、每位评审 1,922 个候选判断，双份候选顺序独立、test 封存、构建不读 qrels，并包含来源映射与过耦合审计；manifest digest `ecf532c8ebbe7b3f9866623eab0e9fb53cd979abe486fb29359cb9ca7f20729f`。当前状态严格为 `pilot_unlabeled`，双人独立标注、仲裁、外部仓库 holdout 和真实 Agent shadow evidence 尚未完成。
 - Model-only blind review（2026-08-12）：两名有效隔离子 Agent 完成 1,922×2 判断，第三方角色逐条仲裁 527 个核心分歧，最终 provisional artifact SHA-256 `0c836306283ae750521b5526b844c8b0a0ef6c0a05137bcb5f846dcd558e83e1`。相关性 raw agreement 75.70%，但 Cohen's κ 仅 0.203；安全判断 agreement 97.66%、κ 0.834。原 reviewer-A 轮次因自报越界代码搜索被整轮作废并替换。该结果仅用于 rubric/主动学习诊断，不改变 `pilot_unlabeled`，不批准生产权重。
-- AI-only executable calibration（2026-08-12）：已冻结 `memoryos-ai-executable-calibration-v1` 协议，实现三 provider/三模型家族双顺序 AI Jury、运行时/提示/响应哈希绑定、概率弱监督、真实 full/minus-memory 消融、符号约束 pairwise 权重训练、dev 数据选择正则强度、显式 shadow scoring、仓库 holdout 和 sealed promotion gate；训练命令拒绝 test、fixture 与重复 observation，要求 AI Jury + real executable 两种标签都位于 train 分区，并把完整 train/dev 输入哈希绑定到候选 profile；晋级 CI 按 task 聚类且要求完整 task×agent 矩阵。新增 SWE-bench Verified `psf__requests-6028`：2 个协议有效 real-agent pair 中 1 个 full 成功/minus 失败并生成真实 TRAIN label，另 1 个双臂均成功；full 相对 minus 的平均耗时差为 -170.10 秒。readiness 现为真实消融对 2、有效 jury provider/模型家族 1、sealed promotion tasks 0；单仓库输入被训练器按最低 3 仓库规则拒绝，生产权重保持冻结，且不存在自动激活路径。
+- AI-only executable calibration（2026-08-12～13）：已冻结 `memoryos-ai-executable-calibration-v1` 协议，实现三 provider/三模型家族双顺序 AI Jury、运行时/提示/响应哈希绑定、概率弱监督、真实 full/minus-memory 消融、符号约束 pairwise 权重训练、dev 数据选择正则强度、显式 shadow scoring、仓库 holdout 和 sealed promotion gate；训练命令拒绝 test、fixture 与重复 observation，要求 AI Jury + real executable 两种标签都位于 train 分区，并把完整 train/dev 输入哈希绑定到候选 profile；晋级 CI 按 task 聚类且要求完整 task×agent 矩阵。当前 readiness 为 9 个协议有效 real-agent pair、6 个 SWE-bench Verified task、1 个有效 jury provider/model family、0 个 sealed promotion task。只有 Requests 的 1 个 pair 为 full 成功/minus 失败并生成真实 TRAIN label；另一个 Requests repeat、3 个 cross-repository pair 和 4 个后续 label-seeking pair 均为双臂同结果。证据仍不足以覆盖 3 个 train repository 和 held-out dev observation，生产权重保持冻结，且不存在自动激活路径。
 - Public BGE retrieval bootstrap（2026-08-13）：SWE-Gym 1,942 条可用查询、仓库级 train/dev/test 和真实 `BAAI/bge-small-en-v1.5` 产生 19.25% FTS / 80.75% vector 的非生产先验；仅投影 FTS/vector 相对 RRF 比例，graph/temporal/K/MMR 及安全门全部冻结。真实 MemoryOS 同候选池 52-query 回放的仓库宏平均 NDCG@10 为 0.49611→0.51330、required Recall@5 为 0.11538→0.17308，但 NDCG 95% CI 跨零，且 Pandas 两指标回退。机器门禁结论为 `retain_frozen_baseline`；一组 pytest 真实 Agent full/minus-memory 显示记忆有帮助，但不识别该权重比例。生产权重未变。
 - Query-adaptive retrieval（2026-08-13）：已实现声明式 `RetrievalPlan` 候选架构和 router v2。执行链拆为 candidate/fusion/governance/rerank/diversity；精确查询可用独立 Source Anchor 通道；请求与实际通道能力、降级、reranker、融合参数、阶段耗时和 bounded score contract 均进入证据。路由决策只使用离散信号和原因码，不再生成或阈值化伪概率。聚合器按 task 而非重复运行 bootstrap，并设 worst repository/agent/recipe、安全、成本和时延门禁。该能力只能显式 Shadow 启用；默认生产仍执行冻结 safe-hybrid，当前没有真实 Agent 因果数据支持激活。
 - Routing hardening 本地验证（2026-08-13）：全仓 Ruff/format PASS，`memoryos` 106 个源码文件 Mypy 0 error；后端全量 262 passed、0 failed（1 条上游 Starlette/httpx 弃用 warning）。这是实现回归证据，不是路由效果证据。
 
-MemoryOS V2.1 发布快照中的 A47 因当时未提供真实 coding-agent endpoint 与凭据而走 `external_blocker` 路径；该历史验收记录保持不变。2026-08-12 当前开发环境已接入隔离的真实 Codex runtime 并取得上述 2 个 full/minus pair，但仍不足以回写旧版 50-task 验收或作 confirmatory 产品效果声明。50-task fixture 仍只证明 harness/metrics/CI plumbing。
+MemoryOS V2.1 发布快照中的 A47 因当时未提供真实 coding-agent endpoint 与凭据而走 `external_blocker` 路径；该历史验收记录保持不变。2026-08-12 当前开发环境开始接入隔离的真实 Codex runtime，先取得 Requests 的 2 个 full/minus pair，随后扩展到上述 9 个协议有效 pair；它们仍不足以回写旧版 50-task 验收或作 confirmatory 产品效果声明。50-task fixture 仍只证明 harness/metrics/CI plumbing。
 
 ## V2.1 交付范围
 
@@ -34,7 +34,7 @@ MemoryOS V2.1 发布快照中的 A47 因当时未提供真实 coding-agent endpo
 | Retrieval calibration | 300-query public Git silver set、仓库级 holdout、future/cross-scope guards、可复现构建与哈希校验 | Silver baseline complete |
 | Human retrieval review | 61-case 盲标包、双评顺序隔离、1,922 judgments/reviewer、test 封存、过耦合/留一来源计划 | Optional diagnostic; not active promotion path |
 | Model review exercise | 双模型盲评、527 条第三方仲裁、全链哈希与银标后验诊断 | Provisional only; no weight promotion |
-| AI-only weight calibration | 3+ 模型家族双顺序 Jury、真实单记忆消融、受约束学习、sealed 多 Agent 晋级门禁 | 2 real pairs / 1 TRAIN label; fitting blocked by evidence gates; weights frozen |
+| AI-only weight calibration | 3+ 模型家族双顺序 Jury、真实单记忆消融、受约束学习、sealed 多 Agent 晋级门禁 | 9 valid real pairs / 6 tasks / 1 TRAIN label; fitting blocked by evidence gates; weights frozen |
 | Public retrieval prior | SWE-Gym 仓库 holdout、真实 BGE、同候选池 RRF Shadow、分层 bootstrap 与最差仓库门禁 | 52-query diagnostic positive point estimate; gate failed; frozen baseline retained |
 | Query-adaptive retrieval | allowlisted recipes、五阶段执行、Source Anchor exact channel、实际能力遥测、bounded score contract、task-level promotion gate | Candidate Shadow complete; production frozen; sealed causal matrix pending |
 | Agent A/B | V2.1 ≥50 paired fixture；V2.2 已完成 Requests 真实模型 2 次 full/minus repeat；50+ confirmatory 样本与多模型仍未完成 | Exploratory real evidence only |
@@ -59,7 +59,8 @@ MemoryOS V2.1 发布快照中的 A47 因当时未提供真实 coding-agent endpo
 | Blind benchmark | 100 retrieval + 100 temporal + 100 conflict；V2 Recall@5/temporal/conflict F1 = 1.0；perfect-score warning present |
 | 100K full pipeline | search P50/P95 87.853/100.822 ms；context P50/P95 127.422/138.808 ms |
 | Agent evidence | `external_blocker`，requested 50/completed 0，fixture harness-only |
-| AI calibration evidence | Requests real-agent 2 pairs / 4 arms；1 helped、1 unchanged、0 harmed；平均 latency effect -170.10 s；生产权重未变 |
+| AI calibration Requests seed | 2 pairs / 4 arms；1 helped、1 unchanged、0 harmed；平均 latency effect -170.10 s |
+| AI calibration readiness | 9 valid pairs / 6 tasks；1 TRAIN label；1 provider/model family；0 sealed promotion tasks；生产权重未变 |
 | Public RRF Shadow | 52 queries / 2 repos；NDCG@10 +0.01719（95% CI -0.00847～+0.04612）；Recall@5 +0.05769；Pandas 回退；生产门禁 FAIL |
 | Backend wheel | `memoryos-2.1.0-py3-none-any.whl`，135,473 bytes |
 | Windows executable | `MemoryOS.exe`，15,506,332 bytes |

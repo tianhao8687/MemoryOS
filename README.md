@@ -149,12 +149,12 @@ train/dev input SHA-256 into the candidate profile.
 .\.venv\Scripts\python.exe scripts\ai_calibration.py --help
 ```
 
-The checked-in readiness registry currently says `protocol_ready_evidence_pending`: five valid
-real-agent full/minus pairs now cover four SWE-bench Verified tasks across Requests, Pylint, pytest,
-and Seaborn. Only one Requests pair is discordant and creates a real TRAIN label; the three new
-cross-repository pairs preserve two both-pass outcomes and one both-fail outcome, rather than
-selecting only favorable examples. The model review still represents only one effective model
-family/provider, training still lacks usable labels across three training repositories and the
+The checked-in readiness registry currently says `protocol_ready_evidence_pending`: nine valid
+real-agent full/minus pairs now cover six SWE-bench Verified tasks across Requests, Pylint, pytest,
+and Seaborn. Only one Requests pair is discordant and creates a real TRAIN label; the other Requests
+repeat, three cross-repository pairs, and four later label-seeking pairs preserve unchanged outcomes
+rather than selecting only favorable examples. The model review still represents only one effective
+model family/provider, training still lacks usable labels across three training repositories and the
 required repository-held-out development observation, and there are no sealed promotion tasks.
 Production weights therefore remain frozen. Protocol, evidence hashes, commands, and blockers are in
 [`benchmarks/ai_calibration_v1/README.md`](benchmarks/ai_calibration_v1/README.md).
@@ -215,6 +215,7 @@ MemoryOS 不做全仓源码收藏或云同步。Source Anchor 只读取被明确
 - [MCP 接入](MCP_SETUP.md)
 - [验收证据](docs/ACCEPTANCE.md)
 - [项目状态](PROJECT_STATUS.md)
+- [开发问题总复盘](docs/DEVELOPMENT_PROBLEMS_RETROSPECTIVE.md)
 - [实施决策](DECISIONS.md)
 - [变更日志](CHANGELOG.md)
 - [MemoryBench](benchmarks/memorybench_v2/README.md)

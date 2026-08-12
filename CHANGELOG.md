@@ -4,6 +4,9 @@
 
 ### Added
 
+- A living development-problem retrospective covering product-scope decisions, adversarial fixes,
+  calibration failures, scorer invalidations, real-agent evidence scarcity, Windows infrastructure
+  incidents, magic-number status, and the remaining path to production weight promotion.
 - A pinned public Git silver retrieval-calibration dataset with 300 repository-held-out queries,
   3,656 commit-memory candidates, 9,600 graded judgments, future/cross-scope guards, separate
   runtime/qrels artifacts, license hashes, and deterministic offline rebuilds.
