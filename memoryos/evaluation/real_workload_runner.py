@@ -32,6 +32,7 @@ from memoryos.evaluation.real_workload_report import (
 )
 from memoryos.evaluation.real_workload_scoring import HiddenTestRunner, scan_canary_leakage
 from memoryos.evaluation.real_workload_workspace import RepositoryWorkspaceManager
+from memoryos.retrieval_v2.rrf_shadow import RRFChannelShadowProfile
 from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
 
 _RUN_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
@@ -74,6 +75,9 @@ class RealWorkloadRunner:
         conditions: list[ExperimentCondition] | None = None,
         order_seed: int = 20260810,
         scoring_profile: ShadowRetrievalProfile | None = None,
+        rrf_channel_profile: RRFChannelShadowProfile | None = None,
+        embedding_base_url: str | None = None,
+        embedding_model: str | None = None,
     ) -> dict[str, Any]:
         if not _RUN_ID.fullmatch(run_id):
             raise ValueError("run_id contains unsafe path characters")
@@ -86,8 +90,14 @@ class RealWorkloadRunner:
             raise ValueError("condition calibration filter must be non-empty and unique")
         if mode is RunMode.CONFIRMATORY and set(selected_conditions) != set(ExperimentCondition):
             raise ValueError("confirmatory mode must run all three conditions")
-        if scoring_profile is not None and selected_conditions != [ExperimentCondition.MEMORYOS]:
+        if scoring_profile is not None and rrf_channel_profile is not None:
+            raise ValueError("a run can use only one shadow retrieval profile")
+        if (scoring_profile is not None or rrf_channel_profile is not None) and (
+            selected_conditions != [ExperimentCondition.MEMORYOS]
+        ):
             raise ValueError("shadow scoring profiles require a MemoryOS-only dry run")
+        if (embedding_base_url is None) != (embedding_model is None):
+            raise ValueError("embedding_base_url and embedding_model must be set together")
         evidence_dir = output_root.resolve() / run_id
         if evidence_dir.exists():
             raise ValueError(f"refusing to reuse evidence directory: {evidence_dir}")
@@ -156,6 +166,9 @@ class RealWorkloadRunner:
                     execution_index,
                     seeds,
                     scoring_profile,
+                    rrf_channel_profile,
+                    embedding_base_url,
+                    embedding_model,
                 )
                 records.append(record)
                 execution_index += 1
@@ -169,9 +182,14 @@ class RealWorkloadRunner:
             started_at=started_at,
         )
         report["runtime_spec_sha256"] = _canonical_sha256(runtime.model_dump(mode="json"))
-        report["scoring_profile_sha256"] = (
-            None if scoring_profile is None else scoring_profile.digest()
+        report["scoring_profile_sha256"] = _profile_digest(
+            scoring_profile,
+            rrf_channel_profile,
         )
+        report["embedding_provider"] = {
+            "configured": embedding_model is not None,
+            "model": embedding_model,
+        }
         report["order_seed"] = order_seed
         report["execution_order"] = execution_order
         report["temporal_validation"] = provenance
@@ -189,6 +207,7 @@ class RealWorkloadRunner:
                 "runtime": runtime.model_dump(mode="json"),
                 "runtime_spec_sha256": report["runtime_spec_sha256"],
                 "scoring_profile_sha256": report["scoring_profile_sha256"],
+                "embedding_provider": report["embedding_provider"],
                 "order_seed": order_seed,
                 "task_ids": [task.id for task in tasks],
                 "report_sha256": hashlib.sha256(
@@ -213,6 +232,9 @@ class RealWorkloadRunner:
         execution_index: int,
         seeds: dict[str, Any],
         scoring_profile: ShadowRetrievalProfile | None,
+        rrf_channel_profile: RRFChannelShadowProfile | None,
+        embedding_base_url: str | None,
+        embedding_model: str | None,
     ) -> ConditionRunRecord:
         condition_started = time.perf_counter()
         task_state = state_dir / "tasks" / task.id / condition.value
@@ -237,6 +259,9 @@ class RealWorkloadRunner:
                     else "http://benchmark-memory:8000/mcp"
                 ),
                 scoring_profile=scoring_profile,
+                rrf_channel_profile=rrf_channel_profile,
+                embedding_base_url=embedding_base_url,
+                embedding_model=embedding_model,
             )
             execution = self.agent_executor.run(
                 runtime_spec,
@@ -406,6 +431,17 @@ def _canonical_sha256(payload: Any) -> str:
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _profile_digest(
+    scoring_profile: ShadowRetrievalProfile | None,
+    rrf_channel_profile: RRFChannelShadowProfile | None,
+) -> str | None:
+    if scoring_profile is not None:
+        return scoring_profile.digest()
+    if rrf_channel_profile is not None:
+        return rrf_channel_profile.digest()
+    return None
 
 
 __all__ = ["RealWorkloadRunner", "load_agent_runtime", "load_runner_inputs"]

@@ -212,6 +212,7 @@ def test_executor_uses_sidecar_and_hardened_agent_mounts(tmp_path: Path) -> None
     assert "--cap-drop" in sidecar
     assert "--network-alias" in sidecar
     assert "benchmark-memory" in sidecar
+    assert "PYTHONUNBUFFERED=1" in sidecar
     assert "--publish" not in sidecar
     assert len(engine.probes) == 1
 

@@ -64,7 +64,11 @@ from memoryos.providers.openai_compatible import (
     OpenAICompatibleReranker,
 )
 from memoryos.retrieval.search import RetrievalEngine
-from memoryos.retrieval_v2 import RetrievalPipeline, ShadowRetrievalProfile
+from memoryos.retrieval_v2 import (
+    RetrievalPipeline,
+    RRFChannelShadowProfile,
+    ShadowRetrievalProfile,
+)
 from memoryos.security.redaction import redact_secrets
 
 logger = logging.getLogger(__name__)
@@ -86,9 +90,18 @@ class MemoryService:
         settings: MemoryOSSettings,
         *,
         retrieval_scoring_profile: ShadowRetrievalProfile | None = None,
+        retrieval_rrf_channel_profile: RRFChannelShadowProfile | None = None,
     ) -> None:
         self.database = database
         self.settings = settings
+        if retrieval_rrf_channel_profile is not None:
+            if not settings.embedding_base_url or not settings.embedding_model:
+                raise ValueError("RRF channel shadow requires an embedding provider")
+            expected_prefix = f"fastembed:{settings.embedding_model}@"
+            if not retrieval_rrf_channel_profile.source_vector_channel_id.startswith(
+                expected_prefix
+            ):
+                raise ValueError("embedding model does not match the RRF channel shadow source")
         embedding_provider = None
         if settings.embedding_base_url and settings.embedding_model:
             embedding_provider = OpenAICompatibleEmbeddingProvider(
@@ -131,6 +144,7 @@ class MemoryService:
             self.retrieval,
             reranker,
             scoring_profile=retrieval_scoring_profile,
+            rrf_channel_profile=retrieval_rrf_channel_profile,
         )
         self.context_builder = TaskAwareContextCompiler(self.retrieval_v2)
         self.truth = TruthMaintenanceService(relationship_judge)

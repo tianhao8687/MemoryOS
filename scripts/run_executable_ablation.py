@@ -26,6 +26,7 @@ from memoryos.evaluation.retrieval_weight_calibration import (
     CalibrationPartition,
     observation_from_ablation_pair,
 )
+from memoryos.retrieval_v2.rrf_shadow import load_rrf_channel_shadow_profile
 
 
 def main() -> None:
@@ -55,6 +56,14 @@ def main() -> None:
         help="Reuse one completed, protocol-valid minus-arm report after strict identity checks.",
     )
     parser.add_argument("--order-seed", type=int, default=20260812)
+    parser.add_argument("--rrf-channel-profile", type=Path)
+    parser.add_argument("--embedding-base-url")
+    parser.add_argument("--embedding-model")
+    parser.add_argument(
+        "--diagnostic-only",
+        action="store_true",
+        help="Run the pair without emitting a calibration training observation.",
+    )
     parser.add_argument("--work-root", type=Path, default=Path("build/real-workload"))
     parser.add_argument(
         "--reuse-repository-cache-without-fetch",
@@ -72,6 +81,17 @@ def main() -> None:
     arguments = parser.parse_args()
 
     manifest, runtime = load_runner_inputs(arguments.manifest, arguments.runtime)
+    channel_profile = (
+        None
+        if arguments.rrf_channel_profile is None
+        else load_rrf_channel_shadow_profile(arguments.rrf_channel_profile)
+    )
+    if channel_profile is not None and not arguments.diagnostic_only:
+        raise ValueError("public RRF shadows may run only with --diagnostic-only")
+    if (arguments.embedding_base_url is None) != (arguments.embedding_model is None):
+        raise ValueError("--embedding-base-url and --embedding-model must be set together")
+    if channel_profile is not None and arguments.embedding_model is None:
+        raise ValueError("public RRF shadow requires its real embedding provider")
     task_by_id = {task.id: task for task in manifest.tasks}
     try:
         task = task_by_id[arguments.task_id]
@@ -127,9 +147,20 @@ def main() -> None:
                 run_id=arm_run_id,
                 conditions=[ExperimentCondition.MEMORYOS],
                 order_seed=arguments.order_seed,
+                rrf_channel_profile=channel_profile,
+                embedding_base_url=arguments.embedding_base_url,
+                embedding_model=arguments.embedding_model,
             )
         else:
             source_report = _load_json_object(resume_path)
+            if channel_profile is not None or arguments.embedding_model is not None:
+                _validate_resumed_provider(
+                    source_report,
+                    shadow_profile_sha256=(
+                        None if channel_profile is None else channel_profile.digest()
+                    ),
+                    embedding_model=arguments.embedding_model,
+                )
             resumed_arms.append(arm.value)
         converted = ablation_run_from_report(
             source_report,
@@ -149,14 +180,18 @@ def main() -> None:
     ablation_report = analyze_executable_ablations(runs)
     full_run = next(run for run in runs if run.arm is AblationArm.MEMORYOS_FULL)
     minus_run = next(run for run in runs if run.arm is AblationArm.MEMORYOS_MINUS_MEMORY)
-    observation = observation_from_ablation_pair(
-        full_run,
-        minus_run,
-        observation_id="ablation-"
-        + hashlib.sha256(
-            f"{run_id}\x1f{repeat_id}\x1f{task.id}\x1f{arguments.memory_id}".encode()
-        ).hexdigest()[:32],
-        partition=CalibrationPartition(arguments.partition),
+    observation = (
+        None
+        if arguments.diagnostic_only
+        else observation_from_ablation_pair(
+            full_run,
+            minus_run,
+            observation_id="ablation-"
+            + hashlib.sha256(
+                f"{run_id}\x1f{repeat_id}\x1f{task.id}\x1f{arguments.memory_id}".encode()
+            ).hexdigest()[:32],
+            partition=CalibrationPartition(arguments.partition),
+        )
     )
     aggregate_dir.mkdir(parents=True)
     _write_jsonl(aggregate_dir / "ablation-runs.jsonl", runs)
@@ -179,6 +214,9 @@ def main() -> None:
         "effect_status": ablation_report.effects[0].status.value,
         "informative_pairs": ablation_report.effects[0].informative_pairs,
         "training_observations": int(observation is not None),
+        "diagnostic_only": arguments.diagnostic_only,
+        "shadow_profile_sha256": (None if channel_profile is None else channel_profile.digest()),
+        "embedding_model": arguments.embedding_model,
         "production_eligible": ablation_report.production_eligible,
         "output": str(aggregate_dir),
     }
@@ -232,6 +270,19 @@ def _canonical_sha256(value: Any) -> str:
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def _validate_resumed_provider(
+    report: dict[str, Any],
+    *,
+    shadow_profile_sha256: str | None,
+    embedding_model: str | None,
+) -> None:
+    if report.get("scoring_profile_sha256") != shadow_profile_sha256:
+        raise ValueError("resumed arm shadow profile does not match this run")
+    provider = report.get("embedding_provider")
+    if not isinstance(provider, dict) or provider.get("model") != embedding_model:
+        raise ValueError("resumed arm embedding provider does not match this run")
 
 
 if __name__ == "__main__":

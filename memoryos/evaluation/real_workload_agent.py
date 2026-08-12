@@ -375,16 +375,22 @@ class DockerAgentExecutor:
             "local",
             "--log-opt",
             "max-size=1m",
-            spec.mcp_image,
-            spec.mcp_python_command,
-            *memory.server_arguments,
-            "--transport",
-            "streamable-http",
-            "--host",
-            _CONTAINER_BIND,
-            "--port",
-            "8000",
         ]
+        for name, value in memory.server_environment:
+            arguments.extend(["--env", f"{name}={value}"])
+        arguments.extend(
+            [
+                spec.mcp_image,
+                spec.mcp_python_command,
+                *memory.server_arguments,
+                "--transport",
+                "streamable-http",
+                "--host",
+                _CONTAINER_BIND,
+                "--port",
+                "8000",
+            ]
+        )
         self.engine.start_detached(arguments)
         self.engine.probe_python_socket(
             container_name,

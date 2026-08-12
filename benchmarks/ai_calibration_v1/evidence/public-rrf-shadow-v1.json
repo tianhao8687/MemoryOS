@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0",
+  "status": "exploratory_public_shadow_rejected_for_production",
+  "evaluated_on": "2026-08-13",
+  "production_eligible": false,
+  "production_weights_changed": false,
+  "identifiable_claim": "relative_fts_vector_weight_only",
+  "hypothesis": {
+    "frozen_baseline_channel_weights": {
+      "fts": 1.0,
+      "vector": 1.0,
+      "graph": 0.82,
+      "temporal": 0.9
+    },
+    "shadow_channel_weights": {
+      "fts": 0.385095470978,
+      "vector": 1.614904529022,
+      "graph": 0.82,
+      "temporal": 0.9
+    },
+    "rrf_k": 60,
+    "mmr_lambda": 0.78,
+    "normalization": "preserve_fts_vector_total_weight"
+  },
+  "lineage": {
+    "dataset_id": "swe-gym-history-silver-v1",
+    "dataset_content_sha256": "24780ec534eac0d942f3b519581626f66a8345ab0298c1d3a17f54f664b4724b",
+    "source_parquet_sha256": "60569cea74bb281f7a5579467436a2bc1932c6e0c5f2f7fa0d084392abd9ad97",
+    "feature_rows_sha256": "d5e3c3d8c2b4bfe52ca3789428df26a0dc2365ed9b8610d8ce2ff48b98b42f37",
+    "embedding_cache_sha256": "d4a1322751bf24a68a9319cbd1490ce70a23e7c2e354f32fcc2bff09430c9f10",
+    "public_profile_content_sha256": "ef61a1410179922c41cee6cadb4f985950ef5aceb229aec51ddc810b80ea8df7",
+    "public_profile_file_sha256": "97815f50bde97177330499de91f7123acd808c7765b84295c7d076d5b5140a92",
+    "shadow_profile_content_sha256": "5bce1eeb51aeaf0f891e47aa4ba1abd9643885c3ae232af51d51a0a544af2dae",
+    "shadow_profile_file_sha256": "dcc513c426369f82e7555e8480e19f0fdb61a8ee7db6e6c659ccc0f13ec2784d",
+    "vector_channel_id": "fastembed:BAAI/bge-small-en-v1.5@52398278842ec682c6f32300af41344b1c0b0bb2",
+    "vector_channel_source_sha256": "3fc39f4bafea6ba5be63c4fc1606461a5e7f8fe2bcf8087364513689c1a9d913",
+    "vector_feature_adapter_sha256": "37549e17ecd86416afc6bd4f80ab42863428d0dbf50ac73ccc3682f142f1688f"
+  },
+  "offline_public_fit": {
+    "training_queries": 1052,
+    "development_queries": 166,
+    "public_test_queries": 724,
+    "training_repositories": 7,
+    "development_repositories": 2,
+    "public_test_repositories": 2,
+    "selected_l2": 0.02,
+    "repository_macro_test": {
+      "baseline_ndcg_at_10": 0.6262555800087423,
+      "shadow_ndcg_at_10": 0.6416588920370339,
+      "baseline_required_recall_at_5": 0.3194842406876791,
+      "shadow_required_recall_at_5": 0.3543641172581
+    }
+  },
+  "real_pipeline_replay": {
+    "report_sha256": "58f1fb490610c6eb018024c48ecbda9c46722d7bae7a7e4534613eacc09719ad",
+    "analysis_sha256": "aaddbc8a1b8f276ddd33e9fb5ee05b075fc4529f00fc66ad683a48e1104d29d5",
+    "split": "test",
+    "sample_seed": "memoryos-public-rrf-replay-v1",
+    "sampling": "all 26 Conan queries plus 26 deterministic Pandas queries",
+    "query_count": 52,
+    "repository_count": 2,
+    "metric_aggregation": "repository_macro_average",
+    "baseline": {
+      "ndcg_at_10": 0.4961051923300889,
+      "required_recall_at_5": 0.11538461538461539
+    },
+    "shadow": {
+      "ndcg_at_10": 0.5132983638227464,
+      "required_recall_at_5": 0.17307692307692307
+    },
+    "delta": {
+      "ndcg_at_10": 0.017193171492657533,
+      "required_recall_at_5": 0.05769230769230768
+    },
+    "paired_stratified_bootstrap": {
+      "rounds": 10000,
+      "seed": 20260813,
+      "ndcg_at_10_delta_ci95": [
+        -0.008467791347662328,
+        0.04612360268363252
+      ],
+      "required_recall_at_5_delta_ci95": [
+        -0.038461538461538464,
+        0.15384615384615385
+      ]
+    },
+    "required_rank_changes": {
+      "improved": 23,
+      "unchanged": 12,
+      "worsened": 17
+    },
+    "per_repository": {
+      "conan-io/conan": {
+        "queries": 26,
+        "ndcg_at_10_delta": 0.045285796862425565,
+        "required_recall_at_5_delta": 0.15384615384615383
+      },
+      "pandas-dev/pandas": {
+        "queries": 26,
+        "ndcg_at_10_delta": -0.010899453877110665,
+        "required_recall_at_5_delta": -0.038461538461538464
+      }
+    }
+  },
+  "decision": {
+    "policy": "public_rrf_shadow_gate_v1",
+    "status": "shadow_gate_failed",
+    "recommendation": "retain_frozen_baseline",
+    "failed_gates": [
+      "minimum_repository_coverage",
+      "ndcg_ci95_lower_bound_positive",
+      "worst_repository_ndcg_non_regression",
+      "worst_repository_required_recall_non_regression"
+    ]
+  },
+  "real_agent_probe": {
+    "interpretation": "memory_presence_ablation_not_weight_ablation",
+    "task_id": "pytest-pr-6197",
+    "agent_model": "gpt-5.6-terra",
+    "valid_pairs": 1,
+    "helped_pairs": 1,
+    "harmed_pairs": 0,
+    "full_success_minus_success_difference": 1.0,
+    "latency_difference_seconds": -5.894480999999985,
+    "safety_worsened_pairs": 0,
+    "training_observations": 0,
+    "full_report_sha256": "bf16d87c9fad9dadbb4613c7a2ff3e107e9a2aa778c7301aa406eef84250ef0c",
+    "ablation_report_sha256": "21b84817d52760dd7b3b4d852d6c43eaa23387cdf2f8c33fc0a1ec53975de4d5",
+    "summary_sha256": "75e9cb9831f3af7ad80e557165daca5665ed9e8e211ed5f1eb97e70cb01bced6",
+    "runs_sha256": "cc9c094f611e60dd3d6874540613322c0d4fa1994addca78e7da2caecf075bcd",
+    "empty_training_observations_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limitations": [
+    "Public path-overlap labels are not downstream agent-success ground truth.",
+    "The public test partition is repository-held-out but neither sealed nor broad enough for promotion.",
+    "The 52-query real-pipeline replay covers only two repositories and has a confidence interval crossing zero.",
+    "The real-agent probe tests whether one retrieved memory helped; it does not isolate the 19/81 channel ratio against the frozen 50/50 baseline.",
+    "This evidence cannot activate or approve production weights."
+  ]
+}
