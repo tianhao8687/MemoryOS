@@ -3,12 +3,12 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from memoryos.claims.canonicalize import canonical_predicate
 from memoryos.db.models import ClaimIdentityRow, ClaimRow, ClaimVersionRow, EntityRow, MemoryRow
-from memoryos.domain.schemas import ClaimStaleState, ClaimStatus
+from memoryos.domain.schemas import ClaimStaleState, ClaimStatus, ScopeType
 
 
 def _now() -> datetime:
@@ -173,33 +173,54 @@ class ClaimVersionStore:
         *,
         valid_time: datetime,
         known_time: datetime,
+        scope_type: ScopeType | None = None,
+        scope_key: str | None = None,
+        predicate: str | None = None,
+        statuses: set[ClaimStatus] | None = None,
     ) -> list[ClaimVersionRow]:
-        candidates = list(
+        filters = [
+            ClaimVersionRow.transaction_from <= known_time,
+            or_(
+                ClaimVersionRow.transaction_to.is_(None),
+                known_time < ClaimVersionRow.transaction_to,
+            ),
+            or_(ClaimVersionRow.valid_from.is_(None), ClaimVersionRow.valid_from <= valid_time),
+            or_(ClaimVersionRow.valid_to.is_(None), valid_time < ClaimVersionRow.valid_to),
+        ]
+        if scope_type is not None:
+            filters.append(ClaimIdentityRow.scope_type == scope_type)
+        if scope_key is not None:
+            filters.append(ClaimIdentityRow.scope_key == scope_key)
+        if predicate is not None:
+            filters.append(ClaimIdentityRow.canonical_predicate == canonical_predicate(predicate))
+        if statuses is not None:
+            filters.append(ClaimVersionRow.status.in_(statuses))
+        ranked = (
+            select(
+                ClaimVersionRow.id.label("version_id"),
+                func.row_number()
+                .over(
+                    partition_by=ClaimVersionRow.claim_id,
+                    order_by=(
+                        ClaimVersionRow.transaction_from.desc(),
+                        ClaimVersionRow.version_number.desc(),
+                        ClaimVersionRow.id,
+                    ),
+                )
+                .label("visibility_rank"),
+            )
+            .join(ClaimIdentityRow, ClaimIdentityRow.id == ClaimVersionRow.identity_id)
+            .where(*filters)
+            .subquery()
+        )
+        return list(
             session.scalars(
                 select(ClaimVersionRow)
-                .where(ClaimVersionRow.transaction_from <= known_time)
-                .order_by(
-                    ClaimVersionRow.claim_id,
-                    ClaimVersionRow.transaction_from.desc(),
-                    ClaimVersionRow.version_number.desc(),
-                )
+                .join(ranked, ranked.c.version_id == ClaimVersionRow.id)
+                .where(ranked.c.visibility_rank == 1)
+                .order_by(ClaimVersionRow.claim_id, ClaimVersionRow.id)
             )
         )
-        current_at_time: dict[str, ClaimVersionRow] = {}
-        for version in candidates:
-            if version.claim_id in current_at_time:
-                continue
-            if version.transaction_to is not None and _utc(version.transaction_to) <= _utc(
-                known_time
-            ):
-                continue
-            current_at_time[version.claim_id] = version
-        return [
-            version
-            for version in current_at_time.values()
-            if (version.valid_from is None or _utc(version.valid_from) <= _utc(valid_time))
-            and (version.valid_to is None or _utc(valid_time) < _utc(version.valid_to))
-        ]
 
     @staticmethod
     def _snapshot(

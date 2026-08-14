@@ -122,9 +122,11 @@ def compare_anchor(anchor: SourceAnchorRow, repository_path: Path | str) -> Fres
     if context.head == anchor.cached_head and anchor.checked_at is not None:
         return FreshnessResult(
             anchor.freshness_state,
-            anchor.path,
+            anchor.observed_path or anchor.path,
             context.head,
             "Cached freshness result for the current HEAD.",
+            line_start=anchor.observed_line_start,
+            line_end=anchor.observed_line_end,
         )
     if not absolute.is_file():
         moved = _renamed_path(context, anchor)
@@ -219,14 +221,15 @@ def compare_anchor(anchor: SourceAnchorRow, repository_path: Path | str) -> Fres
 
 
 def apply_freshness_result(anchor: SourceAnchorRow, result: FreshnessResult) -> None:
+    observed_at = datetime.now(UTC)
     anchor.freshness_state = result.state
-    anchor.path = result.path
     anchor.cached_head = result.head
-    anchor.checked_at = datetime.now(UTC)
-    if result.current_excerpt is not None:
-        anchor.evidence_excerpt = result.current_excerpt
-        anchor.excerpt_hash = _hash(result.current_excerpt)
-    if result.line_start is not None:
-        anchor.line_start = result.line_start
-    if result.line_end is not None:
-        anchor.line_end = result.line_end
+    anchor.checked_at = observed_at
+    anchor.observed_head = result.head
+    anchor.observed_path = result.path
+    anchor.observed_line_start = result.line_start
+    anchor.observed_line_end = result.line_end
+    anchor.observed_excerpt_hash = (
+        _hash(result.current_excerpt) if result.current_excerpt is not None else None
+    )
+    anchor.observed_at = observed_at

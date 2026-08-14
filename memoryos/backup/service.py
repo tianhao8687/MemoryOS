@@ -76,10 +76,11 @@ MAX_DATABASE_IMPORT_BYTES = 2 * 1024 * 1024 * 1024
 MAX_JSONL_IMPORT_BYTES = 512 * 1024 * 1024
 MAX_JSONL_RECORD_BYTES = 4 * 1024 * 1024
 MAX_IMPORT_RECORDS = 1_000_000
-CURRENT_SCHEMA_VERSION = "0003_reality_intelligence_hardening"
+CURRENT_SCHEMA_VERSION = "0004_anchor_observation_hardening"
 SUPPORTED_SCHEMA_VERSIONS = {
     "0001_initial",
     "0002_memory_intelligence",
+    "0003_reality_intelligence_hardening",
     CURRENT_SCHEMA_VERSION,
 }
 REQUIRED_FTS_TRIGGERS = {
@@ -1024,6 +1025,12 @@ class BackupService:
             "freshness_state": row.freshness_state.value,
             "cached_head": row.cached_head,
             "checked_at": self._iso(row.checked_at),
+            "observed_head": row.observed_head,
+            "observed_path": row.observed_path,
+            "observed_line_start": row.observed_line_start,
+            "observed_line_end": row.observed_line_end,
+            "observed_excerpt_hash": row.observed_excerpt_hash,
+            "observed_at": self._iso(row.observed_at),
             "metadata_json": row.metadata_json,
             "created_at": self._iso(row.created_at),
         }
@@ -1258,6 +1265,7 @@ class BackupService:
         if kind == "source_anchor":
             data["freshness_state"] = FreshnessState(data["freshness_state"])
             data["checked_at"] = self._dt(data.get("checked_at"))
+            data["observed_at"] = self._dt(data.get("observed_at"))
             data["created_at"] = self._dt(data.get("created_at"))
             return SourceAnchorRow(**data)
         if kind == "claim":

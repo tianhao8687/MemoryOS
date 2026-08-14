@@ -41,7 +41,7 @@ def rrf_channel_shadow_from_public(
         limitations=[
             *profile.limitations,
             "This projection changes only the FTS/vector RRF ratio; graph, temporal, RRF K, "
-            "MMR, freshness, scope, feedback, truth, and safety gates stay frozen.",
+            "Lexical MMR, freshness, scope, feedback, truth, and safety gates stay frozen.",
             "The projection is diagnostic-only and cannot authorize production activation.",
         ],
     )

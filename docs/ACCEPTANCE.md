@@ -65,7 +65,7 @@ V1 frozen baseline 位于 `docs/verification/v2/v1-baseline.json`（commit `83df
 | A39 Abstention Safety | abstain/异常写审计但不改变 accepted truth | benchmark gate + V2.1 tests |
 | A40 ANN Live | sqlite-vec provider/model/dimension namespace 真实写入、检索、状态持久化；发行包捆绑 runtime | ANN test + doctor + package smoke |
 | A41 Fallback | ANN 禁用/不可用时明确 `exact-fallback`，结果仍可检索 | ANN test |
-| A42 100K Search | 完整 RetrievalPipeline，100,000 records，P95 <150 ms | `full-pipeline-performance.json` |
+| A42 100K Search | FTS-first Core Pipeline，100,000 records，P95 <150 ms | `full-pipeline-performance.json` |
 | A43 100K Context | TaskAwareContextCompiler 同一数据集 P95 <300 ms | `full-pipeline-performance.json` |
 | A44 Blind Recall@5 | 100 hard-negative retrieval cases，Recall@5 ≥0.90 | `coding-memory-bench.json` |
 | A45 Gold Isolation | runtime payload 不含 gold，gold 只由 scorer 加载，input/gold 独立 hash | `coding-memory-bench.json` |
@@ -96,7 +96,7 @@ V1 frozen baseline 位于 `docs/verification/v2/v1-baseline.json`（commit `83df
 
 真实 coding-agent A/B 需要外部模型/harness。本环境未配置，因此该效果项保持外部阻塞；这是 A30 要求的诚实结论，不把 fixture 成功率当产品准确率。
 
-V2.1 新门槛：temporal accuracy ≥0.98、conflict F1 ≥0.88、hard-negative Recall@5 ≥0.90、100k full-pipeline search P95 <150 ms、context P95 <300 ms。完美分数会在报告中产生警告，要求继续扩展 adversarial cases；它不是“已证明泛化”的声明。
+V2.1 新门槛：temporal accuracy ≥0.98、conflict F1 ≥0.88、hard-negative Recall@5 ≥0.90、100K FTS-first core search P95 <150 ms、context P95 <300 ms。该性能门禁不代表 embedding/Claim/Relation/model-enhanced 全管线。完美分数会在报告中产生警告，要求继续扩展 adversarial cases；它不是“已证明泛化”的声明。
 
 ## 命令级门禁
 
@@ -108,9 +108,9 @@ V2.1 新门槛：temporal accuracy ≥0.98、conflict F1 ≥0.88、hard-negative
 4. Mypy strict
 5. Pytest
 6. MemoryBench V2 regression
-7. Blind CodingMemoryBench V2.1
+7. CodingMemoryBench fixture regression
 8. paired real-agent protocol or explicit blocker
-9. 100k full retrieval/context pipeline
+9. 100K FTS-first Core Pipeline
 10. TypeScript typecheck
 11. ESLint zero warnings
 12. Vitest
@@ -130,8 +130,8 @@ V2.1 新门槛：temporal accuracy ≥0.98、conflict F1 ≥0.88、hard-negative
 - A15–A32：`docs/verification/v2/acceptance-summary.json`
 - package smoke：`docs/verification/package-smoke.json`
 - V2 verify：`docs/verification/v2/verify-summary.json`
-- CodingMemoryBench：`docs/verification/v2.1/coding-memory-bench.{json,html}`
-- 100k full pipeline：`docs/verification/v2.1/full-pipeline-performance.json`
+- CodingMemoryBench fixture regression：`docs/verification/v2.1/coding-memory-bench.{json,html}`
+- 100K FTS-first Core Pipeline（历史文件名保留）：`docs/verification/v2.1/full-pipeline-performance.json`
 - real-agent/blocker：`docs/verification/v2.1/agent-ab.json`
 - A33–A52：`docs/verification/v2.1/acceptance-summary.json`
 - main release：`docs/verification/v2.1/main-release-smoke.json`

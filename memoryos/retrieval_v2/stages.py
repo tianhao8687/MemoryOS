@@ -4,9 +4,10 @@ import math
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Literal, Protocol
 
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import Float, case, cast, false, func, or_, select
 from sqlalchemy.orm import Session, noload
 
 from memoryos.db.models import (
@@ -14,11 +15,20 @@ from memoryos.db.models import (
     ClaimRelationRow,
     ClaimRow,
     EntityRow,
+    MemoryHealthRow,
     MemoryRow,
     SourceAnchorRow,
 )
 from memoryos.db.session import Database
-from memoryos.domain.schemas import ClaimStatus, QueryIntent, SearchRequest
+from memoryos.domain.schemas import (
+    ClaimStaleState,
+    ClaimStatus,
+    MemoryStatus,
+    MemoryTemperature,
+    QueryIntent,
+    ScopeType,
+    SearchRequest,
+)
 from memoryos.errors import ProviderError
 from memoryos.retrieval.search import RetrievalEngine
 from memoryos.retrieval_v2.diversity import mmr_select
@@ -184,6 +194,8 @@ class CandidateRetrievalStage:
                 channel_ids["graph"] = self._graph_candidates(
                     session,
                     plan,
+                    request=request,
+                    allowed_scopes=allowed_scopes,
                     limit=recipe.candidate_pool_max,
                 )
                 channel_durations["graph"] = _duration_ms(channel_started)
@@ -452,48 +464,171 @@ class CandidateRetrievalStage:
         return list(dict.fromkeys(item[3] for item in ranked))
 
     @staticmethod
-    def _graph_candidates(session: Session, plan: QueryPlan, *, limit: int) -> list[str]:
+    def _graph_candidates(
+        session: Session,
+        plan: QueryPlan,
+        *,
+        request: SearchRequest,
+        allowed_scopes: set[tuple[str, str | None]] | None,
+        limit: int,
+    ) -> list[str]:
         if not plan.entities:
             return []
+        tokens = sorted(set(plan.entities))
         conditions = [
             predicate
-            for token in plan.entities
+            for token in tokens
             for predicate in (
                 EntityRow.normalized_name.icontains(token, autoescape=True),
                 ClaimRow.canonical_key.icontains(token, autoescape=True),
             )
         ]
-        claims = session.execute(
-            select(ClaimRow, EntityRow)
+        eligibility = CandidateRetrievalStage._claim_eligibility_conditions(
+            request,
+            allowed_scopes,
+        )
+        exact_entity = func.lower(EntityRow.normalized_name).in_(tokens)
+        match_priority = case((exact_entity, 2), else_=1)
+        per_memory_rank = func.row_number().over(
+            partition_by=ClaimRow.memory_id,
+            order_by=(match_priority.desc(), ClaimRow.recorded_at.desc(), ClaimRow.id),
+        )
+        ranked = (
+            select(
+                ClaimRow.id.label("claim_id"),
+                ClaimRow.memory_id.label("memory_id"),
+                ClaimRow.recorded_at.label("recorded_at"),
+                match_priority.label("match_priority"),
+                per_memory_rank.label("memory_rank"),
+            )
             .join(EntityRow, EntityRow.id == ClaimRow.subject_entity_id)
-            .where(or_(*conditions))
-            .order_by(ClaimRow.recorded_at.desc(), ClaimRow.id)
+            .join(MemoryRow, MemoryRow.id == ClaimRow.memory_id)
+            .outerjoin(MemoryHealthRow, MemoryHealthRow.memory_id == MemoryRow.id)
+            .where(or_(*conditions), *eligibility)
+            .subquery()
+        )
+        claims = session.execute(
+            select(ranked.c.claim_id, ranked.c.memory_id)
+            .where(ranked.c.memory_rank == 1)
+            .order_by(
+                ranked.c.match_priority.desc(),
+                ranked.c.recorded_at.desc(),
+                ranked.c.claim_id,
+            )
             .limit(limit)
         ).all()
-        seed_claims = [claim for claim, _entity in claims]
-        graph = [claim.memory_id for claim in seed_claims]
-        if not seed_claims:
+        seed_ids = [str(claim_id) for claim_id, _memory_id in claims]
+        graph = [str(memory_id) for _claim_id, memory_id in claims]
+        if not seed_ids or len(graph) >= limit:
             return list(dict.fromkeys(graph))
-        seed_ids = [claim.id for claim in seed_claims]
-        relations = list(
-            session.scalars(
-                select(ClaimRelationRow).where(
-                    or_(
-                        ClaimRelationRow.from_claim_id.in_(seed_ids),
-                        ClaimRelationRow.to_claim_id.in_(seed_ids),
-                    )
+        relations = session.execute(
+            select(
+                ClaimRelationRow.from_claim_id,
+                ClaimRelationRow.to_claim_id,
+            )
+            .where(
+                or_(
+                    ClaimRelationRow.from_claim_id.in_(seed_ids),
+                    ClaimRelationRow.to_claim_id.in_(seed_ids),
                 )
             )
+            .order_by(ClaimRelationRow.created_at.desc(), ClaimRelationRow.id)
+            .limit(limit * 4)
+        ).all()
+        seed_id_set = set(seed_ids)
+        related_ids = list(
+            dict.fromkeys(
+                str(to_claim_id) if str(from_claim_id) in seed_id_set else str(from_claim_id)
+                for from_claim_id, to_claim_id in relations
+            )
         )
-        related_ids = {
-            relation.to_claim_id if relation.from_claim_id in seed_ids else relation.from_claim_id
-            for relation in relations
-        }
         if related_ids:
+            eligible_related = {
+                str(claim_id): str(memory_id)
+                for claim_id, memory_id in session.execute(
+                    select(ClaimRow.id, ClaimRow.memory_id)
+                    .join(EntityRow, EntityRow.id == ClaimRow.subject_entity_id)
+                    .join(MemoryRow, MemoryRow.id == ClaimRow.memory_id)
+                    .outerjoin(MemoryHealthRow, MemoryHealthRow.memory_id == MemoryRow.id)
+                    .where(ClaimRow.id.in_(related_ids), *eligibility)
+                ).all()
+            }
             graph.extend(
-                session.scalars(select(ClaimRow.memory_id).where(ClaimRow.id.in_(related_ids)))
+                eligible_related[claim_id]
+                for claim_id in related_ids
+                if claim_id in eligible_related
             )
         return list(dict.fromkeys(graph))[:limit]
+
+    @staticmethod
+    def _claim_eligibility_conditions(
+        request: SearchRequest,
+        allowed_scopes: set[tuple[str, str | None]] | None,
+    ) -> list[Any]:
+        valid_moment = request.as_of_valid_time or datetime.now(UTC)
+        known_moment = request.as_known_at or datetime.now(UTC)
+        conditions: list[Any] = [
+            EntityRow.scope_type == MemoryRow.scope_type,
+            EntityRow.scope_key == MemoryRow.scope_key,
+            or_(MemoryRow.valid_from.is_(None), MemoryRow.valid_from <= valid_moment),
+            or_(MemoryRow.valid_to.is_(None), valid_moment < MemoryRow.valid_to),
+            or_(ClaimRow.valid_from.is_(None), ClaimRow.valid_from <= valid_moment),
+            or_(ClaimRow.valid_to.is_(None), valid_moment < ClaimRow.valid_to),
+            MemoryRow.created_at <= known_moment,
+            ClaimRow.recorded_at <= known_moment,
+            or_(
+                MemoryRow.ttl_seconds.is_(None),
+                func.julianday(MemoryRow.created_at) + cast(MemoryRow.ttl_seconds, Float) / 86400.0
+                > func.julianday(valid_moment),
+            ),
+        ]
+        if request.scope_type is not None:
+            conditions.extend(
+                (
+                    MemoryRow.scope_type == request.scope_type,
+                    EntityRow.scope_type == request.scope_type,
+                )
+            )
+        if request.scope_key is not None:
+            conditions.extend(
+                (
+                    MemoryRow.scope_key == request.scope_key,
+                    EntityRow.scope_key == request.scope_key,
+                )
+            )
+        if request.status is not None:
+            conditions.append(MemoryRow.status == request.status)
+        elif not request.include_history:
+            conditions.extend(
+                (
+                    MemoryRow.status == MemoryStatus.ACTIVE,
+                    ClaimRow.status.in_([ClaimStatus.ACCEPTED, ClaimStatus.CONTESTED]),
+                    ClaimRow.stale_state != ClaimStaleState.STALE,
+                    or_(
+                        MemoryHealthRow.memory_id.is_(None),
+                        MemoryHealthRow.temperature != MemoryTemperature.ARCHIVED,
+                    ),
+                )
+            )
+        if allowed_scopes is not None:
+            if not allowed_scopes:
+                conditions.append(false())
+            else:
+                scope_conditions = []
+                for raw_scope_type, scope_key in sorted(
+                    allowed_scopes,
+                    key=lambda item: (item[0], item[1] or ""),
+                ):
+                    scope_type = ScopeType(raw_scope_type)
+                    if scope_key is None:
+                        scope_conditions.append(MemoryRow.scope_type == scope_type)
+                    else:
+                        scope_conditions.append(
+                            (MemoryRow.scope_type == scope_type)
+                            & (MemoryRow.scope_key == scope_key)
+                        )
+                conditions.append(or_(*scope_conditions))
+        return conditions
 
     @staticmethod
     def _temporal_candidates(session: Session, plan: QueryPlan, *, limit: int) -> list[str]:

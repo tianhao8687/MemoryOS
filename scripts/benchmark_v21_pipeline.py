@@ -65,7 +65,7 @@ def _insert_records(database: Database, records: int) -> None:
                         "updated_at": now,
                         "created_by": "import",
                         "sensitivity": "normal",
-                        "metadata_json": {"fixture": "v2.1-full-pipeline"},
+                        "metadata_json": {"fixture": "100k-fts-first-core-pipeline"},
                     }
                 )
             connection.execute(insert(MemoryRow), batch)
@@ -84,6 +84,11 @@ def run(records: int, rounds: int) -> dict[str, Any]:
         compiler = TaskAwareContextCompiler(pipeline)
         search_ms: list[float] = []
         context_ms: list[float] = []
+        requested_channels: set[str] = set()
+        executed_channels: set[str] = set()
+        contributing_channels: set[str] = set()
+        degraded_channels: set[str] = set()
+        reranker_modes: set[str] = set()
         for index in range(rounds + 3):
             token = f"adapter{(index * 37) % 1000}"
             started = time.perf_counter()
@@ -98,7 +103,13 @@ def run(records: int, rounds: int) -> dict[str, Any]:
             if index >= 3:
                 search_ms.append(elapsed)
             if not search["items"]:
-                raise RuntimeError("full-pipeline benchmark search returned no candidates")
+                raise RuntimeError("FTS-first core benchmark search returned no candidates")
+            routing = search["query_plan"]["routing"]
+            requested_channels.update(str(item) for item in routing["requested_channels"])
+            executed_channels.update(str(item) for item in routing["executed_channels"])
+            contributing_channels.update(str(item) for item in routing["contributing_channels"])
+            degraded_channels.update(str(item) for item in routing["degraded_channels"])
+            reranker_modes.add(str(search["reranker"]))
             started = time.perf_counter()
             context = compiler.build(
                 ContextRequest(
@@ -111,10 +122,14 @@ def run(records: int, rounds: int) -> dict[str, Any]:
             if index >= 3:
                 context_ms.append(elapsed)
             if not context["manifest"]:
-                raise RuntimeError("full-pipeline context compilation returned no manifest")
+                raise RuntimeError("FTS-first core context compilation returned no manifest")
         report: dict[str, Any] = {
-            "schema": "memoryos-v2.1-full-pipeline-performance@1",
+            "schema": "memoryos-performance-tier-report@1",
+            "tier": "tier_1_100k_fts_first_core_pipeline",
+            "label": "100K FTS-first Core Pipeline",
             "generated_at": datetime.now(UTC).isoformat(),
+            "evidence_type": "synthetic_performance_fixture",
+            "effect_claim": "none",
             "records": records,
             "rounds": rounds,
             "insert_seconds": round(insert_seconds, 3),
@@ -132,9 +147,26 @@ def run(records: int, rounds: int) -> dict[str, Any]:
                 "platform": platform.platform(),
                 "python": platform.python_version(),
                 "pipeline": "RetrievalPipeline + TaskAwareContextCompiler",
-                "retrieval_profile": "fts-only",
-                "embedding_provider": False,
-                "claim_graph_fixture": False,
+                "retrieval_profile": "fts-first deterministic core",
+                "provider": {"configured": False, "kind": "none"},
+                "fixture": "synthetic_memory_rows_without_claim_graph",
+                "record_counts": {
+                    "memories": records,
+                    "embeddings": 0,
+                    "claims": 0,
+                    "claim_versions": 0,
+                    "relations": 0,
+                },
+                "channels": {
+                    "requested": sorted(requested_channels),
+                    "executed": sorted(executed_channels),
+                    "contributing": sorted(contributing_channels),
+                    "degraded": sorted(degraded_channels),
+                },
+                "vector_backend": "unconfigured",
+                "reranker": sorted(reranker_modes),
+                "fallback_state": "vector unavailable; FTS5 remained active",
+                "ci_eligible": True,
             },
         }
         report["passed"] = bool(
@@ -148,13 +180,13 @@ def run(records: int, rounds: int) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Benchmark V2.1 full retrieval/context pipeline")
+    parser = argparse.ArgumentParser(description="Benchmark the 100K FTS-first core pipeline")
     parser.add_argument("--records", type=int, default=100_000)
     parser.add_argument("--rounds", type=int, default=25)
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("docs/verification/v2.1/full-pipeline-performance.json"),
+        default=Path("docs/verification/v2.2/100k-fts-first-core-pipeline.json"),
     )
     parser.add_argument("--development", action="store_true")
     args = parser.parse_args()

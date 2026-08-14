@@ -1,0 +1,232 @@
+{
+  "schema": "coding-memory-bench-production@1",
+  "generated_at": "2026-08-14T15:55:07.445805+00:00",
+  "evidence_type": "local_production_path_integration",
+  "effect_claim": "integration_correctness_only",
+  "production_path_executed": true,
+  "blind_protocol": {
+    "runtime_payload_contains_gold": false,
+    "gold_loaded_only_by_scorer": true,
+    "immutable_input_hash": "55350f46df7c27f9121ccdc9a73fa859ef9e87802f2e91c7e885b3f5e674c733",
+    "immutable_gold_hash": "ab428c4826d2c730666a69bedf7e6b660c00a5b502db409d386a759aac5272a9"
+  },
+  "provenance": {
+    "repository_commit": "e607d5f7c2f602aea7d5e44b8aed0e5d755feb5e",
+    "retrieval_config_hash": "34997d5d67ff5bf408da02eeb5e7922eb71b51e1f671e97e1ee25589d495c452",
+    "database_schema_version": "0004_anchor_observation_hardening",
+    "providers": "deterministic_local_core"
+  },
+  "active_modules": [
+    "memoryos.db.session.Database",
+    "memoryos.engine.service.MemoryService",
+    "memoryos.retrieval_v2.pipeline.RetrievalPipeline",
+    "memoryos.context.compiler.TaskAwareContextCompiler",
+    "memoryos.claims.truth.TruthMaintenanceService.current_truth"
+  ],
+  "retrieval": {
+    "recall_at_5": 1.0,
+    "requested_channels": [
+      "fts",
+      "graph",
+      "temporal",
+      "vector"
+    ],
+    "executed_channels": [
+      "fts"
+    ],
+    "contributing_channels": [
+      "fts"
+    ],
+    "degraded_channels": [
+      "vector"
+    ],
+    "channel_execution": [
+      {
+        "channel": "fts",
+        "requested": true,
+        "available": true,
+        "attempted": true,
+        "executed": true,
+        "candidate_count": 3,
+        "eligible_candidate_count": 3,
+        "status": "executed",
+        "reason_code": null,
+        "shared_stage": "lexical_vector",
+        "duration_ms": 2.432
+      },
+      {
+        "channel": "graph",
+        "requested": true,
+        "available": true,
+        "attempted": false,
+        "executed": false,
+        "candidate_count": 0,
+        "eligible_candidate_count": 0,
+        "status": "not_applicable",
+        "reason_code": "no_entities",
+        "shared_stage": null,
+        "duration_ms": null
+      },
+      {
+        "channel": "source_anchor",
+        "requested": false,
+        "available": true,
+        "attempted": false,
+        "executed": false,
+        "candidate_count": 0,
+        "eligible_candidate_count": 0,
+        "status": "not_requested",
+        "reason_code": null,
+        "shared_stage": null,
+        "duration_ms": null
+      },
+      {
+        "channel": "temporal",
+        "requested": true,
+        "available": true,
+        "attempted": false,
+        "executed": false,
+        "candidate_count": 0,
+        "eligible_candidate_count": 0,
+        "status": "not_applicable",
+        "reason_code": "non_temporal_intent",
+        "shared_stage": null,
+        "duration_ms": null
+      },
+      {
+        "channel": "vector",
+        "requested": true,
+        "available": false,
+        "attempted": false,
+        "executed": false,
+        "candidate_count": 0,
+        "eligible_candidate_count": 0,
+        "status": "unavailable",
+        "reason_code": "embedding_provider_not_configured",
+        "shared_stage": "lexical_vector",
+        "duration_ms": 2.432
+      }
+    ],
+    "retrieval_run_count": 5
+  },
+  "context": {
+    "target_inclusion_rate": 1.0,
+    "executed_cases": 1
+  },
+  "temporal": {
+    "accuracy": 1.0,
+    "case_results": {
+      "production-temporal-old": true,
+      "production-temporal-current": true,
+      "production-temporal-before-supersede": true,
+      "production-temporal-after-supersede": true,
+      "production-temporal-stale": true,
+      "production-temporal-during-archive": true,
+      "production-temporal-after-restore": true
+    },
+    "outputs": {
+      "production-temporal-old": {
+        "state": "resolved",
+        "object_values": [
+          "sqlite"
+        ],
+        "memory_ids": [
+          "e1757404-d96b-4e55-bb78-a9051f06690f"
+        ]
+      },
+      "production-temporal-current": {
+        "state": "resolved",
+        "object_values": [
+          "postgresql"
+        ],
+        "memory_ids": [
+          "9463abe7-0eb3-43ff-87fb-cd82c0af2fc2"
+        ]
+      },
+      "production-temporal-before-supersede": {
+        "state": "resolved",
+        "object_values": [
+          "mysql"
+        ],
+        "memory_ids": [
+          "7c5689c4-0838-4be2-8c42-3c845a1badbb"
+        ]
+      },
+      "production-temporal-after-supersede": {
+        "state": "resolved",
+        "object_values": [
+          "postgresql"
+        ],
+        "memory_ids": [
+          "3ffff5ac-7ed3-4c43-9de3-8508ce9ef754"
+        ]
+      },
+      "production-temporal-stale": {
+        "state": "stale",
+        "object_values": [],
+        "memory_ids": []
+      },
+      "production-temporal-during-archive": {
+        "state": "resolved",
+        "object_values": [
+          "sqlite"
+        ],
+        "memory_ids": [
+          "da14a3d1-22d6-4008-8e93-103966ea5bf2"
+        ]
+      },
+      "production-temporal-after-restore": {
+        "state": "resolved",
+        "object_values": [
+          "sqlite"
+        ],
+        "memory_ids": [
+          "7c300a3a-3a53-4aec-b6c0-85773ad8b899",
+          "da14a3d1-22d6-4008-8e93-103966ea5bf2"
+        ]
+      }
+    }
+  },
+  "conflict": {
+    "accuracy": 1.0
+  },
+  "sample_sizes": {
+    "retrieval": 4,
+    "context": 1,
+    "temporal": 7,
+    "conflict": 2
+  },
+  "coverage": {
+    "retrieval_hard_negatives": [
+      "sibling_scope",
+      "stale",
+      "candidate",
+      "archived",
+      "negative_constraint",
+      "target"
+    ],
+    "temporal": [
+      "valid_time",
+      "known_time",
+      "superseded_history",
+      "stale",
+      "archive_restore_history"
+    ],
+    "conflict": [
+      "contested",
+      "resolved"
+    ]
+  },
+  "gates": {
+    "retrieval_recall_at_5": true,
+    "context_target_inclusion": true,
+    "temporal_accuracy": true,
+    "conflict_accuracy": true,
+    "gold_isolation": true,
+    "production_path_executed": true
+  },
+  "limitations": [
+    "Small deterministic integration corpus; it does not estimate real-agent effect.",
+    "External embeddings, rerankers, and model judges are intentionally disabled."
+  ]
+}

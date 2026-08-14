@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -75,6 +76,7 @@ class SourceAnchorService:
             line_start, line_end, symbol_kind = start, end, None
         excerpt = excerpt[:10000]
         context_text = "\n".join(source.splitlines()[max(0, line_start - 4) : line_end + 3])
+        observed_at = datetime.now(UTC)
         with self.database.session() as session:
             claim_ids = list(
                 session.scalars(select(ClaimRow.id).where(ClaimRow.memory_id == memory_id))
@@ -96,6 +98,13 @@ class SourceAnchorService:
                 context_hash=_hash(context_text),
                 freshness_state=FreshnessState.FRESH,
                 cached_head=context.head,
+                checked_at=observed_at,
+                observed_head=context.head,
+                observed_path=relative,
+                observed_line_start=line_start,
+                observed_line_end=line_end,
+                observed_excerpt_hash=_hash(excerpt),
+                observed_at=observed_at,
                 metadata_json={
                     "bounded_excerpt": True,
                     "parser_backend": symbol.backend if symbol is not None else "bounded-lines",
@@ -206,21 +215,32 @@ class SourceAnchorService:
 
     @staticmethod
     def _serialize(anchor: SourceAnchorRow) -> dict[str, Any]:
+        observed_path = anchor.observed_path or anchor.path
         return {
             "id": anchor.id,
             "repository_stable_key": anchor.repository_stable_key,
             "commit_sha": anchor.commit_sha,
-            "path": anchor.path,
+            "path": observed_path,
+            "original_path": anchor.path,
+            "observed_path": observed_path,
             "blob_sha": anchor.blob_sha,
             "language": anchor.language,
             "symbol_fqn": anchor.symbol_fqn,
             "symbol_kind": anchor.symbol_kind,
-            "line_start": anchor.line_start,
-            "line_end": anchor.line_end,
+            "line_start": anchor.observed_line_start,
+            "line_end": anchor.observed_line_end,
+            "original_line_start": anchor.line_start,
+            "original_line_end": anchor.line_end,
+            "observed_line_start": anchor.observed_line_start,
+            "observed_line_end": anchor.observed_line_end,
             "excerpt_hash": anchor.excerpt_hash,
+            "original_excerpt_hash": anchor.excerpt_hash,
+            "observed_excerpt_hash": anchor.observed_excerpt_hash,
             "context_hash": anchor.context_hash,
             "freshness_state": anchor.freshness_state.value,
             "cached_head": anchor.cached_head,
             "checked_at": anchor.checked_at.isoformat() if anchor.checked_at else None,
+            "observed_head": anchor.observed_head,
+            "observed_at": anchor.observed_at.isoformat() if anchor.observed_at else None,
             "parser_backend": anchor.metadata_json.get("parser_backend", "unknown"),
         }

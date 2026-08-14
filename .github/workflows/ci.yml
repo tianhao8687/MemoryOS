@@ -62,13 +62,16 @@ jobs:
           python -c "from tree_sitter_language_pack import get_parser; [get_parser(name) for name in ('python', 'typescript', 'javascript', 'rust')]"
 
       - name: Check imports
-        run: python -c "import memoryos; assert memoryos.__version__ == '2.1.0'"
+        run: python -c "import memoryos; assert memoryos.__version__ == '2.2.0'"
 
       - name: Lint
         run: python -m ruff check memoryos tests scripts
 
       - name: Check formatting
         run: python -m ruff format --check memoryos tests scripts
+
+      - name: Check generated readiness status
+        run: python scripts/sync_project_status.py --check
 
       - name: Type-check
         run: python -m mypy memoryos

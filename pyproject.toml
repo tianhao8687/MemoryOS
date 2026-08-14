@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "memoryos"
-version = "2.1.0"
+version = "2.2.0"
 description = "Local-first coding-agent memory intelligence layer"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -80,4 +80,5 @@ markers = [
   "v2: mandatory A15-A32 Memory Intelligence acceptance scenario",
   "slow: packaging, performance, or browser test",
   "v21: mandatory A33-A52 Reality Intelligence hardening scenario",
+  "v22: mandatory MemoryOS V2.2 hardening scenario",
 ]

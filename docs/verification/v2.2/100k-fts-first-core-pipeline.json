@@ -1,0 +1,63 @@
+{
+  "schema": "memoryos-performance-tier-report@1",
+  "tier": "tier_1_100k_fts_first_core_pipeline",
+  "label": "100K FTS-first Core Pipeline",
+  "generated_at": "2026-08-14T15:10:07.953259+00:00",
+  "evidence_type": "synthetic_performance_fixture",
+  "effect_claim": "none",
+  "records": 100000,
+  "rounds": 25,
+  "insert_seconds": 7.345,
+  "search": {
+    "p50_ms": 17.715,
+    "p95_ms": 20.598,
+    "target_p95_ms": 150.0
+  },
+  "context": {
+    "p50_ms": 239.949,
+    "p95_ms": 263.738,
+    "target_p95_ms": 300.0
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.13",
+    "pipeline": "RetrievalPipeline + TaskAwareContextCompiler",
+    "retrieval_profile": "fts-first deterministic core",
+    "provider": {
+      "configured": false,
+      "kind": "none"
+    },
+    "fixture": "synthetic_memory_rows_without_claim_graph",
+    "record_counts": {
+      "memories": 100000,
+      "embeddings": 0,
+      "claims": 0,
+      "claim_versions": 0,
+      "relations": 0
+    },
+    "channels": {
+      "requested": [
+        "fts",
+        "graph",
+        "temporal",
+        "vector"
+      ],
+      "executed": [
+        "fts"
+      ],
+      "contributing": [
+        "fts"
+      ],
+      "degraded": [
+        "vector"
+      ]
+    },
+    "vector_backend": "unconfigured",
+    "reranker": [
+      "disabled"
+    ],
+    "fallback_state": "vector unavailable; FTS5 remained active",
+    "ci_eligible": true
+  },
+  "passed": true
+}

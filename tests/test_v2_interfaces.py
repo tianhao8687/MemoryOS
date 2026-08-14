@@ -35,7 +35,7 @@ def test_v2_http_truth_debug_feedback_and_consolidation_contracts(tmp_path: Path
         },
     }
     with TestClient(create_app(settings)) as client:
-        assert client.get("/api/health").json()["version"] == "2.1.0"
+        assert client.get("/api/health").json()["version"] == "2.2.0"
         memory = client.post("/api/memories", json=memory_payload, headers=headers).json()["memory"]
         truth = client.post(
             "/api/current-truth",

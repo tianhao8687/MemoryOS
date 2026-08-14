@@ -1,18 +1,41 @@
 # MemoryOS
 
 > [开发问题总复盘：开发中遇到的问题、失败实验、修复证据与遗留风险](docs/DEVELOPMENT_PROBLEMS_RETROSPECTIVE.md)
+>
+> [V2.2 Hardening Report：H-001～H-008 修复、迁移、测试、基准与限制](HARDENING_REPORT.md)
 
-MemoryOS V2.1 是面向编码 Agent 的本地优先 Reality Intelligence 层。它在 V2 的 Claim Graph、Git-aware freshness 与任务上下文之上，加入不可变 ClaimVersion 事务历史、真正双时态 Current Truth、确定性/不确定性冲突路由、持久化 sqlite-vec 路径、记忆健康治理和有来源约束的抽象巩固。MCP、HTTP、CLI 和 React Workbench 继续共享同一 SQLite 事实源。
+<!-- MEMORYOS:READINESS:START -->
+### AI calibration readiness (自动生成)
 
-当前版本：`2.1.0`。在干净 `main` 上的唯一全量验收入口为：
+> 单一事实源: `benchmarks/ai_calibration_v1/readiness.json`。请运行 `python scripts/sync_project_status.py --write` 更新本段; 不要手工修改。
+
+- 状态: `protocol_ready_evidence_pending`
+- 生产 profile: `inactive`; 生产权重冻结: `yes`
+- 有效 real-agent 配对: `9`
+- AI Jury 有效覆盖: `1` 个模型家族 / `1` 个 provider
+- Sealed promotion: `0` tasks / `0` repositories / `0` sequences; 批准: `no`
+
+当前阻塞:
+
+1. Need order-swapped pairwise votes from at least three genuinely distinct model families and providers.
+2. Need usable train labels across at least three training repositories plus repository-held-out development observations; both the cross-repository and adaptive label-seeking pairs had unchanged outcomes and create no new labels.
+3. Need a repository-held-out candidate profile trained without safety-gate leakage.
+4. Need paired real-agent frozen-baseline/candidate shadow runs bound to that profile.
+5. Need at least 50 sealed tasks across three repositories, ten sequences, and two unseen agent models with complete paired cost data.
+6. Need a passing explicit promotion decision before any atomic activation can be considered.
+<!-- MEMORYOS:READINESS:END -->
+
+MemoryOS V2.2 是面向编码 Agent 的本地优先 Reality Intelligence 层。它在 V2.1 的不可变 ClaimVersion、双时态 Current Truth、Git-aware freshness 与任务上下文之上，进一步强化 Source Anchor 不可变性、真实产品路径评测、Claim/Relation 检索正确性、双时态查询扩展性和性能证据分层。MCP、HTTP、CLI 和 React Workbench 继续共享同一 SQLite 事实源。
+
+当前版本：`2.2.0`。H-001～H-008 的实现、测试、基准和限制见 [V2.2 Hardening Report](HARDENING_REPORT.md)。合并后应在干净 `main` 上重建发行包并运行：
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\verify_v21.py
+.\.venv\Scripts\python.exe scripts\main_release_smoke.py --distribution .\release\MemoryOS
 ```
 
-验收映射见 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)，V2.1 机器报告位于 `docs/verification/v2.1/`。
+V2.1 的历史验收映射和不可变机器报告继续保留在 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) 与 `docs/verification/v2.1/`；V2.2 证据位于 `docs/verification/v2.2/`。
 
-## V2.1 能力
+## V2.2 能力
 
 - 保留 V1 的五级 scope、六类 memory、candidate-first 生命周期、来源、审计、TTL、逻辑忘却、备份和 7 个 MCP 工具。
 - 从 evidence span 生成标准化 Claim；实体别名只在同 scope/type 内解析，可审计合并与 redirect。
@@ -27,9 +50,9 @@ MemoryOS V2.1 是面向编码 Agent 的本地优先 Reality Intelligence 层。�
 - Grounded consolidation 校验 supporting/counter memory IDs 与独立来源；离线 extractive fallback 明确标注。所有抽象与 distillation 只生成 candidate，永不自动激活。
 - Memory Health 用可解释分数管理 Hot/Warm/Cold/Archived；归档可逆，唯一 accepted current truth 不可归档，Cold/Archived 才能参与 distillation。
 - helpful/unhelpful feedback 可审计，只影响 retrieval utility，不修改事实状态。
-- 12 个 stdio MCP 工具、V2.1 HTTP API/CLI，以及包含 Current Truth 版本、Possible Conflicts、Memory Health 与向量诊断的 Workbench。
-- Blind CodingMemoryBench 分离 runtime input 与 gold scorer，包含 hard negatives、时间和冲突三模式对照，并对满分给出过拟合警告。
-- 实测 100,000 记录完整 RetrievalPipeline + ContextCompiler P95；真实 coding-agent endpoint 缺失时只生成明确 blocker，不声明模型收益。
+- 12 个 stdio MCP 工具、V2.2 HTTP API/CLI，以及包含 Current Truth 版本、Possible Conflicts、Memory Health 与向量诊断的 Workbench。
+- CodingMemoryBench Fixture Regression 分离 runtime input 与 gold scorer，包含 hard negatives、时间和冲突三模式对照，并对满分给出过拟合警告；另有独立 production-path integration suite，二者均不声明真实 Agent 效果。
+- 实测 100,000 记录 FTS-first RetrievalPipeline + ContextCompiler P95；该 Tier 1 fixture 未执行 embedding、Claim/Relation 或模型通道，也不声明模型收益。
 
 ## 从源码运行（Windows PowerShell）
 
@@ -61,7 +84,7 @@ Tree-sitter language pack 是 V2 core dependency。若要启用可选 SQLite ANN
 .\release\MemoryOS\MemoryOS.exe --data-dir .\memoryos-data serve
 ```
 
-发行形式为 PyInstaller `onedir`，必须保留整个 `release\MemoryOS` 目录。生产 smoke 会从真实 `0001_initial` 数据库启动，验证自动迁移到 `0003_reality_intelligence_hardening`、旧数据保留、12 个 MCP 工具、HTTP/UI/CLI、两套 benchmark 资源、sqlite-vec runtime 和重启持久化。
+发行形式为 PyInstaller `onedir`，必须保留整个 `release\MemoryOS` 目录。生产 smoke 会从真实 `0001_initial` 数据库启动，验证自动迁移到 `0004_anchor_observation_hardening`、旧数据与不可变 anchor 基线保留、12 个 MCP 工具、HTTP/UI/CLI、fixture benchmark 资源、sqlite-vec runtime 和重启持久化。Production-path integration benchmark 作为源码验证证据单独保存在 `docs/verification/v2.2/`，不冒充打包内置功能。
 
 ## CLI 示例
 
@@ -198,7 +221,7 @@ pnpm exec playwright install chromium
 Set-Location ..
 ```
 
-`scripts/verify_v21.py` 依次执行 19 个 fail-fast 门禁：后端质量/测试、V2 回归、V2.1 盲测、50 对 agent 协议或 blocker、100k 全管线性能、前端质量/E2E、wheel、Windows package、V1→V2.1 production smoke、干净 main release smoke 和 A33–A52 manifest。任何一步失败即非零退出。
+`scripts/verify_v21.py` 依次执行 19 个 fail-fast 门禁：后端质量/测试、V2 回归、V2.1 盲测、50 对 agent 协议或 blocker、100K FTS-first Core Pipeline 性能、前端质量/E2E、wheel、Windows package、V1→V2.1 production smoke、干净 main release smoke 和 A33–A52 manifest。任何一步失败即非零退出。
 
 ## 数据和隐私边界
 
@@ -223,3 +246,4 @@ MemoryOS 不做全仓源码收藏或云同步。Source Anchor 只读取被明确
 - [MemoryBench](benchmarks/memorybench_v2/README.md)
 - [V2.1 Reality Intelligence](docs/REALITY_INTELLIGENCE_V2_1.md)
 - [V2.2 real-workload evaluation](docs/REAL_WORKLOAD_EVALUATION_V2_2.md)
+- [V2.2 performance tiers](docs/PERFORMANCE_TIERS_V2_2.md)

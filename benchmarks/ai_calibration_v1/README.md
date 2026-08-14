@@ -136,7 +136,7 @@ caps per-query preference pairs, records leave-one-repository-out ranges, and em
 freshness, scope, truth, feedback, confidence, importance, reranking, or safety behavior.
 
 `build_public_rrf_shadow.py` converts that prior into a narrower `rrf_channel_candidate_shadow`.
-The converter preserves the frozen FTS+vector total scale, graph and temporal weights, RRF K, MMR,
+The converter preserves the frozen FTS+vector total scale, graph and temporal weights, RRF K, Lexical MMR,
 and every downstream score factor and hard gate. The shadow binds the dataset, feature rows,
 FastEmbed model revision/source, feature adapter, and converter hashes. MemoryOS refuses to run it
 without the matching embedding model, and the benchmark MCP verifies the live embedding service
@@ -176,11 +176,11 @@ invent a query-time weight vector. The deterministic router may select only a re
 | Route | Approved recipe | Channels | Reranker | Diversity |
 | --- | --- | --- | --- | --- |
 | Exact code/symbol | `exact-symbol-v1` | FTS, vector, Source Anchor | Disabled | Disabled |
-| Semantic | `semantic-hybrid-v1` | FTS, vector | If available | MMR |
-| Relational/provenance | `relational-graph-v1` | FTS, vector, graph | If available | MMR |
+| Semantic | `semantic-hybrid-v1` | FTS, vector | If available | Lexical MMR |
+| Relational/provenance | `relational-graph-v1` | FTS, vector, graph | If available | Lexical MMR |
 | Historical/as-of | `temporal-as-of-v1` | FTS, vector, temporal | If available | Disabled |
-| Multi-clause | `complex-hybrid-v1` | All | If available | MMR |
-| Unclassified fallback | `safe-hybrid-v1` | Frozen production channels | If available | MMR |
+| Multi-clause | `complex-hybrid-v1` | All | If available | Lexical MMR |
+| Unclassified fallback | `safe-hybrid-v1` | Frozen production channels | If available | Lexical MMR |
 
 Every recipe is immutable and hashable. The Shadow profile binds the complete approved registry;
 unknown recipes, changed registry contents, and composition with a scoring or RRF-weight Shadow all
@@ -201,7 +201,7 @@ do not receive recipe-dependent raw RRF magnitudes. Context Compiler validates t
 frozen production path intentionally retains `legacy_raw_rrf_v1`; changing its score semantics is
 outside this candidate experiment.
 
-The candidate-pool floor/cap (80/1000), rerank window (40), frozen RRF weights/K, and MMR lambda
+The candidate-pool floor/cap (80/1000), rerank window (40), frozen RRF weights/K, and Lexical MMR lambda
 are named and hash-bound heuristic baselines, not newly justified constants. Routing removes the
 incorrect assumption that one channel topology fits every query; it does not manufacture evidence
 for the remaining numeric parameters. Those parameters stay in the separate calibration and

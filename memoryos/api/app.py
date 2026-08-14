@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
+from memoryos import __version__
 from memoryos.backup import BackupService
 from memoryos.config import MemoryOSSettings
 from memoryos.db.models import RepositoryRow
@@ -125,7 +126,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
 
     app = FastAPI(
         title="MemoryOS",
-        version="2.1.0",
+        version=__version__,
         description="Local-first truth and memory intelligence for coding agents",
         lifespan=lifespan,
     )
@@ -185,7 +186,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:
-        return {"ok": True, "version": "2.1.0", "database": database.integrity_check()}
+        return {"ok": True, "version": __version__, "database": database.integrity_check()}
 
     @app.get("/api/status", dependencies=[Depends(require_write_access)])
     def get_status() -> dict[str, Any]:
@@ -500,7 +501,7 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
             else "offline",
             "host": settings.host,
             "telemetry": False,
-            "version": "2.1.0",
+            "version": __version__,
             "provider_capabilities": [
                 "candidate_extraction",
                 "claim_extraction",
@@ -508,7 +509,6 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
                 "relationship_judgement",
                 "rerank",
                 "consolidation_judgement",
-                "staleness_judgement",
             ],
         }
 

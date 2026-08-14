@@ -1,0 +1,65 @@
+{
+  "schema": "coding-memory-bench-v2.1@1",
+  "generated_at": "2026-08-14T15:43:51.807707+00:00",
+  "evidence_type": "deterministic_fixture",
+  "effect_claim": "none",
+  "production_path_executed": false,
+  "blind_protocol": {
+    "runtime_payload_contains_gold": false,
+    "gold_loaded_only_by_scorer": true,
+    "immutable_input_hash": "6bd6e0980ac566f8f11b6beb8243e53ffdb68f25da79c5119a1ecc03fe23b8ea",
+    "immutable_gold_hash": "2fd9b52667e902b4e8079891c4d042c609760a74234a3af2cac16fdd2a8ff0d3"
+  },
+  "sample_sizes": {
+    "retrieval_hard_negatives": 100,
+    "temporal": 100,
+    "conflict": 100
+  },
+  "modes": {
+    "baseline": {
+      "retrieval_recall_at_5": 0.0,
+      "temporal_accuracy": 0.0,
+      "conflict": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6666666666666666
+      },
+      "perfect_score_warning": null,
+      "real_model": false,
+      "model_status": "not_applicable"
+    },
+    "v2": {
+      "retrieval_recall_at_5": 1.0,
+      "temporal_accuracy": 1.0,
+      "conflict": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "perfect_score_warning": "Perfect score detected; inspect isolation and expand adversarial cases: retrieval_recall_at_5, temporal_accuracy, conflict_f1",
+      "real_model": false,
+      "model_status": "not_applicable"
+    },
+    "v2_model": {
+      "retrieval_recall_at_5": 1.0,
+      "temporal_accuracy": 1.0,
+      "conflict": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "perfect_score_warning": "Perfect score detected; inspect isolation and expand adversarial cases: retrieval_recall_at_5, temporal_accuracy, conflict_f1",
+      "real_model": false,
+      "model_status": "external_blocker"
+    }
+  },
+  "release_gates": {
+    "blind_gold_isolation": true,
+    "retrieval_recall_at_5": true,
+    "temporal_accuracy": true,
+    "conflict_f1": true,
+    "abstention_safe": true
+  },
+  "all_measured_gates_passed": true,
+  "truthfulness": "This deterministic fixture is regression evidence only and makes no product effect claim. v2_model counts as real-model evidence only when a model runner was supplied; external_blocker is never presented as an effectiveness result."
+}

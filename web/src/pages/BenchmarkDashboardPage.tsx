@@ -89,7 +89,7 @@ export function BenchmarkDashboardPage() {
             <section className="benchmark-table panel" aria-labelledby="coding-benchmark-title">
               <header className="panel-header">
                 <h2 id="coding-benchmark-title">
-                  <FlaskConical aria-hidden="true" />Blind CodingMemoryBench V2.1
+                  <FlaskConical aria-hidden="true" />CodingMemoryBench Fixture Regression
                 </h2>
                 <span>
                   {coding.data.blind_protocol.gold_loaded_only_by_scorer

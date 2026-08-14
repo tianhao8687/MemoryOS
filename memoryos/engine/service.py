@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from memoryos import __version__
 from memoryos.claims.truth import TruthMaintenanceService
 from memoryos.config import MemoryOSSettings
 from memoryos.consolidation import ConsolidationService
@@ -1026,7 +1027,7 @@ class MemoryService:
             )
             provenance_rate = active_with_source / active_count if active_count else 1.0
             return {
-                "version": "2.1.0",
+                "version": __version__,
                 "database": str(self.settings.database_path),
                 "schema_version": self.database.schema_version(),
                 "counts": counts,

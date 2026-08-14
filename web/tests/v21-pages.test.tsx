@@ -20,7 +20,7 @@ const health = {
 }
 
 function body(path: string) {
-  if (path.startsWith('/api/status')) return { version: '2.1.0', counts: {} }
+  if (path.startsWith('/api/status')) return { version: '2.2.0', counts: {} }
   if (path.startsWith('/api/repositories')) return []
   if (path.startsWith('/api/memory-health/evaluate')) return { ok: true, evaluated: 1, counts: { cold: 1 } }
   if (path.startsWith('/api/memory-health')) return [health]

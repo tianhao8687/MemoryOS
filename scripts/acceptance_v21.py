@@ -18,9 +18,9 @@ REQUIRED_VERIFICATION_STEPS = (
     "Mypy",
     "Backend pytest",
     "V2 regression MemoryBench",
-    "Blind CodingMemoryBench V2.1",
+    "CodingMemoryBench fixture regression",
     "Paired real-agent protocol or explicit blocker",
-    "100K full retrieval/context pipeline",
+    "100K FTS-first Core Pipeline",
     "Frontend typecheck",
     "Frontend lint",
     "Frontend unit tests",
@@ -145,8 +145,8 @@ def main() -> int:
     )
     package_v21 = bool(
         package.get("result") == "PASS"
-        and package.get("v1_to_v21_migration") is True
-        and package.get("schema_version") == "0003_reality_intelligence_hardening"
+        and package.get("v1_to_v22_migration") is True
+        and package.get("schema_version") == "0004_anchor_observation_hardening"
         and package.get("coding_memory_bench_bundled") is True
         and package.get("sqlite_vec_bundled") is True
         and package.get("first_health", {}).get("version") == "2.1.0"
@@ -170,10 +170,14 @@ def main() -> int:
             "A34",
             "Immutable migration replay",
             package_v21 and verified_runtime,
-            [*tests, "memoryos/db/migrations/versions/0003_reality_intelligence_hardening.py"],
+            [
+                *tests,
+                "memoryos/db/migrations/versions/0003_reality_intelligence_hardening.py",
+                "memoryos/db/migrations/versions/0004_anchor_observation_hardening.py",
+            ],
             (
-                "Alembic upgrades real 0001 data through explicit 0002/0003 operations "
-                "and replay tests."
+                "Alembic upgrades real 0001 data through explicit 0002/0003/0004 operations "
+                "and preserves immutable anchor baselines across replay tests."
             ),
         ),
         _check(
@@ -227,7 +231,7 @@ def main() -> int:
         ),
         _check(
             "A42",
-            "100K full-pipeline search P95",
+            "100K FTS-first core search P95",
             int(performance["records"]) >= 100_000
             and float(performance["search"]["p95_ms"]) < 150.0
             and verified_runtime,
