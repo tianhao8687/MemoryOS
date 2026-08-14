@@ -8,7 +8,7 @@ Performance evidence is split by the capabilities that actually executed. No tie
 | 2 — Hybrid Local Pipeline | 10K and 20K memories with matching real BGE embeddings/claims plus 100/200 relations | FTS, vector, Claim/Relation, temporal, context; sqlite-vec ANN and forced exact fallback | manual/scheduled only; not claimed as CI | 10K ANN/exact search P50/P95 278.454/313.424 and 1679.675/1733.581 ms; 20K 322.170/375.527 and 3054.057/3165.333 ms |
 | 3 — Model-enhanced Pipeline | provider-dependent | embedding + model reranker, with model-provider fallback treated as failure | explicit manual provider run | not executed: no compatible reranker/relationship endpoint was configured |
 
-Machine-readable evidence is indexed in [`performance-tiers.json`](verification/v2.2/performance-tiers.json). Tier 1 and Tier 2 reports record platform, provider/fixture identity, record counts, vector backend, reranker state, requested/executed/contributing/degraded channels, fallback state, and P50/P95.
+Machine-readable evidence is indexed in [`performance-tiers.json`](verification/v2.2/performance-tiers.json). Its file digests use the declared `utf8-text-lf-normalized-v1` policy so Windows CRLF and Linux LF checkouts verify identically. Tier 1 and Tier 2 reports record platform, provider/fixture identity, record counts, vector backend, reranker state, requested/executed/contributing/degraded channels, fallback state, and P50/P95.
 
 Tier 2 contains zero `ClaimVersion` history rows: its temporal contribution is driven by `Claim` valid intervals. Bitemporal version-history scaling is measured separately by the Current Truth benchmark below.
 

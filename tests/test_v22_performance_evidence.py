@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
+
+from memoryos.evaluation.evidence_hashing import canonical_file_sha256
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "docs" / "verification" / "v2.2" / "performance-tiers.json"
@@ -17,12 +18,24 @@ def _read(path: Path) -> dict[str, Any]:
 
 def _verified_report(relative_path: str, expected_hash: str) -> dict[str, Any]:
     path = ROOT / relative_path
-    assert hashlib.sha256(path.read_bytes()).hexdigest() == expected_hash
+    assert canonical_file_sha256(path) == expected_hash
     return _read(path)
+
+
+def test_performance_evidence_hash_is_stable_across_checkout_line_endings(
+    tmp_path: Path,
+) -> None:
+    lf = tmp_path / "lf.json"
+    crlf = tmp_path / "crlf.json"
+    lf.write_bytes(b'{\n  "ok": true\n}\n')
+    crlf.write_bytes(b'{\r\n  "ok": true\r\n}\r\n')
+
+    assert canonical_file_sha256(lf) == canonical_file_sha256(crlf)
 
 
 def test_performance_tier_index_matches_hashed_evidence_and_executed_channels() -> None:
     index = _read(INDEX)
+    assert index["file_sha256_policy"] == "utf8-text-lf-normalized-v1"
     tier_1 = index["tiers"]["tier_1"]
     core = _verified_report(tier_1["path"], tier_1["file_sha256"])
     assert core["label"] == "100K FTS-first Core Pipeline"

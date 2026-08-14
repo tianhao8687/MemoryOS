@@ -1,11 +1,12 @@
 {
   "schema": "memoryos-performance-tier-index@1",
+  "file_sha256_policy": "utf8-text-lf-normalized-v1",
   "generated_at": "2026-08-14T15:10:07.953259+00:00",
   "effect_claim": "none",
   "current_truth": {
     "status": "measured_before_and_after",
     "path": "docs/verification/v2.2/current-truth-performance.json",
-    "file_sha256": "4593b6dc418cf62ff315d3c28be11f979b8ec9bbeeb87252c1e4fb62de104aef",
+    "file_sha256": "6d411a8f2dfa21dd94a5fc03627b33c3e8e369479575863ff2c182a92173df28",
     "identities": 1000,
     "baseline_sql_queries": 7046,
     "hardened_sql_queries": 9,
@@ -20,7 +21,7 @@
       "status": "measured",
       "execution_class": "release_or_manual",
       "path": "docs/verification/v2.2/100k-fts-first-core-pipeline.json",
-      "file_sha256": "4458cad84f4c68b7c350786cc28113dbf0f609297656c6e7de4fa6c58f55ef64",
+      "file_sha256": "bf5fec218506813fa1c17aefe286fb899d42acb0f424d518f9af5c02f7e58309",
       "records": 100000,
       "contributing_channels": [
         "fts"
@@ -49,7 +50,7 @@
       "results": {
         "10000": {
           "path": "docs/verification/v2.2/hybrid-local-10k.json",
-          "file_sha256": "f651550b1df47c0a0277df79258ddf82642d37441a88fab88a2a1f6fd0c22e4a",
+          "file_sha256": "8bca458284b10cf317d110c5db304d900d5fabe2db2713193bab7f4d8a8d1efd",
           "embeddings": 10000,
           "claims": 10000,
           "relations": 100,
@@ -68,7 +69,7 @@
         },
         "20000": {
           "path": "docs/verification/v2.2/hybrid-local-20k.json",
-          "file_sha256": "e1be6a372ea580a1f157bd155f19d550fe22e87471bb10d2825f480c8c95d55f",
+          "file_sha256": "3e73e61463dc74ede4edde5e78f7c41b6c84acc207bebf932f4493b95082c7b2",
           "embeddings": 20000,
           "claims": 20000,
           "relations": 200,

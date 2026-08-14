@@ -8,6 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 from memoryos.evaluation.ai_jury import AIJuryProtocol
+from memoryos.evaluation.evidence_hashing import canonical_file_sha256
 from memoryos.evaluation.retrieval_calibration_features import (
     default_weight_training_protocol,
 )
@@ -207,10 +208,7 @@ def validate_ai_calibration_assets(
 
 
 def _file_sha256(path: Path) -> str:
-    payload = path.read_bytes()
-    if path.suffix.lower() in {".json", ".jsonl", ".md", ".patch"}:
-        payload = payload.replace(b"\r\n", b"\n")
-    return hashlib.sha256(payload).hexdigest()
+    return canonical_file_sha256(path)
 
 
 def _validate_evidence_semantics(
