@@ -397,6 +397,15 @@ def test_a45_blind_runtime_rejects_nested_gold_fields() -> None:
         )
 
 
+@pytest.mark.v22
+def test_coding_memory_bench_fixture_cannot_claim_production_effect() -> None:
+    report = CodingMemoryBench().run()
+
+    assert report["evidence_type"] == "deterministic_fixture"
+    assert report["effect_claim"] == "none"
+    assert report["production_path_executed"] is False
+
+
 class _InvalidGroundingJudge:
     @property
     def metadata(self) -> ProviderMetadata:

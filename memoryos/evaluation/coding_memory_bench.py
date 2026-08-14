@@ -35,7 +35,7 @@ def _binary_metrics(expected: list[bool], predicted: list[bool]) -> dict[str, fl
 
 
 class CodingMemoryBench:
-    """Blind hard-negative evaluation: runtime payloads never contain gold labels."""
+    """Deterministic fixture regression whose runtime payloads contain no gold labels."""
 
     VERSION = "coding-memory-bench-v2.1@1"
 
@@ -121,6 +121,9 @@ class CodingMemoryBench:
         return {
             "schema": self.VERSION,
             "generated_at": datetime.now(UTC).isoformat(),
+            "evidence_type": "deterministic_fixture",
+            "effect_claim": "none",
+            "production_path_executed": False,
             "blind_protocol": {
                 "runtime_payload_contains_gold": False,
                 "gold_loaded_only_by_scorer": True,
@@ -136,8 +139,9 @@ class CodingMemoryBench:
             "release_gates": gates,
             "all_measured_gates_passed": all(gates.values()),
             "truthfulness": (
-                "v2_model counts as real-model evidence only when a model runner was supplied; "
-                "external_blocker is never presented as an effectiveness result."
+                "This deterministic fixture is regression evidence only and makes no product "
+                "effect claim. v2_model counts as real-model evidence only when a model runner "
+                "was supplied; external_blocker is never presented as an effectiveness result."
             ),
         }
 
@@ -163,8 +167,9 @@ class CodingMemoryBench:
             "<!doctype html><meta charset='utf-8'><title>CodingMemoryBench</title>"
             "<style>body{font:16px system-ui;max-width:960px;margin:40px auto;color:#18211d}"
             "table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #ccd5cf}"
-            "th{background:#eef4f0}</style><h1>CodingMemoryBench V2.1</h1>"
-            "<p>Blind hard-negative protocol; gold is withheld from runtime payloads.</p>"
+            "th{background:#eef4f0}</style><h1>CodingMemoryBench Fixture Regression</h1>"
+            "<p>Deterministic hard-negative fixture; gold is withheld from runtime payloads. "
+            "This report makes no production-path or Agent-effect claim.</p>"
             "<table><thead><tr><th>Mode</th><th>Recall@5</th><th>Temporal accuracy</th>"
             "<th>Conflict F1</th><th>Model</th></tr></thead><tbody>"
             + "".join(rows)

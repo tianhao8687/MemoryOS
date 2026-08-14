@@ -70,7 +70,7 @@ export function RetrievalDebuggerPage() {
       {debug.data ? (
         <div className="debug-layout" aria-live="polite">
           <section className="debug-summary panel" aria-labelledby="debug-plan-title">
-            <header className="panel-header"><h2 id="debug-plan-title">Query planner</h2><StatusBadge status={debug.data.truth_state ?? 'unknown'} /></header>
+            <header className="panel-header"><h2 id="debug-plan-title">Deterministic Query Planner</h2><StatusBadge status={debug.data.truth_state ?? 'unknown'} /></header>
             <dl>
               <div><dt>Intent</dt><dd>{(typeof intent === 'string' ? intent : 'broad_search').replaceAll('_', ' ')}</dd></div>
               <div><dt>Pipeline</dt><dd><code>{debug.data.retrieval_mode}</code></dd></div>

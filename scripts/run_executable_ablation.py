@@ -26,6 +26,7 @@ from memoryos.evaluation.retrieval_weight_calibration import (
     CalibrationPartition,
     observation_from_ablation_pair,
 )
+from memoryos.retrieval_v2.routing import load_routing_shadow_profile
 from memoryos.retrieval_v2.rrf_shadow import load_rrf_channel_shadow_profile
 
 
@@ -57,6 +58,7 @@ def main() -> None:
     )
     parser.add_argument("--order-seed", type=int, default=20260812)
     parser.add_argument("--rrf-channel-profile", type=Path)
+    parser.add_argument("--routing-profile", type=Path)
     parser.add_argument("--embedding-base-url")
     parser.add_argument("--embedding-model")
     parser.add_argument(
@@ -86,8 +88,17 @@ def main() -> None:
         if arguments.rrf_channel_profile is None
         else load_rrf_channel_shadow_profile(arguments.rrf_channel_profile)
     )
-    if channel_profile is not None and not arguments.diagnostic_only:
-        raise ValueError("public RRF shadows may run only with --diagnostic-only")
+    routing_profile = (
+        None
+        if arguments.routing_profile is None
+        else load_routing_shadow_profile(arguments.routing_profile)
+    )
+    if channel_profile is not None and routing_profile is not None:
+        raise ValueError("executable ablation can use only one retrieval shadow profile")
+    if (channel_profile is not None or routing_profile is not None) and not (
+        arguments.diagnostic_only
+    ):
+        raise ValueError("retrieval shadows may run only with --diagnostic-only")
     if (arguments.embedding_base_url is None) != (arguments.embedding_model is None):
         raise ValueError("--embedding-base-url and --embedding-model must be set together")
     if channel_profile is not None and arguments.embedding_model is None:
@@ -148,16 +159,24 @@ def main() -> None:
                 conditions=[ExperimentCondition.MEMORYOS],
                 order_seed=arguments.order_seed,
                 rrf_channel_profile=channel_profile,
+                routing_profile=routing_profile,
                 embedding_base_url=arguments.embedding_base_url,
                 embedding_model=arguments.embedding_model,
             )
         else:
             source_report = _load_json_object(resume_path)
-            if channel_profile is not None or arguments.embedding_model is not None:
+            if (
+                channel_profile is not None
+                or routing_profile is not None
+                or arguments.embedding_model is not None
+            ):
                 _validate_resumed_provider(
                     source_report,
                     shadow_profile_sha256=(
-                        None if channel_profile is None else channel_profile.digest()
+                        channel_profile.digest() if channel_profile is not None else None
+                    ),
+                    routing_profile_sha256=(
+                        routing_profile.digest() if routing_profile is not None else None
                     ),
                     embedding_model=arguments.embedding_model,
                 )
@@ -276,10 +295,13 @@ def _validate_resumed_provider(
     report: dict[str, Any],
     *,
     shadow_profile_sha256: str | None,
+    routing_profile_sha256: str | None,
     embedding_model: str | None,
 ) -> None:
     if report.get("scoring_profile_sha256") != shadow_profile_sha256:
         raise ValueError("resumed arm shadow profile does not match this run")
+    if report.get("routing_profile_sha256") != routing_profile_sha256:
+        raise ValueError("resumed arm routing profile does not match this run")
     provider = report.get("embedding_provider")
     if not isinstance(provider, dict) or provider.get("model") != embedding_model:
         raise ValueError("resumed arm embedding provider does not match this run")

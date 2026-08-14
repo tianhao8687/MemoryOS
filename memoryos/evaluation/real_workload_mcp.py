@@ -23,6 +23,7 @@ from memoryos.evaluation.real_workload_models import (
     ExperimentCondition,
     MemorySeedSpec,
 )
+from memoryos.retrieval_v2.routing import load_routing_shadow_profile
 from memoryos.retrieval_v2.rrf_shadow import load_rrf_channel_shadow_profile
 from memoryos.retrieval_v2.scoring import load_shadow_retrieval_profile
 
@@ -156,11 +157,18 @@ class MemoryOSBackend:
         *,
         weight_profile: Path | None = None,
         rrf_channel_profile: Path | None = None,
+        routing_profile: Path | None = None,
         expected_vector_channel_id: str | None = None,
         expected_vector_channel_source_sha256: str | None = None,
         expected_vector_feature_adapter_sha256: str | None = None,
     ) -> None:
-        if weight_profile is not None and rrf_channel_profile is not None:
+        if (
+            sum(
+                profile is not None
+                for profile in (weight_profile, rrf_channel_profile, routing_profile)
+            )
+            > 1
+        ):
             raise ValueError("benchmark MemoryOS can use only one shadow profile")
         self.database = Database(settings_for(data_dir))
         self.database.initialize()
@@ -171,6 +179,9 @@ class MemoryOSBackend:
             None
             if rrf_channel_profile is None
             else load_rrf_channel_shadow_profile(rrf_channel_profile)
+        )
+        retrieval_routing_profile = (
+            None if routing_profile is None else load_routing_shadow_profile(routing_profile)
         )
         expected_identity = (
             expected_vector_channel_id,
@@ -204,6 +215,7 @@ class MemoryOSBackend:
             self.database.settings,
             retrieval_scoring_profile=scoring_profile,
             retrieval_rrf_channel_profile=channel_profile,
+            retrieval_routing_profile=retrieval_routing_profile,
         )
         self.repository = repository
         self.cutoff = cutoff
@@ -454,6 +466,7 @@ def main() -> None:
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--weight-profile", type=Path)
     parser.add_argument("--rrf-channel-profile", type=Path)
+    parser.add_argument("--routing-profile", type=Path)
     parser.add_argument("--expected-vector-channel-id")
     parser.add_argument("--expected-vector-channel-source-sha256")
     parser.add_argument("--expected-vector-feature-adapter-sha256")
@@ -473,6 +486,8 @@ def main() -> None:
             parser.error("--weight-profile is only valid for memoryos")
         if arguments.rrf_channel_profile is not None:
             parser.error("--rrf-channel-profile is only valid for memoryos")
+        if arguments.routing_profile is not None:
+            parser.error("--routing-profile is only valid for memoryos")
         if arguments.expected_vector_channel_id is not None:
             parser.error("--expected-vector-channel-id is only valid for memoryos")
         if arguments.expected_vector_channel_source_sha256 is not None:
@@ -489,6 +504,7 @@ def main() -> None:
             cutoff,
             weight_profile=arguments.weight_profile,
             rrf_channel_profile=arguments.rrf_channel_profile,
+            routing_profile=arguments.routing_profile,
             expected_vector_channel_id=arguments.expected_vector_channel_id,
             expected_vector_channel_source_sha256=(arguments.expected_vector_channel_source_sha256),
             expected_vector_feature_adapter_sha256=(

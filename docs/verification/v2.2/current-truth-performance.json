@@ -1,0 +1,169 @@
+{
+  "schema": "memoryos-current-truth-performance@1",
+  "generated_at": "2026-08-14T15:20:19.805290+00:00",
+  "implementation": "working-tree-v2.2",
+  "schema_revision": "0004_anchor_observation_hardening",
+  "dataset": {
+    "kind": "deterministic_synthetic_bitemporal",
+    "sizes": [
+      1,
+      10,
+      1000
+    ],
+    "total_identities": 1011,
+    "effect_claim": "none"
+  },
+  "platform": {
+    "python": "3.12.13",
+    "system": "Windows",
+    "release": "11",
+    "machine": "AMD64"
+  },
+  "measurements": {
+    "1": {
+      "identities": 1,
+      "returned_truths": 1,
+      "rounds": 7,
+      "sql_queries": {
+        "min": 9,
+        "max": 9,
+        "median": 9
+      },
+      "latency_ms": {
+        "p50": 1.997,
+        "p95": 2.584,
+        "min": 1.872,
+        "max": 2.584
+      }
+    },
+    "10": {
+      "identities": 10,
+      "returned_truths": 10,
+      "rounds": 7,
+      "sql_queries": {
+        "min": 9,
+        "max": 9,
+        "median": 9
+      },
+      "latency_ms": {
+        "p50": 2.684,
+        "p95": 2.916,
+        "min": 2.45,
+        "max": 2.916
+      }
+    },
+    "1000": {
+      "identities": 1000,
+      "returned_truths": 1000,
+      "rounds": 7,
+      "sql_queries": {
+        "min": 9,
+        "max": 9,
+        "median": 9
+      },
+      "latency_ms": {
+        "p50": 76.094,
+        "p95": 82.46,
+        "min": 57.654,
+        "max": 82.46
+      }
+    }
+  },
+  "gates": {
+    "exact_results": true,
+    "constant_query_bound": true
+  },
+  "baseline": {
+    "schema": "memoryos-current-truth-performance@1",
+    "generated_at": "2026-08-14T15:20:08.077338+00:00",
+    "implementation": "baseline-e607d5f",
+    "schema_revision": "0003_reality_intelligence_hardening",
+    "dataset": {
+      "kind": "deterministic_synthetic_bitemporal",
+      "sizes": [
+        1,
+        10,
+        1000
+      ],
+      "total_identities": 1011,
+      "effect_claim": "none"
+    },
+    "platform": {
+      "python": "3.12.13",
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64"
+    },
+    "measurements": {
+      "1": {
+        "identities": 1,
+        "returned_truths": 1,
+        "rounds": 7,
+        "sql_queries": {
+          "min": 4049,
+          "max": 4049,
+          "median": 4049
+        },
+        "latency_ms": {
+          "p50": 557.323,
+          "p95": 587.757,
+          "min": 481.14,
+          "max": 587.757
+        }
+      },
+      "10": {
+        "identities": 10,
+        "returned_truths": 10,
+        "rounds": 7,
+        "sql_queries": {
+          "min": 4076,
+          "max": 4076,
+          "median": 4076
+        },
+        "latency_ms": {
+          "p50": 557.433,
+          "p95": 607.847,
+          "min": 547.301,
+          "max": 607.847
+        }
+      },
+      "1000": {
+        "identities": 1000,
+        "returned_truths": 1000,
+        "rounds": 7,
+        "sql_queries": {
+          "min": 7046,
+          "max": 7046,
+          "median": 7046
+        },
+        "latency_ms": {
+          "p50": 1217.033,
+          "p95": 1311.148,
+          "min": 1207.999,
+          "max": 1311.148
+        }
+      }
+    },
+    "gates": {
+      "exact_results": true,
+      "constant_query_bound": false
+    }
+  },
+  "comparison": {
+    "1": {
+      "sql_query_reduction": 4040,
+      "sql_query_reduction_ratio": 0.997777,
+      "p95_speedup": 227.46
+    },
+    "10": {
+      "sql_query_reduction": 4067,
+      "sql_query_reduction_ratio": 0.997792,
+      "p95_speedup": 208.452
+    },
+    "1000": {
+      "sql_query_reduction": 7037,
+      "sql_query_reduction_ratio": 0.998723,
+      "p95_speedup": 15.9
+    }
+  }
+}

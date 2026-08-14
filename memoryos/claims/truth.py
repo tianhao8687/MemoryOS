@@ -593,16 +593,6 @@ class TruthMaintenanceService:
     def current_truth(self, session: Session, request: CurrentTruthRequest) -> dict[str, Any]:
         valid_moment = request.as_of_valid_time or _now()
         known_moment = request.as_known_at or _now()
-        rows = self.versions.visible_versions(
-            session,
-            valid_time=valid_moment,
-            known_time=known_moment,
-        )
-        subject_query = normalize_entity_name(request.subject) if request.subject else None
-        text_query = normalize_entity_name(request.query) if request.query else None
-        visible: list[ClaimVersionRow] = []
-        identities: dict[str, ClaimIdentityRow] = {}
-        entities: dict[str, EntityRow] = {}
         visible_statuses = {
             ClaimStatus.ACCEPTED,
             ClaimStatus.CONTESTED,
@@ -610,15 +600,51 @@ class TruthMaintenanceService:
             ClaimStatus.STALE,
             ClaimStatus.HISTORICAL,
         }
+        rows = self.versions.visible_versions(
+            session,
+            valid_time=valid_moment,
+            known_time=known_moment,
+            scope_type=request.scope_type,
+            scope_key=request.scope_key,
+            predicate=request.predicate,
+            statuses=visible_statuses,
+        )
+        subject_query = normalize_entity_name(request.subject) if request.subject else None
+        text_query = normalize_entity_name(request.query) if request.query else None
+        visible: list[ClaimVersionRow] = []
+        identity_ids = {version.identity_id for version in rows}
+        identities = {
+            identity.id: identity
+            for identity in session.scalars(
+                select(ClaimIdentityRow).where(ClaimIdentityRow.id.in_(identity_ids))
+            )
+        }
+        entity_ids = {identity.subject_entity_id for identity in identities.values()} | {
+            version.object_entity_id for version in rows if version.object_entity_id
+        }
+        entities = {
+            entity.id: entity
+            for entity in session.scalars(select(EntityRow).where(EntityRow.id.in_(entity_ids)))
+        }
+        archived_memory_ids = self._archived_memory_ids(
+            session,
+            {version.memory_id for version in rows},
+            known_moment,
+        )
+
+        def version_object_identity(version: ClaimVersionRow) -> Any:
+            if version.object_entity_id:
+                entity = entities.get(version.object_entity_id)
+                return entity.normalized_name if entity else version.object_value
+            return version.object_value
+
         for version in rows:
-            if version.status not in visible_statuses:
+            if version.memory_id in archived_memory_ids:
                 continue
-            if self._memory_archived_at(session, version.memory_id, known_moment):
-                continue
-            identity = session.get(ClaimIdentityRow, version.identity_id)
+            identity = identities.get(version.identity_id)
             if identity is None:
                 continue
-            entity = session.get(EntityRow, identity.subject_entity_id)
+            entity = entities.get(identity.subject_entity_id)
             if entity is None:
                 continue
             if request.scope_type is not None and identity.scope_type is not request.scope_type:
@@ -639,7 +665,7 @@ class TruthMaintenanceService:
                     (
                         entity.normalized_name,
                         identity.canonical_predicate,
-                        canonical_object(self._version_object_identity(session, version)),
+                        canonical_object(version_object_identity(version)),
                     )
                 )
                 if not all(token in haystack for token in text_query.split()):
@@ -649,6 +675,21 @@ class TruthMaintenanceService:
         grouped: dict[str, list[ClaimVersionRow]] = defaultdict(list)
         for version in visible:
             grouped[version.identity_id].append(version)
+        all_claim_ids = [version.claim_id for version in visible]
+        evidence_rows = self._evidence_for(session, all_claim_ids)
+        history_rows = self._version_history(session, all_claim_ids, known_moment)
+        relation_rows = self._relations_for(session, all_claim_ids)
+        evidence_by_claim: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        history_by_claim: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        relations_by_claim: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for item in evidence_rows:
+            evidence_by_claim[str(item["claim_id"])].append(item)
+        for item in history_rows:
+            history_by_claim[str(item["claim_id"])].append(item)
+        for item in relation_rows:
+            relations_by_claim[str(item["from_claim_id"])].append(item)
+            if item["to_claim_id"] != item["from_claim_id"]:
+                relations_by_claim[str(item["to_claim_id"])].append(item)
         truths = []
         all_accepted: list[dict[str, Any]] = []
         all_conflicting: list[dict[str, Any]] = []
@@ -668,10 +709,7 @@ class TruthMaintenanceService:
                 }
                 and version.stale_state is not ClaimStaleState.STALE
             ]
-            distinct = {
-                canonical_object(self._version_object_identity(session, version))
-                for version in non_stale
-            }
+            distinct = {canonical_object(version_object_identity(version)) for version in non_stale}
             contested = any(version.status is ClaimStatus.CONTESTED for version in versions) or (
                 is_single_valued(identity.canonical_predicate, entity.normalized_name)
                 and len(distinct) > 1
@@ -686,7 +724,7 @@ class TruthMaintenanceService:
                 state = TruthState.UNKNOWN
             states.append(state)
             serialized = [
-                self.serialize_version(session, version, identity) for version in versions
+                self.serialize_version(session, version, identity, entities) for version in versions
             ]
             accepted = [
                 item
@@ -695,11 +733,15 @@ class TruthMaintenanceService:
             ]
             conflicting = serialized if state is TruthState.CONTESTED else []
             claim_ids = [version.claim_id for version in versions]
-            evidence = self._evidence_for(session, claim_ids)
-            history = [
-                *self._version_history(session, claim_ids, known_moment),
-                *self._relations_for(session, claim_ids),
+            evidence = [item for claim_id in claim_ids for item in evidence_by_claim[claim_id]]
+            version_history = [
+                item for claim_id in claim_ids for item in history_by_claim[claim_id]
             ]
+            identity_relations: dict[str, dict[str, Any]] = {}
+            for claim_id in claim_ids:
+                for item in relations_by_claim[claim_id]:
+                    identity_relations[str(item["id"])] = item
+            history = [*version_history, *identity_relations.values()]
             truths.append(
                 {
                     "identity_id": identity.id,
@@ -731,43 +773,78 @@ class TruthMaintenanceService:
         }
 
     @staticmethod
-    def _memory_archived_at(session: Session, memory_id: str, known_moment: datetime) -> bool:
+    def _archived_memory_ids(
+        session: Session,
+        memory_ids: set[str],
+        known_moment: datetime,
+    ) -> set[str]:
+        if not memory_ids:
+            return set()
         events = list(
             session.execute(
-                select(AuditEventRow.action, AuditEventRow.timestamp)
+                select(
+                    AuditEventRow.entity_id,
+                    AuditEventRow.action,
+                    AuditEventRow.timestamp,
+                )
                 .where(
                     AuditEventRow.entity_type == "memory",
-                    AuditEventRow.entity_id == memory_id,
+                    AuditEventRow.entity_id.in_(memory_ids),
                     AuditEventRow.action.in_(["health_archive", "health_restore"]),
                 )
-                .order_by(AuditEventRow.timestamp)
+                .order_by(
+                    AuditEventRow.entity_id,
+                    AuditEventRow.timestamp,
+                    AuditEventRow.id,
+                )
             )
         )
-        if events:
-            known_utc = _utc(known_moment)
-            visible_actions = [
-                action for action, timestamp in events if _utc(timestamp) <= known_utc
-            ]
-            return bool(visible_actions and visible_actions[-1] == "health_archive")
-        health = session.get(MemoryHealthRow, memory_id)
-        if health is None or health.temperature is not MemoryTemperature.ARCHIVED:
-            return False
-        return health.archived_at is None or _utc(health.archived_at) <= _utc(known_moment)
+        events_by_memory: dict[str, list[tuple[str, datetime]]] = defaultdict(list)
+        for memory_id, action, timestamp in events:
+            events_by_memory[str(memory_id)].append((str(action), timestamp))
+        known_utc = _utc(known_moment)
+        archived = {
+            memory_id
+            for memory_id, memory_events in events_by_memory.items()
+            if (
+                visible_actions := [
+                    action for action, timestamp in memory_events if _utc(timestamp) <= known_utc
+                ]
+            )
+            and visible_actions[-1] == "health_archive"
+        }
+        without_events = memory_ids - set(events_by_memory)
+        if without_events:
+            for health in session.scalars(
+                select(MemoryHealthRow).where(MemoryHealthRow.memory_id.in_(without_events))
+            ):
+                if health.temperature is MemoryTemperature.ARCHIVED and (
+                    health.archived_at is None or _utc(health.archived_at) <= known_utc
+                ):
+                    archived.add(health.memory_id)
+        return archived
 
     def serialize_version(
         self,
         session: Session,
         version: ClaimVersionRow,
         identity: ClaimIdentityRow | None = None,
+        entities: dict[str, EntityRow] | None = None,
     ) -> dict[str, Any]:
         resolved_identity = identity or session.get(ClaimIdentityRow, version.identity_id)
         subject = (
-            session.get(EntityRow, resolved_identity.subject_entity_id)
+            entities.get(resolved_identity.subject_entity_id)
+            if entities is not None and resolved_identity is not None
+            else session.get(EntityRow, resolved_identity.subject_entity_id)
             if resolved_identity is not None
             else None
         )
         object_entity = (
-            session.get(EntityRow, version.object_entity_id) if version.object_entity_id else None
+            entities.get(version.object_entity_id)
+            if entities is not None and version.object_entity_id
+            else session.get(EntityRow, version.object_entity_id)
+            if version.object_entity_id
+            else None
         )
         return {
             "id": version.claim_id,

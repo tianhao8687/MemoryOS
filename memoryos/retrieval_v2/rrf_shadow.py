@@ -64,7 +64,7 @@ class RRFChannelShadowProfile(BaseModel):
         if self.rrf_k != FROZEN_RRF_K:
             raise ValueError("RRF channel shadow profile changed frozen RRF K")
         if not math.isclose(self.mmr_lambda, FROZEN_MMR_LAMBDA, abs_tol=1e-12):
-            raise ValueError("RRF channel shadow profile changed frozen MMR lambda")
+            raise ValueError("RRF channel shadow profile changed frozen Lexical MMR lambda")
         return self
 
     def canonical_json(self) -> str:

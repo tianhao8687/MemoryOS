@@ -593,7 +593,7 @@ def train_candidate_weights(
             "The profile remains candidate-only until a sealed executable promotion gate passes.",
             "Hard safety gates are deliberately excluded from learned features.",
             "L2 regularization is selected on the repository-held-out development partition.",
-            "MMR and context cost structure remain frozen baseline parameters until "
+            "Lexical MMR and context cost structure remain frozen baseline parameters until "
             "sealed promotion.",
         ],
     )

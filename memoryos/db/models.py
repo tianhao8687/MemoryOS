@@ -210,6 +210,7 @@ class EntityRow(Base):
             name="uq_entities_scoped_name",
         ),
         Index("ix_entities_scope_type", "scope_type", "scope_key", "entity_type"),
+        Index("ix_entities_scope_name", "scope_type", "scope_key", "normalized_name"),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
@@ -251,6 +252,14 @@ class ClaimRow(Base):
         Index("ix_claims_subject_predicate_status", "subject_entity_id", "predicate", "status"),
         Index("ix_claims_memory_status", "memory_id", "status"),
         Index("ix_claims_temporal", "valid_from", "valid_to", "recorded_at"),
+        Index(
+            "ix_claims_subject_status_recorded",
+            "subject_entity_id",
+            "status",
+            "stale_state",
+            "recorded_at",
+            "memory_id",
+        ),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
@@ -409,6 +418,12 @@ class SourceAnchorRow(Base):
     )
     cached_head: Mapped[str | None] = mapped_column(String(64))
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    observed_head: Mapped[str | None] = mapped_column(String(64))
+    observed_path: Mapped[str | None] = mapped_column(String(2000))
+    observed_line_start: Mapped[int | None] = mapped_column(Integer)
+    observed_line_end: Mapped[int | None] = mapped_column(Integer)
+    observed_excerpt_hash: Mapped[str | None] = mapped_column(String(64))
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 

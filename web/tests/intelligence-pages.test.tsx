@@ -31,7 +31,7 @@ const claim = {
 function bodyFor(path: string) {
   if (path.startsWith('/api/status'))
     return {
-      version: '2.1.0',
+      version: '2.2.0',
       database: 'memoryos.db',
       schema_version: '0003_reality_intelligence_hardening',
       counts: { candidate: 0, active: 1, superseded: 0, expired: 0, forgotten: 0, rejected: 0 },
@@ -115,7 +115,7 @@ describe('Memory Intelligence Workbench', () => {
     renderRoute('/benchmarks')
     expect(await screen.findByRole('heading', { name: 'Benchmark Dashboard' })).toBeInTheDocument()
     expect(await screen.findByText('R Retrieval')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Blind CodingMemoryBench V2.1' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'CodingMemoryBench Fixture Regression' })).toBeInTheDocument()
     expect(screen.getByText('Gold isolated')).toBeInTheDocument()
     expect(screen.getByText('Real-model Agent A/B: external blocker')).toBeInTheDocument()
     expect(screen.getByText('Fixture only')).toBeInTheDocument()

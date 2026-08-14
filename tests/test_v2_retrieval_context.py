@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 from sqlalchemy import func, select
 
+from memoryos.context.compiler import TaskAwareContextCompiler
 from memoryos.db.models import EmbeddingRow, RetrievalRunRow
 from memoryos.db.session import Database
 from memoryos.domain.schemas import (
@@ -54,6 +55,17 @@ def test_mmr_retains_relevance_while_avoiding_duplicate_context() -> None:
     selected = mmr_select(candidates, limit=2, lambda_relevance=0.5)
 
     assert [item["memory"]["id"] for item in selected] == ["a", "c"]
+
+
+def test_context_compiler_rejects_out_of_contract_routed_fusion_score() -> None:
+    with pytest.raises(ValueError, match="normalized fusion contract"):
+        TaskAwareContextCompiler._validate_score_contract(
+            {
+                "routing_profile_sha256": "a" * 64,
+                "query_plan": {"routing": {"score_contract": "normalized_weighted_rrf_v1"}},
+                "items": [{"trace": {"fused_score": 1.01}}],
+            }
+        )
 
 
 @pytest.mark.v2

@@ -179,7 +179,7 @@ def main() -> None:
         **common,
     )
     run(
-        "Blind CodingMemoryBench V2.1",
+        "CodingMemoryBench fixture regression",
         [python, "scripts/coding_memory_bench.py", "--output-dir", str(scratch / "v2.1")],
         steps,
         **common,
@@ -198,7 +198,7 @@ def main() -> None:
         **common,
     )
     run(
-        "100K full retrieval/context pipeline",
+        "100K FTS-first Core Pipeline",
         [
             python,
             "scripts/benchmark_v21_pipeline.py",

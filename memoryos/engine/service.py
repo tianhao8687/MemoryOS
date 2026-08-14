@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from memoryos import __version__
 from memoryos.claims.truth import TruthMaintenanceService
 from memoryos.config import MemoryOSSettings
 from memoryos.consolidation import ConsolidationService
@@ -66,6 +67,7 @@ from memoryos.providers.openai_compatible import (
 from memoryos.retrieval.search import RetrievalEngine
 from memoryos.retrieval_v2 import (
     RetrievalPipeline,
+    RetrievalRoutingShadowProfile,
     RRFChannelShadowProfile,
     ShadowRetrievalProfile,
 )
@@ -91,9 +93,20 @@ class MemoryService:
         *,
         retrieval_scoring_profile: ShadowRetrievalProfile | None = None,
         retrieval_rrf_channel_profile: RRFChannelShadowProfile | None = None,
+        retrieval_routing_profile: RetrievalRoutingShadowProfile | None = None,
     ) -> None:
         self.database = database
         self.settings = settings
+        shadow_profile_count = sum(
+            profile is not None
+            for profile in (
+                retrieval_scoring_profile,
+                retrieval_rrf_channel_profile,
+                retrieval_routing_profile,
+            )
+        )
+        if shadow_profile_count > 1:
+            raise ValueError("only one retrieval shadow profile may be active")
         if retrieval_rrf_channel_profile is not None:
             if not settings.embedding_base_url or not settings.embedding_model:
                 raise ValueError("RRF channel shadow requires an embedding provider")
@@ -145,6 +158,7 @@ class MemoryService:
             reranker,
             scoring_profile=retrieval_scoring_profile,
             rrf_channel_profile=retrieval_rrf_channel_profile,
+            routing_profile=retrieval_routing_profile,
         )
         self.context_builder = TaskAwareContextCompiler(self.retrieval_v2)
         self.truth = TruthMaintenanceService(relationship_judge)
@@ -1013,7 +1027,7 @@ class MemoryService:
             )
             provenance_rate = active_with_source / active_count if active_count else 1.0
             return {
-                "version": "2.1.0",
+                "version": __version__,
                 "database": str(self.settings.database_path),
                 "schema_version": self.database.schema_version(),
                 "counts": counts,

@@ -163,3 +163,26 @@ They are implementation commitments, not future proposals.
     never a production approval. The first BGE/SWE-Gym candidate (19.25% FTS / 80.75% vector)
     improved the 52-query point estimates but failed repository coverage, confidence-bound, and
     Pandas worst-repository gates, so the frozen 50/50 production ratio remains unchanged.
+46. Separate query routing from numeric score calibration. Following the named-retriever and phased
+    ranking patterns used by mature search systems, a query planner may select only an immutable,
+    versioned recipe from an allowlist: exact, semantic, relational, temporal, complex, or the safe
+    hybrid fallback. A recipe controls active channels, RRF fusion, the bounded reranker policy, and
+    diversity policy; it cannot emit executable code, arbitrary weights, thresholds, or safety
+    overrides. Candidate retrieval, fusion, governance, reranking, and diversity are separate
+    stages. Exact-code Shadow execution uses persisted Source Anchors as a structured channel rather
+    than scanning the repository or pretending lexical retrieval is symbol lookup. Router v2 uses
+    discrete evidence signals and stable reason codes; the rule planner emits reason codes instead
+    of uncalibrated numeric confidence, and no numeric threshold controls execution. Unclassified input fails
+    closed to the safe recipe. Every channel reports requested, applicable, attempted, executed,
+    contributing, and degraded state; actual reranker mode, fusion weights/K, score contract, and
+    stage timings are persisted. Routed RRF is normalized to a bounded contract checked by Context
+    Compiler, while production retains its legacy raw-RRF contract and frozen safe-hybrid recipe.
+    Query-adaptive execution requires an explicit registry-hash-bound Shadow profile, is mutually
+    exclusive with scoring/RRF shadows, and fails closed if the registry changes. The router is an
+    architecture candidate, not evidence that its choices improve outcomes; 80/1000 pool bounds,
+    40-item rerank window, RRF values, and MMR lambda remain named heuristic baselines. Numeric
+    changes stay in the independent calibration track. Routing promotion aggregates independent
+    tasks rather than repeated runs, binds the complete evaluation set, and requires sealed public
+    real-agent evidence, a complete agent/repeat matrix, positive paired success CI, no safety or
+    worst repository/agent/recipe regression, and bounded complete latency/cost. Passing produces
+    only an activation-review candidate and never changes production automatically.

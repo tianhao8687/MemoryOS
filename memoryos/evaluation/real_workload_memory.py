@@ -30,6 +30,7 @@ from memoryos.evaluation.real_workload_models import (
     WorkloadTaskSpec,
 )
 from memoryos.retrieval_v2.pipeline import retrieval_config_hash
+from memoryos.retrieval_v2.routing import RetrievalRoutingShadowProfile
 from memoryos.retrieval_v2.rrf_shadow import RRFChannelShadowProfile
 from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
 
@@ -37,6 +38,7 @@ _PUBLISHABLE_RETRIEVAL_FEATURES = frozenset(
     {
         "fts_rank",
         "vector_rank",
+        "source_anchor_rank",
         "graph_rank",
         "temporal_rank",
         "scope_match",
@@ -48,6 +50,40 @@ _PUBLISHABLE_RETRIEVAL_FEATURES = frozenset(
         "memory_confidence",
         "memory_importance",
         "reranker_score",
+    }
+)
+_PUBLISHABLE_ROUTING_FIELDS = frozenset(
+    {
+        "route",
+        "recommended_recipe_id",
+        "recommended_recipe_sha256",
+        "fallback_used",
+        "decision_basis",
+        "reason_codes",
+        "features",
+        "router_version",
+        "execution_mode",
+        "executed_recipe_id",
+        "executed_recipe_sha256",
+        "active_channels",
+        "requested_channels",
+        "executed_channels",
+        "contributing_channels",
+        "degraded_channels",
+        "channel_execution",
+        "fusion",
+        "fusion_weights",
+        "rrf_k",
+        "score_contract",
+        "source_anchor_weight_policy",
+        "reranker_policy",
+        "reranker_mode",
+        "diversity_policy",
+        "candidate_pool_min",
+        "candidate_pool_max",
+        "rerank_window",
+        "fallback_recipe_id",
+        "stage_timings_ms",
     }
 )
 
@@ -65,6 +101,7 @@ class MemoryRuntime:
     seed_ids: tuple[str, ...]
     generated_memory_ids: dict[str, str]
     scoring_profile_sha256: str | None
+    routing_profile_sha256: str | None
     expected_retrieval_config_hash: str | None
     server_arguments: tuple[str, ...]
     server_environment: tuple[tuple[str, str], ...]
@@ -80,7 +117,9 @@ class MemoryUsageEvidence:
     selected_seed_ids: tuple[str, ...]
     candidate_features: tuple[dict[str, Any], ...]
     retrieval_config_hashes: tuple[str, ...]
+    retrieval_routes: tuple[dict[str, Any], ...]
     scoring_profile_sha256: str | None
+    routing_profile_sha256: str | None
     errors: tuple[str, ...]
 
     def as_dict(self) -> dict[str, Any]:
@@ -106,6 +145,7 @@ class MemoryRuntimeBuilder:
         http_url: str | None = None,
         scoring_profile: ShadowRetrievalProfile | None = None,
         rrf_channel_profile: RRFChannelShadowProfile | None = None,
+        routing_profile: RetrievalRoutingShadowProfile | None = None,
         embedding_base_url: str | None = None,
         embedding_model: str | None = None,
     ) -> MemoryRuntime:
@@ -113,10 +153,11 @@ class MemoryRuntimeBuilder:
         destination.mkdir(parents=True, exist_ok=False)
         config_path = destination / "mcp.json"
         selected = _select_seeds(task, seeds)
-        if scoring_profile is not None and rrf_channel_profile is not None:
+        shadow_profiles = (scoring_profile, rrf_channel_profile, routing_profile)
+        if sum(profile is not None for profile in shadow_profiles) > 1:
             raise MemoryRuntimeError("benchmark can use only one shadow profile")
-        if (scoring_profile is not None or rrf_channel_profile is not None) and (
-            condition is not ExperimentCondition.MEMORYOS
+        if any(profile is not None for profile in shadow_profiles) and condition is not (
+            ExperimentCondition.MEMORYOS
         ):
             raise MemoryRuntimeError("shadow retrieval profiles are valid only for MemoryOS")
         if (embedding_base_url is None) != (embedding_model is None):
@@ -148,6 +189,7 @@ class MemoryRuntimeBuilder:
                 seed_ids=tuple(seed.id for seed in selected),
                 generated_memory_ids={},
                 scoring_profile_sha256=None,
+                routing_profile_sha256=None,
                 expected_retrieval_config_hash=None,
                 server_arguments=(),
                 server_environment=(),
@@ -198,6 +240,10 @@ class MemoryRuntimeBuilder:
                         rrf_channel_profile.source_vector_adapter_sha256,
                     ]
                 )
+            if routing_profile is not None:
+                profile_path = destination / "retrieval-routing-shadow-profile.json"
+                _write_json(profile_path, routing_profile.model_dump(mode="json"))
+                common_arguments.extend(["--routing-profile", path_mapper(profile_path)])
         else:  # pragma: no cover - enum exhaustiveness guard
             raise MemoryRuntimeError(f"unsupported memory condition: {condition}")
 
@@ -230,10 +276,14 @@ class MemoryRuntimeBuilder:
                 if rrf_channel_profile is not None
                 else None
             ),
+            routing_profile_sha256=(
+                routing_profile.digest() if routing_profile is not None else None
+            ),
             expected_retrieval_config_hash=(
                 retrieval_config_hash(
                     scoring_profile,
                     rrf_channel_profile=rrf_channel_profile,
+                    routing_profile=routing_profile,
                 )
                 if condition is ExperimentCondition.MEMORYOS
                 else None
@@ -253,7 +303,9 @@ class MemoryRuntimeBuilder:
                 selected_seed_ids=(),
                 candidate_features=(),
                 retrieval_config_hashes=(),
+                retrieval_routes=(),
                 scoring_profile_sha256=None,
+                routing_profile_sha256=None,
                 errors=(),
             )
         errors: list[str] = []
@@ -272,6 +324,7 @@ class MemoryRuntimeBuilder:
         retrieval_runs = 0
         candidate_features: list[dict[str, Any]] = []
         retrieval_config_hashes: set[str] = set()
+        retrieval_routes: list[dict[str, Any]] = []
         if runtime.condition is ExperimentCondition.MEMORYOS:
             if runtime.data_dir is None:
                 errors.append("MemoryOS runtime has no data directory")
@@ -289,6 +342,23 @@ class MemoryRuntimeBuilder:
                     }
                     for retrieval_index, run in enumerate(runs):
                         retrieval_config_hashes.add(run.config_hash)
+                        retrieval_plan = run.scope_json.get("retrieval_plan")
+                        routing = (
+                            retrieval_plan.get("routing")
+                            if isinstance(retrieval_plan, dict)
+                            else None
+                        )
+                        if isinstance(routing, dict):
+                            retrieval_routes.append(
+                                {
+                                    "retrieval_index": retrieval_index,
+                                    **{
+                                        str(key): value
+                                        for key, value in routing.items()
+                                        if key in _PUBLISHABLE_ROUTING_FIELDS
+                                    },
+                                }
+                            )
                         selected.update(
                             reverse_ids[memory_id]
                             for memory_id in run.selected_memory_ids
@@ -325,6 +395,8 @@ class MemoryRuntimeBuilder:
                 database.close()
             if retrieval_runs == 0:
                 errors.append("MemoryOS condition produced no RetrievalRunRow")
+            elif len(retrieval_routes) != retrieval_runs:
+                errors.append("MemoryOS RetrievalRun is missing routing execution evidence")
             if runtime.expected_retrieval_config_hash is None or retrieval_config_hashes != {
                 runtime.expected_retrieval_config_hash
             }:
@@ -349,7 +421,9 @@ class MemoryRuntimeBuilder:
             selected_seed_ids=tuple(sorted(selected)),
             candidate_features=tuple(candidate_features),
             retrieval_config_hashes=tuple(sorted(retrieval_config_hashes)),
+            retrieval_routes=tuple(retrieval_routes),
             scoring_profile_sha256=runtime.scoring_profile_sha256,
+            routing_profile_sha256=runtime.routing_profile_sha256,
             errors=tuple(errors),
         )
 

@@ -1,4 +1,4 @@
-# MemoryOS V2.1 架构
+# MemoryOS V2.2 架构
 
 ## 原则
 
@@ -46,7 +46,9 @@ flowchart LR
 - `ann_index_state`
 - `memory_health`
 
-0001/0002 迁移是显式、不可变的 Alembic operation，不再引用运行时 `Base.metadata`。0003 对既有 claim 保守回填首个 version；迁移可降级再重放而不重复历史。
+`0004_anchor_observation_hardening` 将 Source Anchor 的不可变基线字段与最近一次观测字段分开，并增加 scope-first Claim/Entity 索引。旧 anchor 的 observation 由既有基线确定性回填。
+
+0001/0002 迁移是显式、不可变的 Alembic operation，不再引用运行时 `Base.metadata`。0003 对既有 claim 保守回填首个 version；0004 迁移可降级再重放，且不重复历史或覆盖基线证据。
 
 现有 V1 memory 不会被迁移脚本凭空补成 accepted claim；首次正常操作可保守、lazy normalize。备份格式为 V2 且显式接受 V1 import。生产 smoke 以真实 `0001_initial` DB 启动 packaged executable，验证自动升级和旧数据保留。
 
@@ -74,22 +76,29 @@ Freshness lazy 计算并按 HEAD 缓存：
 
 ```mermaid
 flowchart LR
-    Q["Task query"] --> Planner["Intent + entities + scopes + time"]
+    Q["Task query"] --> Planner["Deterministic Query Planner"]
+    Planner -. "explicit Shadow only" .-> Router["Allowlisted recipe router v2"]
     Planner --> FTS["FTS5 BM25"]
     Planner --> Vec["Embedding index"]
-    Planner --> Graph["Claim/entity graph"]
+    Router --> Anchor["Persisted Source Anchor"]
+    Planner --> Graph["Claim/Relation Retrieval"]
     Planner --> Temporal["Current truth / temporal"]
     FTS --> RRF["Weighted RRF"]
     Vec --> RRF
+    Anchor --> RRF
     Graph --> RRF
     Temporal --> RRF
     RRF --> Filter["Scope / freshness / evidence / feedback"]
     Filter --> Rerank["Optional top 20–40 reranker"]
-    Rerank --> MMR["MMR diversity"]
+    Rerank --> MMR["Lexical MMR diversity"]
     MMR --> Trace["Top-N + persisted trace"]
 ```
 
-每个结果记录 FTS/vector/graph/temporal rank、fused score、scope、freshness、evidence count、reranker score 和 final reasons。Embedding 区分 query/document instruction。sqlite-vec 以 `<provider>/<model>/<dimensions>` namespace 持久化，写入 memory embedding 时同步 upsert；状态、item count、失败原因和重建时间进入主库。扩展禁用/不可用或查询失败时显式使用 exact NumPy fallback，FTS5 始终可用。
+实现上分为 candidate retrieval、fusion、governance scoring、bounded rerank 和 diversity 五个阶段。生产路径固定执行既有 safe-hybrid topology 和 `legacy_raw_rrf_v1`；路由器只在显式、哈希绑定的 Shadow profile 下改变 topology，且与权重 Shadow 互斥。router v2 只按离散信号和意图原因码选择 immutable recipe，不产生未校准的 query-time 概率，也不使用数值阈值；无法分类时回退生产 recipe。
+
+每个结果记录 FTS/vector/source-anchor/graph/temporal rank、fused score、scope、freshness、evidence count、reranker score 和 final reasons。每个通道还记录 requested/available/applicable/attempted/executed/contributing/degraded 状态与计数，避免把“配置了通道”误报为“通道工作了”。Shadow RRF 使用 `[0,1]` bounded fusion contract，Context Compiler 在消费前校验；实际融合 weights/K、reranker mode 和阶段耗时进入 RetrievalRun。Source Anchor 查询只读已持久化的 bounded symbol/path 证据，不触发全仓扫描。
+
+Embedding 区分 query/document instruction。sqlite-vec 以 `<provider>/<model>/<dimensions>` namespace 持久化，写入 memory embedding 时同步 upsert；状态、item count、失败原因和重建时间进入主库。扩展禁用/不可用或查询失败时显式使用 exact NumPy fallback，FTS5 始终可用。路由 Shadow 的生产候选资格由独立 task-level 成对 Agent 聚合器判断；最差 repository/agent/recipe、安全、成本与时延任一门禁失败即保留冻结基线，且通过也不自动激活。
 
 ## Task-aware Context Compiler
 
@@ -103,8 +112,8 @@ Memory Health 根据状态、更新时间、检索使用、证据和 accepted tr
 
 ## Provider 边界
 
-CandidateExtractor、ClaimExtractor、EmbeddingProvider、RelationshipJudge、Reranker、ConsolidationJudge 和 StalenessJudge 均暴露 provider/model、real/fixture、capabilities、timeout、max input 和 stats。OpenAI-compatible JSON 输出经 `extra=forbid` schema 与 evidence span 校验；异常统一转为 `ProviderError`，不写污染数据，也不记录完整 prompt。
+CandidateExtractor、ClaimExtractor、EmbeddingProvider、RelationshipJudge、Reranker 和 ConsolidationJudge 均暴露 provider/model、real/fixture、capabilities、timeout、max input 和 stats。OpenAI-compatible JSON 输出经 `extra=forbid` schema 与 evidence span 校验；异常统一转为 `ProviderError`，不写污染数据，也不记录完整 prompt。Freshness 当前仅由确定性的 Git/source-anchor 比较驱动；未接线的 `staleness_model` 配置和能力声明已经删除。
 
 ## 部署
 
-HTTP 强制 loopback。MCP 是 stdio 子进程。Windows onedir 包捆绑 migrations、Tree-sitter grammars、sqlite-vec、React dist、MemoryBench V2 和 CodingMemoryBench V2.1 report。V1 数据原地升级至 0003；写入状态转换始终在事务中完成。
+HTTP 强制 loopback。MCP 是 stdio 子进程。Windows onedir 包捆绑 migrations、Tree-sitter grammars、sqlite-vec、React dist、MemoryBench V2 和 CodingMemoryBench fixture regression report。V1 数据原地升级至 `0004_anchor_observation_hardening`；写入状态转换始终在事务中完成。

@@ -1,0 +1,221 @@
+{
+  "schema": "memoryos-performance-tier-report@1",
+  "tier": "tier_2_10k_20k_hybrid_local",
+  "label": "20K Hybrid Local Pipeline",
+  "generated_at": "2026-08-14T15:34:44.765330+00:00",
+  "evidence_type": "real_local_embedding_performance_fixture",
+  "effect_claim": "none",
+  "manual_or_scheduled_only": true,
+  "ci_claim": false,
+  "records": 20000,
+  "rounds": 3,
+  "seed_seconds": 6.263,
+  "embedding_seconds": 57.445,
+  "record_counts": {
+    "memories": 20000,
+    "embeddings": 20000,
+    "claims": 20000,
+    "claim_versions": 0,
+    "relations": 200
+  },
+  "provider": {
+    "provider": "fastembed-local",
+    "model": "BAAI/bge-small-en-v1.5",
+    "revision": "52398278842ec682c6f32300af41344b1c0b0bb2",
+    "dimensions": 384,
+    "fastembed_version": "0.8.0",
+    "model_files_sha256": "41b3b428819b8066c66f20bb748fab8f97137be4ba15a47519ab42c6359a91da",
+    "fixture": false
+  },
+  "vector_backend": {
+    "primary": "sqlite-vec",
+    "sqlite_vec_version": "0.1.9",
+    "fallback": "exact-numpy"
+  },
+  "reranker": {
+    "configured": false,
+    "mode": "disabled"
+  },
+  "fixture": "synthetic memories/claims/relations with real local BGE embeddings",
+  "modes": {
+    "sqlite_vec_ann": {
+      "ann_enabled": true,
+      "ann_rebuild": {
+        "status": "ready",
+        "namespaces": [
+          {
+            "namespace": "fastembed-local:BAAI/bge-small-en-v1.5:384:a5b1b4bcf80c",
+            "dimensions": 384,
+            "count": 20000,
+            "status": "ready",
+            "reason": null
+          }
+        ]
+      },
+      "vector_status": [
+        {
+          "namespace": "fastembed-local:BAAI/bge-small-en-v1.5:384:a5b1b4bcf80c",
+          "backend": "sqlite-vec",
+          "provider": "fastembed-local",
+          "model": "BAAI/bge-small-en-v1.5",
+          "model_fingerprint": "a5b1b4bcf80cc64d17f903d75c9eae4596a6fe3bc9686f0775b3a7bb79b8e07e",
+          "dimensions": 384,
+          "item_count": 20000,
+          "status": "ready",
+          "unavailable_reason": null,
+          "last_rebuild_at": "2026-08-14T15:33:35.985481",
+          "updated_at": "2026-08-14T15:33:43.014547"
+        }
+      ],
+      "pipeline_modes": [
+        "rrf-hybrid-ann"
+      ],
+      "channels": {
+        "requested": [
+          "fts",
+          "graph",
+          "temporal",
+          "vector"
+        ],
+        "executed": [
+          "fts",
+          "graph",
+          "temporal",
+          "vector"
+        ],
+        "contributing": [
+          "fts",
+          "graph",
+          "temporal",
+          "vector"
+        ],
+        "degraded": []
+      },
+      "reranker": [
+        "disabled"
+      ],
+      "search": {
+        "p50_ms": 322.17,
+        "p95_ms": 375.527,
+        "scenarios": {
+          "claim_relation": {
+            "p50_ms": 319.499,
+            "p95_ms": 322.17
+          },
+          "hybrid": {
+            "p50_ms": 319.573,
+            "p95_ms": 351.72
+          },
+          "temporal": {
+            "p50_ms": 364.3,
+            "p95_ms": 375.527
+          }
+        }
+      },
+      "context": {
+        "p50_ms": 442.152,
+        "p95_ms": 451.078
+      }
+    },
+    "exact_fallback": {
+      "ann_enabled": false,
+      "ann_rebuild": {
+        "status": "ready",
+        "namespaces": [
+          {
+            "namespace": "fastembed-local:BAAI/bge-small-en-v1.5:384:a5b1b4bcf80c",
+            "dimensions": 384,
+            "count": 0,
+            "status": "unavailable",
+            "reason": "disabled"
+          }
+        ]
+      },
+      "vector_status": [
+        {
+          "namespace": "fastembed-local:BAAI/bge-small-en-v1.5:384:a5b1b4bcf80c",
+          "backend": "sqlite-vec",
+          "provider": "fastembed-local",
+          "model": "BAAI/bge-small-en-v1.5",
+          "model_fingerprint": "a5b1b4bcf80cc64d17f903d75c9eae4596a6fe3bc9686f0775b3a7bb79b8e07e",
+          "dimensions": 384,
+          "item_count": 0,
+          "status": "unavailable",
+          "unavailable_reason": "disabled",
+          "last_rebuild_at": "2026-08-14T15:33:35.985481",
+          "updated_at": "2026-08-14T15:34:44.336398"
+        }
+      ],
+      "pipeline_modes": [
+        "rrf-hybrid-exact-fallback"
+      ],
+      "channels": {
+        "requested": [
+          "fts",
+          "graph",
+          "temporal",
+          "vector"
+        ],
+        "executed": [
+          "fts",
+          "graph",
+          "temporal",
+          "vector"
+        ],
+        "contributing": [
+          "fts",
+          "graph",
+          "temporal",
+          "vector"
+        ],
+        "degraded": []
+      },
+      "reranker": [
+        "disabled"
+      ],
+      "search": {
+        "p50_ms": 3054.057,
+        "p95_ms": 3165.333,
+        "scenarios": {
+          "claim_relation": {
+            "p50_ms": 3047.553,
+            "p95_ms": 3075.141
+          },
+          "hybrid": {
+            "p50_ms": 3013.494,
+            "p95_ms": 3054.057
+          },
+          "temporal": {
+            "p50_ms": 3061.146,
+            "p95_ms": 3165.333
+          }
+        }
+      },
+      "context": {
+        "p50_ms": 3142.234,
+        "p95_ms": 3253.577
+      }
+    }
+  },
+  "platform": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.13"
+  },
+  "gates": {
+    "record_count": true,
+    "real_embeddings": true,
+    "claim_relation_data": true,
+    "ann_executed": true,
+    "exact_fallback_executed": true,
+    "vector_channel": true,
+    "claim_relation_channel": true,
+    "temporal_channel": true
+  },
+  "passed": true,
+  "limitations": [
+    "Synthetic corpus measures local pipeline cost, not coding-agent effectiveness.",
+    "ClaimVersion history count is zero; temporal coverage uses Claim valid intervals.",
+    "No cross-encoder reranker or relationship model is active in Tier 2.",
+    "Tier 2 is manual/scheduled evidence and is not claimed as a default CI job."
+  ]
+}

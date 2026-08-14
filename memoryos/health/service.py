@@ -123,6 +123,7 @@ class MemoryHealthService:
             if memory is None:
                 raise NotFoundError("memory was not found")
             self._assert_truth_safe(session, memory_id)
+            moment = self._next_archive_event_moment(session, memory_id)
             health = session.get(MemoryHealthRow, memory_id)
             if health is None:
                 health = MemoryHealthRow(
@@ -132,7 +133,7 @@ class MemoryHealthService:
                     components_json={},
                     explanation="Archived before first scheduled health evaluation",
                     retrieval_count=0,
-                    evaluated_at=datetime.now(UTC),
+                    evaluated_at=moment,
                 )
                 session.add(health)
             if health.temperature is not MemoryTemperature.ARCHIVED:
@@ -140,8 +141,8 @@ class MemoryHealthService:
                 components["pre_archive_temperature"] = health.temperature.value
                 health.components_json = components
             health.temperature = MemoryTemperature.ARCHIVED
-            health.archived_at = datetime.now(UTC)
-            health.evaluated_at = datetime.now(UTC)
+            health.archived_at = moment
+            health.evaluated_at = moment
             health.explanation = (
                 "Reversibly archived; excluded from normal retrieval and truth views."
             )
@@ -152,6 +153,7 @@ class MemoryHealthService:
                     entity_id=memory_id,
                     actor=actor,
                     details={"reversible": True},
+                    timestamp=moment,
                 )
             )
             session.flush()
@@ -163,10 +165,11 @@ class MemoryHealthService:
             health = session.get(MemoryHealthRow, memory_id)
             if memory is None or health is None:
                 raise NotFoundError("archived memory was not found")
+            moment = self._next_archive_event_moment(session, memory_id)
             previous = str(health.components_json.get("pre_archive_temperature", "cold"))
             health.temperature = MemoryTemperature(previous)
             health.archived_at = None
-            health.evaluated_at = datetime.now(UTC)
+            health.evaluated_at = moment
             health.explanation = "Restored from reversible archive; eligible for retrieval again."
             session.add(
                 AuditEventRow(
@@ -175,10 +178,25 @@ class MemoryHealthService:
                     entity_id=memory_id,
                     actor=actor,
                     details={"temperature": health.temperature.value},
+                    timestamp=moment,
                 )
             )
             session.flush()
             return self.serialize(health, memory)
+
+    @staticmethod
+    def _next_archive_event_moment(session: Any, memory_id: str) -> datetime:
+        moment = datetime.now(UTC)
+        last = session.scalar(
+            select(func.max(AuditEventRow.timestamp)).where(
+                AuditEventRow.entity_type == "memory",
+                AuditEventRow.entity_id == memory_id,
+                AuditEventRow.action.in_(["health_archive", "health_restore"]),
+            )
+        )
+        if last is not None and _utc(moment) <= _utc(last):
+            return _utc(last) + timedelta(microseconds=1)
+        return moment
 
     @staticmethod
     def record_retrieval(session: Any, memory_ids: list[str]) -> None:

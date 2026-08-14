@@ -59,13 +59,6 @@ class _ConsolidationResponse(BaseModel):
     confidence: float = Field(default=0, ge=0, le=1)
 
 
-class _StalenessResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    state: Literal["fresh", "suspect", "stale", "uncertain"]
-    confidence: float = Field(ge=0, le=1)
-    explanation: str = Field(min_length=1, max_length=2000)
-
-
 class _OpenAIJSONProvider:
     capabilities: tuple[str, ...] = ()
 
@@ -312,28 +305,6 @@ class OpenAICompatibleConsolidationJudge(_OpenAIJSONProvider):
         except PydanticValidationError as exc:
             self.stats.failures += 1
             raise ProviderError("consolidation response failed schema validation") from exc
-
-
-class OpenAICompatibleStalenessJudge(_OpenAIJSONProvider):
-    capabilities = ("staleness_judgement", "abstain")
-
-    def judge(self, old_evidence: str, current_summary: str) -> dict[str, Any]:
-        decoded = self._json(
-            system=(
-                "Compare old bounded code evidence with the current bounded symbol summary. "
-                "Return fresh, suspect, stale, or uncertain with confidence and explanation. "
-                "This is only a judgement candidate; never mutate truth."
-            ),
-            user=json.dumps(
-                {"old_evidence": old_evidence, "current_summary": current_summary},
-                ensure_ascii=False,
-            ),
-        )
-        try:
-            return _StalenessResponse.model_validate(decoded).model_dump(mode="json")
-        except PydanticValidationError as exc:
-            self.stats.failures += 1
-            raise ProviderError("staleness response failed schema validation") from exc
 
 
 def validate_provider_candidates(value: Any) -> list[ProviderCandidate]:

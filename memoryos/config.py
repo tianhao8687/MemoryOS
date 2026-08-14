@@ -46,7 +46,6 @@ class MemoryOSSettings(BaseSettings):
     relationship_model: str | None = None
     reranker_model: str | None = None
     consolidation_model: str | None = None
-    staleness_model: str | None = None
     ann_enabled: bool = True
 
     @field_validator("host")

@@ -1,0 +1,108 @@
+{
+  "schema": "memoryos-performance-tier-index@1",
+  "file_sha256_policy": "utf8-text-lf-normalized-v1",
+  "generated_at": "2026-08-14T15:10:07.953259+00:00",
+  "effect_claim": "none",
+  "current_truth": {
+    "status": "measured_before_and_after",
+    "path": "docs/verification/v2.2/current-truth-performance.json",
+    "file_sha256": "6d411a8f2dfa21dd94a5fc03627b33c3e8e369479575863ff2c182a92173df28",
+    "identities": 1000,
+    "baseline_sql_queries": 7046,
+    "hardened_sql_queries": 9,
+    "baseline_p50_ms": 1217.033,
+    "baseline_p95_ms": 1311.148,
+    "hardened_p50_ms": 76.094,
+    "hardened_p95_ms": 82.46
+  },
+  "tiers": {
+    "tier_1": {
+      "label": "100K FTS-first Core Pipeline",
+      "status": "measured",
+      "execution_class": "release_or_manual",
+      "path": "docs/verification/v2.2/100k-fts-first-core-pipeline.json",
+      "file_sha256": "bf5fec218506813fa1c17aefe286fb899d42acb0f424d518f9af5c02f7e58309",
+      "records": 100000,
+      "contributing_channels": [
+        "fts"
+      ],
+      "search_p50_ms": 17.715,
+      "search_p95_ms": 20.598,
+      "context_p50_ms": 239.949,
+      "context_p95_ms": 263.738
+    },
+    "tier_2": {
+      "label": "10K/20K Hybrid Local Pipeline",
+      "status": "measured",
+      "execution_class": "manual_or_scheduled_only",
+      "claimed_as_ci": false,
+      "records": [
+        10000,
+        20000
+      ],
+      "provider": "fastembed-local:BAAI/bge-small-en-v1.5@52398278842ec682c6f32300af41344b1c0b0bb2",
+      "contributing_channels": [
+        "fts",
+        "graph",
+        "temporal",
+        "vector"
+      ],
+      "results": {
+        "10000": {
+          "path": "docs/verification/v2.2/hybrid-local-10k.json",
+          "file_sha256": "8bca458284b10cf317d110c5db304d900d5fabe2db2713193bab7f4d8a8d1efd",
+          "embeddings": 10000,
+          "claims": 10000,
+          "relations": 100,
+          "sqlite_vec_ann": {
+            "search_p50_ms": 278.454,
+            "search_p95_ms": 313.424,
+            "context_p50_ms": 383.943,
+            "context_p95_ms": 410.587
+          },
+          "exact_fallback": {
+            "search_p50_ms": 1679.675,
+            "search_p95_ms": 1733.581,
+            "context_p50_ms": 1752.499,
+            "context_p95_ms": 1783.612
+          }
+        },
+        "20000": {
+          "path": "docs/verification/v2.2/hybrid-local-20k.json",
+          "file_sha256": "3e73e61463dc74ede4edde5e78f7c41b6c84acc207bebf932f4493b95082c7b2",
+          "embeddings": 20000,
+          "claims": 20000,
+          "relations": 200,
+          "sqlite_vec_ann": {
+            "search_p50_ms": 322.17,
+            "search_p95_ms": 375.527,
+            "context_p50_ms": 442.152,
+            "context_p95_ms": 451.078
+          },
+          "exact_fallback": {
+            "search_p50_ms": 3054.057,
+            "search_p95_ms": 3165.333,
+            "context_p50_ms": 3142.234,
+            "context_p95_ms": 3253.577
+          }
+        }
+      }
+    },
+    "tier_3": {
+      "label": "Model-enhanced Pipeline",
+      "status": "not_executed",
+      "execution_class": "manual_with_explicit_model_providers",
+      "reason": "No compatible reranker/relationship model endpoint was configured for this hardening run.",
+      "runner": "scripts/benchmark_model_enhanced_pipeline.py",
+      "search_p50_ms": null,
+      "search_p95_ms": null,
+      "context_p50_ms": null,
+      "context_p95_ms": null
+    }
+  },
+  "limitations": [
+    "Tier 1 and Tier 2 use synthetic corpora and make no coding-agent effect claim.",
+    "Tier 2 uses a real local embedding model but no cross-encoder reranker or relationship model.",
+    "Tier 3 has no result until real configured model channels execute without fallback."
+  ]
+}

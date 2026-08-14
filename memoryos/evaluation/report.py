@@ -30,7 +30,7 @@ def coding_memory_bench_report_path() -> Path:
     return _report_path(
         frozen_name="coding-memory-bench.json",
         source_parts=("docs", "verification", "v2.1", "coding-memory-bench.json"),
-        label="CodingMemoryBench V2.1",
+        label="CodingMemoryBench fixture regression",
     )
 
 
@@ -44,7 +44,7 @@ def load_memorybench_report() -> dict[str, Any]:
 def load_coding_memory_bench_report() -> dict[str, Any]:
     value = json.loads(coding_memory_bench_report_path().read_text(encoding="utf-8"))
     if not isinstance(value, dict) or value.get("schema") != "coding-memory-bench-v2.1@1":
-        raise ValueError("CodingMemoryBench V2.1 report schema is invalid")
+        raise ValueError("CodingMemoryBench fixture regression report schema is invalid")
     return value
 
 

@@ -32,6 +32,7 @@ from memoryos.evaluation.real_workload_report import (
 )
 from memoryos.evaluation.real_workload_scoring import HiddenTestRunner, scan_canary_leakage
 from memoryos.evaluation.real_workload_workspace import RepositoryWorkspaceManager
+from memoryos.retrieval_v2.routing import RetrievalRoutingShadowProfile
 from memoryos.retrieval_v2.rrf_shadow import RRFChannelShadowProfile
 from memoryos.retrieval_v2.scoring import ShadowRetrievalProfile
 
@@ -76,6 +77,7 @@ class RealWorkloadRunner:
         order_seed: int = 20260810,
         scoring_profile: ShadowRetrievalProfile | None = None,
         rrf_channel_profile: RRFChannelShadowProfile | None = None,
+        routing_profile: RetrievalRoutingShadowProfile | None = None,
         embedding_base_url: str | None = None,
         embedding_model: str | None = None,
     ) -> dict[str, Any]:
@@ -90,11 +92,12 @@ class RealWorkloadRunner:
             raise ValueError("condition calibration filter must be non-empty and unique")
         if mode is RunMode.CONFIRMATORY and set(selected_conditions) != set(ExperimentCondition):
             raise ValueError("confirmatory mode must run all three conditions")
-        if scoring_profile is not None and rrf_channel_profile is not None:
+        shadow_profiles = (scoring_profile, rrf_channel_profile, routing_profile)
+        if sum(profile is not None for profile in shadow_profiles) > 1:
             raise ValueError("a run can use only one shadow retrieval profile")
-        if (scoring_profile is not None or rrf_channel_profile is not None) and (
-            selected_conditions != [ExperimentCondition.MEMORYOS]
-        ):
+        if any(profile is not None for profile in shadow_profiles) and selected_conditions != [
+            ExperimentCondition.MEMORYOS
+        ]:
             raise ValueError("shadow scoring profiles require a MemoryOS-only dry run")
         if (embedding_base_url is None) != (embedding_model is None):
             raise ValueError("embedding_base_url and embedding_model must be set together")
@@ -167,6 +170,7 @@ class RealWorkloadRunner:
                     seeds,
                     scoring_profile,
                     rrf_channel_profile,
+                    routing_profile,
                     embedding_base_url,
                     embedding_model,
                 )
@@ -185,6 +189,9 @@ class RealWorkloadRunner:
         report["scoring_profile_sha256"] = _profile_digest(
             scoring_profile,
             rrf_channel_profile,
+        )
+        report["routing_profile_sha256"] = (
+            routing_profile.digest() if routing_profile is not None else None
         )
         report["embedding_provider"] = {
             "configured": embedding_model is not None,
@@ -207,6 +214,7 @@ class RealWorkloadRunner:
                 "runtime": runtime.model_dump(mode="json"),
                 "runtime_spec_sha256": report["runtime_spec_sha256"],
                 "scoring_profile_sha256": report["scoring_profile_sha256"],
+                "routing_profile_sha256": report["routing_profile_sha256"],
                 "embedding_provider": report["embedding_provider"],
                 "order_seed": order_seed,
                 "task_ids": [task.id for task in tasks],
@@ -233,6 +241,7 @@ class RealWorkloadRunner:
         seeds: dict[str, Any],
         scoring_profile: ShadowRetrievalProfile | None,
         rrf_channel_profile: RRFChannelShadowProfile | None,
+        routing_profile: RetrievalRoutingShadowProfile | None,
         embedding_base_url: str | None,
         embedding_model: str | None,
     ) -> ConditionRunRecord:
@@ -260,6 +269,7 @@ class RealWorkloadRunner:
                 ),
                 scoring_profile=scoring_profile,
                 rrf_channel_profile=rrf_channel_profile,
+                routing_profile=routing_profile,
                 embedding_base_url=embedding_base_url,
                 embedding_model=embedding_model,
             )
@@ -331,7 +341,9 @@ class RealWorkloadRunner:
                 retrieval_runs=usage.retrieval_runs,
                 retrieval_candidate_features=list(usage.candidate_features),
                 retrieval_config_hashes=list(usage.retrieval_config_hashes),
+                retrieval_routes=list(usage.retrieval_routes),
                 scoring_profile_sha256=usage.scoring_profile_sha256,
+                routing_profile_sha256=usage.routing_profile_sha256,
                 input_tokens=execution.result.input_tokens,
                 output_tokens=execution.result.output_tokens,
                 cost_usd=execution.result.cost_usd,

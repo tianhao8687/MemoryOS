@@ -136,7 +136,7 @@ caps per-query preference pairs, records leave-one-repository-out ranges, and em
 freshness, scope, truth, feedback, confidence, importance, reranking, or safety behavior.
 
 `build_public_rrf_shadow.py` converts that prior into a narrower `rrf_channel_candidate_shadow`.
-The converter preserves the frozen FTS+vector total scale, graph and temporal weights, RRF K, MMR,
+The converter preserves the frozen FTS+vector total scale, graph and temporal weights, RRF K, Lexical MMR,
 and every downstream score factor and hard gate. The shadow binds the dataset, feature rows,
 FastEmbed model revision/source, feature adapter, and converter hashes. MemoryOS refuses to run it
 without the matching embedding model, and the benchmark MCP verifies the live embedding service
@@ -165,6 +165,87 @@ The real-agent ablation command then receives `--rrf-channel-profile`,
 `--embedding-base-url`, `--embedding-model`, and `--diagnostic-only`. Production remains on the
 frozen baseline unless a separate causal dataset, sealed promotion run, and explicit activation all
 pass.
+
+## Query-adaptive retrieval routing shadow
+
+Numeric calibration and query routing are separate experiments. The routing candidate follows the
+same broad decomposition used by mature multi-stage search systems: plan, retrieve from selected
+channels, fuse, optionally rerank a bounded window, then diversify. It does not ask a model to
+invent a query-time weight vector. The deterministic router may select only a registry entry:
+
+| Route | Approved recipe | Channels | Reranker | Diversity |
+| --- | --- | --- | --- | --- |
+| Exact code/symbol | `exact-symbol-v1` | FTS, vector, Source Anchor | Disabled | Disabled |
+| Semantic | `semantic-hybrid-v1` | FTS, vector | If available | Lexical MMR |
+| Relational/provenance | `relational-graph-v1` | FTS, vector, graph | If available | Lexical MMR |
+| Historical/as-of | `temporal-as-of-v1` | FTS, vector, temporal | If available | Disabled |
+| Multi-clause | `complex-hybrid-v1` | All | If available | Lexical MMR |
+| Unclassified fallback | `safe-hybrid-v1` | Frozen production channels | If available | Lexical MMR |
+
+Every recipe is immutable and hashable. The Shadow profile binds the complete approved registry;
+unknown recipes, changed registry contents, and composition with a scoring or RRF-weight Shadow all
+fail closed. Every RetrievalRun stores both the advisory route and the executed recipe. The normal
+service deliberately records the recommendation but executes `safe-hybrid-v1`, preserving current
+production behavior.
+
+Router v2 uses explicit exact/relational/temporal/clause signals and stable reason codes. The
+rule planner emits an intent-reason code instead of an uncalibrated numeric confidence, so no
+pseudo-probability is thresholded to choose executable behavior. An unclassified query fails closed to `safe-hybrid-v1`. Exact lookup
+queries the already-persisted `SourceAnchor` relation; it does not scan arbitrary repository files.
+Requested channels are not reported as successful merely because they were named by a recipe:
+each run records availability, applicability, attempted/executed state, raw and eligible counts,
+degradation reason, actual reranker mode, fusion weights/K, and stage timings.
+
+Routing Shadow fusion has the `normalized_weighted_rrf_v1` [0,1] contract so downstream consumers
+do not receive recipe-dependent raw RRF magnitudes. Context Compiler validates that contract. The
+frozen production path intentionally retains `legacy_raw_rrf_v1`; changing its score semantics is
+outside this candidate experiment.
+
+The candidate-pool floor/cap (80/1000), rerank window (40), frozen RRF weights/K, and Lexical MMR lambda
+are named and hash-bound heuristic baselines, not newly justified constants. Routing removes the
+incorrect assumption that one channel topology fits every query; it does not manufacture evidence
+for the remaining numeric parameters. Those parameters stay in the separate calibration and
+promotion track.
+
+Build a profile outside the repository (the script refuses overwrite):
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_retrieval_routing_shadow.py `
+  --output D:\MemoryOS-Lab\training\routing\retrieval-routing-shadow-v2.json
+```
+
+Run a randomized production-baseline versus routed pair for one registered task:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_routing_shadow.py `
+  --manifest <manifest.json> `
+  --runtime <real-agent-runtime.json> `
+  --hidden-root <hidden-scorer-root> `
+  --profile D:\MemoryOS-Lab\training\routing\retrieval-routing-shadow-v2.json `
+  --task-id <registered-task-id> `
+  --repeat-id <unique-repeat-id>
+```
+
+The runner verifies prompt/runtime parity, exact baseline and candidate config hashes, and every
+executed recipe/channel/policy trace. Each evaluation also binds the manifest, task spec, arm run
+IDs, and canonical baseline/candidate report SHA-256. It permits only the `memoryos` condition, emits a diagnostic
+evaluation rather than a causal weight-training observation, and cannot authorize activation. The
+v2 rules are an architecture candidate, not a learned policy. Aggregate completed pairs with:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_routing_shadow.py `
+  --profile D:\MemoryOS-Lab\training\routing\retrieval-routing-shadow-v2.json `
+  --evaluations <routing-evaluations-1.jsonl> <routing-evaluations-2.jsonl> `
+  --output D:\MemoryOS-Lab\training\routing\routing-promotion-decision.json
+```
+
+The analyzer canonicalizes and hashes the full evaluation set, rejects duplicate task/agent/repeat
+cells, and aggregates repeated agents at task level. Defaults require 50 sealed public tasks, three
+repositories, ten sequences, two real agent models, a complete balanced task/agent/repeat matrix,
+four observed recipes with five tasks each, a strictly positive paired success lower confidence
+bound, no per-task safety regression, nonnegative worst repository/agent/recipe deltas, and complete
+latency/cost within budget. A pass is only `eligible_for_sealed_activation_review` and sets
+`production_activated=false`.
 
 Replay the candidate and frozen baseline on the same real MemoryOS candidate pools, then compute a
 repository-stratified paired bootstrap without rerunning retrieval:

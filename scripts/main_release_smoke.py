@@ -1,4 +1,4 @@
-"""Verify the packaged V2.1 release from a clean main checkout."""
+"""Verify the packaged V2.2 release from a clean main checkout."""
 
 from __future__ import annotations
 
@@ -45,12 +45,12 @@ def _sha256(path: Path) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run the V2.1 merged-main release smoke")
+    parser = argparse.ArgumentParser(description="Run the V2.2 merged-main release smoke")
     parser.add_argument("--distribution", type=Path, default=ROOT / "release" / "MemoryOS")
     parser.add_argument(
         "--output",
         type=Path,
-        default=ROOT / "docs" / "verification" / "v2.1" / "main-release-smoke.json",
+        default=ROOT / "docs" / "verification" / "v2.2" / "main-release-smoke.json",
     )
     args = parser.parse_args()
     branch = _git("branch", "--show-current")
@@ -86,16 +86,16 @@ def main() -> int:
 
     package_passed = bool(
         package.get("result") == "PASS"
-        and package.get("v1_to_v21_migration") is True
-        and package.get("schema_version") == "0003_reality_intelligence_hardening"
+        and package.get("v1_to_v22_migration") is True
+        and package.get("schema_version") == "0004_anchor_observation_hardening"
         and package.get("coding_memory_bench_bundled") is True
         and package.get("sqlite_vec_bundled") is True
         and package.get("restart_persistence") is True
-        and package.get("first_health", {}).get("version") == "2.1.0"
+        and package.get("first_health", {}).get("version") == "2.2.0"
     )
     result = "PASS" if branch == "main" and not dirty and package_passed else "FAIL"
     report = {
-        "schema": "memoryos-v2.1-main-release-smoke@1",
+        "schema": "memoryos-v2.2-main-release-smoke@1",
         "generated_at": datetime.now(UTC).isoformat(),
         "result": result,
         "branch": branch,

@@ -102,7 +102,7 @@ test('intelligence workbench exposes truth, retrieval traces, and benchmark prov
   await navigate(page, 'Retrieval Debugger')
   await page.getByLabel('Coding task').fill('Which confirmed architecture decision constrains the API?')
   await page.getByRole('button', { name: 'Run trace' }).click()
-  await expect(page.getByRole('heading', { name: 'Query planner' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Deterministic Query Planner' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Compiled context' })).toBeVisible()
 
   await navigate(page, 'Benchmarks')

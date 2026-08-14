@@ -304,7 +304,7 @@ def _assert_http_state(
             coding_benchmark.status_code != 200
             or coding_benchmark.json().get("schema") != "coding-memory-bench-v2.1@1"
         ):
-            raise RuntimeError("bundled CodingMemoryBench V2.1 report is unavailable")
+            raise RuntimeError("bundled CodingMemoryBench fixture report is unavailable")
         doctor = client.get("/api/doctor")
         doctor_checks = {item.get("name"): item for item in doctor.json().get("checks", [])}
         if (
@@ -361,8 +361,8 @@ def main() -> None:
                 trust_env=False,
             ) as client:
                 first_status = client.get("/api/status").json()
-            if first_status.get("schema_version") != "0003_reality_intelligence_hardening":
-                raise RuntimeError("packaged app did not migrate the V1 database to V2.1")
+            if first_status.get("schema_version") != "0004_anchor_observation_hardening":
+                raise RuntimeError("packaged app did not migrate the V1 database to V2.2")
             memory_id, mcp_tool_count = asyncio.run(_mcp_write(executable, data_dir))
             anchor_repository = _prepare_anchor_repository(clean_root)
             anchor = _run_packaged_json(
@@ -417,6 +417,7 @@ def main() -> None:
         "legacy_memory_id": legacy_id,
         "v1_to_v2_migration": True,
         "v1_to_v21_migration": True,
+        "v1_to_v22_migration": True,
         "schema_version": first_status["schema_version"],
         "memorybench_bundled": True,
         "coding_memory_bench_bundled": True,

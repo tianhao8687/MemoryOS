@@ -49,7 +49,7 @@ CodingMemoryBench 在运行前拆分 input 与 gold，runtime adapter 明确拒�
 - 完整门禁：`scripts/verify_v21.py`
 - A33–A52：`scripts/acceptance_v21.py`
 - 盲测：`scripts/coding_memory_bench.py`
-- 100k 全管线：`scripts/benchmark_v21_pipeline.py`
+- 100K FTS-first Core Pipeline：`scripts/benchmark_v21_pipeline.py`
 - paired agent：`scripts/agent_ab_v21.py`
 - merged-main release：`scripts/main_release_smoke.py`
 

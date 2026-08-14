@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from typing import Any
 
@@ -15,6 +16,7 @@ from memoryos.domain.schemas import ContextRequest, QueryIntent, SearchRequest
 from memoryos.health import MemoryHealthService
 from memoryos.retrieval.context import SECTION_ORDER, _section
 from memoryos.retrieval_v2 import RetrievalPipeline
+from memoryos.retrieval_v2.stages import LEGACY_SCORE_CONTRACT, NORMALIZED_SCORE_CONTRACT
 
 COVERAGE = {
     QueryIntent.CURRENT_DECISION: ["decision", "constraint", "failure"],
@@ -61,6 +63,7 @@ class TaskAwareContextCompiler:
             task_scope=request.task_scope,
             record_retrieval=False,
         )
+        self._validate_score_contract(result)
         candidates = list(result["items"])
         intent = QueryIntent(result["query_plan"]["intent"])
         shadow_profile_active = result.get("scoring_profile_sha256") is not None
@@ -251,10 +254,37 @@ class TaskAwareContextCompiler:
             "debug": {
                 "config_hash": result["config_hash"],
                 "scoring_profile_sha256": result.get("scoring_profile_sha256"),
+                "routing_profile_sha256": result.get("routing_profile_sha256"),
                 "reranker": result["reranker"],
                 "candidates": manifest,
             },
         }
+
+    @staticmethod
+    def _validate_score_contract(result: dict[str, Any]) -> None:
+        query_plan = result.get("query_plan")
+        routing = query_plan.get("routing") if isinstance(query_plan, dict) else None
+        if not isinstance(routing, dict):
+            raise ValueError("retrieval result omitted its routing score contract")
+        routed = result.get("routing_profile_sha256") is not None
+        expected = NORMALIZED_SCORE_CONTRACT if routed else LEGACY_SCORE_CONTRACT
+        if routing.get("score_contract") != expected:
+            raise ValueError("retrieval result used an unsupported score contract")
+        if not routed:
+            return
+        items = result.get("items")
+        if not isinstance(items, list):
+            raise ValueError("routed retrieval result omitted candidate items")
+        for item in items:
+            trace = item.get("trace") if isinstance(item, dict) else None
+            fused_score = trace.get("fused_score") if isinstance(trace, dict) else None
+            if (
+                isinstance(fused_score, bool)
+                or not isinstance(fused_score, (int, float))
+                or not math.isfinite(float(fused_score))
+                or not 0.0 <= float(fused_score) <= 1.0
+            ):
+                raise ValueError("routed retrieval violated the normalized fusion contract")
 
     def _metadata(self, candidates: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         memory_ids = [str(item["memory"]["id"]) for item in candidates]
