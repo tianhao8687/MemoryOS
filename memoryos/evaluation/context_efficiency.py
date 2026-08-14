@@ -21,6 +21,7 @@ DELTA_THRESHOLD_GRID = (0.5, 0.65, 0.8, 0.9)
 PROVIDER_BOOTSTRAP_SEED_OFFSET = 100
 ACCOUNTING_BOOTSTRAP_SEED_OFFSET = 200
 ACCOUNTING_BOOTSTRAP_CONDITION_STRIDE = 100
+POWER_ESTIMATE_DECIMAL_PLACES = 12
 REQUIRED_ADVERSARIAL_TAGS = (
     "negated_constraint",
     "numeric_threshold",
@@ -981,12 +982,13 @@ class ContextEfficiencyStudyBuilder:
                 paired_n / self.config.expected_paired_discordance_rate
             )
             achieved = NormalDist().cdf(signal - alpha_z)
+        stable_achieved = round(achieved, POWER_ESTIMATE_DECIMAL_PLACES)
         return {
             "paired_n": paired_n,
             "required_n": required,
             "target": self.config.target_power,
-            "estimated_achieved": achieved,
-            "qualified": paired_n >= required and achieved >= self.config.target_power,
+            "estimated_achieved": stable_achieved,
+            "qualified": (paired_n >= required and stable_achieved >= self.config.target_power),
             "assumption": {
                 "paired_discordance_rate": self.config.expected_paired_discordance_rate,
                 "noninferiority_margin": self.config.success_noninferiority_margin,

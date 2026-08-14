@@ -147,6 +147,7 @@ def test_config_hash_and_power_are_frozen_before_confirmatory_execution() -> Non
 
     assert config.digest() == config.digest()
     assert config.required_sample_size() > 50
+    assert ContextEfficiencyStudyBuilder(config)._power(3)["estimated_achieved"] == 0.062353958059
     assert config.condition_order(task_id="task-0", task_ordinal=0) != config.condition_order(
         task_id="task-1", task_ordinal=1
     )

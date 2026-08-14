@@ -2148,7 +2148,7 @@
       "noninferiority_margin": 0.02,
       "paired_discordance_rate": 0.1
     },
-    "estimated_achieved": 0.06235395805885674,
+    "estimated_achieved": 0.062353958059,
     "paired_n": 3,
     "qualified": false,
     "required_n": 1546,
