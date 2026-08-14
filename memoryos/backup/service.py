@@ -29,6 +29,7 @@ from memoryos.db.models import (
     ClaimRow,
     ClaimVersionRow,
     ConsolidationCandidateRow,
+    ContextSnapshotRow,
     EmbeddingRow,
     EntityMergeEventRow,
     EntityRow,
@@ -76,11 +77,12 @@ MAX_DATABASE_IMPORT_BYTES = 2 * 1024 * 1024 * 1024
 MAX_JSONL_IMPORT_BYTES = 512 * 1024 * 1024
 MAX_JSONL_RECORD_BYTES = 4 * 1024 * 1024
 MAX_IMPORT_RECORDS = 1_000_000
-CURRENT_SCHEMA_VERSION = "0004_anchor_observation_hardening"
+CURRENT_SCHEMA_VERSION = "0005_context_efficiency"
 SUPPORTED_SCHEMA_VERSIONS = {
     "0001_initial",
     "0002_memory_intelligence",
     "0003_reality_intelligence_hardening",
+    "0004_anchor_observation_hardening",
     CURRENT_SCHEMA_VERSION,
 }
 REQUIRED_FTS_TRIGGERS = {
@@ -130,6 +132,7 @@ RESTORE_MODELS: tuple[type[Any], ...] = (
     ClaimEvidenceRow,
     ClaimRelationRow,
     RetrievalRunRow,
+    ContextSnapshotRow,
     MemoryFeedbackRow,
     ConsolidationCandidateRow,
     AnnIndexStateRow,
@@ -152,7 +155,12 @@ JSON_FIELD_SHAPES: dict[type[Any], tuple[tuple[str, type[Any] | None], ...]] = {
         ("selected_memory_ids", list),
         ("candidate_features", list),
         ("context_manifest", list),
+        ("context_usage_json", dict),
+        ("context_policy_manifest", dict),
+        ("context_diagnostics_json", dict),
+        ("context_shadow_json", dict),
     ),
+    ContextSnapshotRow: (("items_json", list),),
     ConsolidationCandidateRow: (
         ("proposal_json", dict),
         ("source_memory_ids", list),
@@ -557,6 +565,7 @@ class BackupService:
             target = sqlite3.connect(staged_database)
             try:
                 source.backup(target)
+                target.execute("DELETE FROM context_snapshots")
                 target.commit()
                 schema_version = str(
                     target.execute("SELECT version_num FROM alembic_version").fetchone()[0]
@@ -651,6 +660,7 @@ class BackupService:
                     _validate_runtime_schema(staging_database)
                     with staging_database.session() as session:
                         session.execute(delete(AnnIndexStateRow))
+                        session.execute(delete(ContextSnapshotRow))
                     staging_database.checkpoint()
                 finally:
                     staging_database.close()
@@ -863,6 +873,7 @@ class BackupService:
             try:
                 with self.database.session() as session:
                     session.execute(delete(AnnIndexStateRow))
+                    session.execute(delete(ContextSnapshotRow))
                     for kind in IMPORT_TYPE_ORDER:
                         for record in _iter_jsonl(type_paths[kind]):
                             data = dict(record["data"])
@@ -1146,6 +1157,10 @@ class BackupService:
             "selected_memory_ids": row.selected_memory_ids,
             "candidate_features": row.candidate_features,
             "context_manifest": row.context_manifest,
+            "context_usage_json": row.context_usage_json,
+            "context_policy_manifest": row.context_policy_manifest,
+            "context_diagnostics_json": row.context_diagnostics_json,
+            "context_shadow_json": row.context_shadow_json,
             "config_hash": row.config_hash,
             "created_at": self._iso(row.created_at),
         }

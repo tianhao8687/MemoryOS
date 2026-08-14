@@ -191,3 +191,31 @@ Tier 2 的 `ClaimVersion` history count 为 0，temporal contribution 来自 Cla
 ## 12. Recommended next step
 
 合并后只做一项：在干净 `main` 上运行完整 clean-main release verification，生成与合并 commit 绑定的最终 package/release evidence；在该门禁通过前不要发布 V2.2 二进制或激活任何 learned profile。
+
+---
+
+## V2.3 Minimum Sufficient Context 补充记录（2026-08-15）
+
+上文是 V2.2 硬化阶段的历史报告，其测试计数、二进制哈希和结论不回写。V2.3 在该基线之上新增可回退的最小充分上下文编译层：
+
+- `legacy / msc_shadow / msc` 三模式，真实证据门禁通过前默认保持 legacy；
+- 旧 `budget` 字符语义不变，新增带 exact/estimated 来源的 Token 预算与完整 payload 分账；
+- 确定性 Context Atom、Pinned Constraint/Contested Bundle 原子安全、exact dedup 和一次 Explain 证据回溯；
+- 显式 `previous_context_id` Delta，以及 Scope/TTL/Policy/Tokenizer/完整性失效时的安全 Full Rebase；
+- `0005_context_efficiency` 迁移和不进长期备份的可丢弃 Snapshot 缓存；
+- 启动时固定的 all/core/governance/debug MCP Profile 及四个规范 Schema Snapshot；
+- 不修改旧三臂枚举的独立 Context Efficiency Study，包含 Provider input/output/cached、成本、延迟、完整记忆/Schema 分账、每成功任务成本、受限 ROI、0.5/0.65/0.8/0.9 Delta 阈值矩阵，以及非劣、安全、透明度、power 和最差组门禁。
+
+确定性证据位于 `docs/verification/v2.3/`。Context Efficiency dry run 不包含真实 Provider Usage，
+只是 protocol fixture，机器结论为 `effect_claim=none` 和 `default_mode_decision=legacy`。
+初始 2 个百分点的预注册非劣界限在 10% 不一致率假设下约需 1,546 个独立配对任务；
+在样本、Provider Usage、安全和最差组门禁完成前，不宣称 MSC 已降低真实 Agent Token 或改善成功率。
+
+V2.3 本地分支验证结果：V2.3 专项 36 passed；Ruff/format PASS，Mypy 115 个源码文件 0 issues，pytest
+332 passed/0 failed（两条已知上游 warning）；前端 typecheck/ESLint PASS，Vitest 11/11 PASS，
+Vite 生产构建 1,745 modules PASS。这些数字是当前源码树的回归证据，不是与 merge commit
+绑定的发行证据，也不是 MSC 效果证据。
+
+完整语义、配置、证据和限制见 `docs/MINIMUM_SUFFICIENT_CONTEXT.md`。V2.3 Windows onedir
+仍必须在合并后干净 `main` 上重建并运行 V1→`0005_context_efficiency` smoke；旧 V2.2
+包保留为历史证据，不重标为 V2.3。

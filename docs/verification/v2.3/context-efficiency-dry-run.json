@@ -1,0 +1,5544 @@
+{
+  "activation_approved": false,
+  "activation_condition": "msc_progressive",
+  "artifact_encoding": "utf-8; newline=LF",
+  "comparisons_to_legacy": {
+    "msc_delta": {
+      "accounting": {
+        "cached_input_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "cost_usd": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "latency_seconds": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_context_text_tokens": {
+          "baseline_mean": 320.0,
+          "ci95_high": -230.0,
+          "ci95_low": -230.0,
+          "ci95_one_sided_low": -230.0,
+          "difference": -230.0,
+          "paired_n": 3,
+          "treatment_mean": 90.0
+        },
+        "memory_delivery_payload_tokens": {
+          "baseline_mean": 400.0,
+          "ci95_high": -280.0,
+          "ci95_low": -280.0,
+          "ci95_one_sided_low": -280.0,
+          "difference": -280.0,
+          "paired_n": 3,
+          "treatment_mean": 120.0
+        },
+        "memory_delta_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 120.0,
+          "ci95_low": 120.0,
+          "ci95_one_sided_low": 120.0,
+          "difference": 120.0,
+          "paired_n": 3,
+          "treatment_mean": 120.0
+        },
+        "memory_evidence_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_explain_calls": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "baseline_mean": 400.0,
+          "ci95_high": -160.0,
+          "ci95_low": -160.0,
+          "ci95_one_sided_low": -160.0,
+          "difference": -160.0,
+          "paired_n": 3,
+          "treatment_mean": 240.0
+        },
+        "memory_history_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "baseline_mean": 80.0,
+          "ci95_high": -50.0,
+          "ci95_low": -50.0,
+          "ci95_one_sided_low": -50.0,
+          "difference": -50.0,
+          "paired_n": 3,
+          "treatment_mean": 30.0
+        },
+        "memory_tool_calls": {
+          "baseline_mean": 1.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 1.0
+        },
+        "memory_tool_schema_tokens": {
+          "baseline_mean": 2719.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 2719.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "provider_input_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "provider_output_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        }
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "complete_provider_usage_n": 0,
+      "expected_provider_input_tokens_per_success": {
+        "baseline": null,
+        "paired_n": 0,
+        "treatment": null
+      },
+      "functional_success": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "ci95_one_sided_low": 0.0,
+        "difference": 0.0
+      },
+      "median_provider_input_reduction": null,
+      "paired_n": 3,
+      "provider_input_tokens": null,
+      "safety": {
+        "baseline_stale_memory_uses": 0,
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "treatment_stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hit_rate": 1.0,
+        "delta_hits": 3,
+        "full_fallback_rate": 0.0,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      },
+      "token_roi": {
+        "mean_tokens_saved": null,
+        "paired_n": 0,
+        "status": "unavailable",
+        "success_delta": null,
+        "success_delta_per_token_saved": null
+      },
+      "transparency": {
+        "cost_complete": false,
+        "counter_kinds": [
+          "estimated"
+        ],
+        "memory_accounting_complete": false,
+        "other_memory_operation_attribution_complete": true,
+        "policy_hash_complete": true,
+        "provider_usage_complete": false,
+        "schema_hash_complete": true,
+        "study_config_hash_complete": true,
+        "tokenizers": [
+          "unicode-heuristic-v1"
+        ]
+      },
+      "worst_groups": {
+        "degraded_groups": [],
+        "evaluated_dimensions": [
+          "agent_version",
+          "contested",
+          "intent",
+          "repository"
+        ],
+        "groups": [],
+        "insufficient_groups": [
+          "agent_version=deterministic-protocol-fixture-v1",
+          "contested=false",
+          "intent=current_decision",
+          "repository=dry-repo-0",
+          "repository=dry-repo-1",
+          "repository=dry-repo-2"
+        ]
+      }
+    },
+    "msc_delta_core": {
+      "accounting": {
+        "cached_input_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "cost_usd": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "latency_seconds": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_context_text_tokens": {
+          "baseline_mean": 320.0,
+          "ci95_high": -230.0,
+          "ci95_low": -230.0,
+          "ci95_one_sided_low": -230.0,
+          "difference": -230.0,
+          "paired_n": 3,
+          "treatment_mean": 90.0
+        },
+        "memory_delivery_payload_tokens": {
+          "baseline_mean": 400.0,
+          "ci95_high": -280.0,
+          "ci95_low": -280.0,
+          "ci95_one_sided_low": -280.0,
+          "difference": -280.0,
+          "paired_n": 3,
+          "treatment_mean": 120.0
+        },
+        "memory_delta_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 120.0,
+          "ci95_low": 120.0,
+          "ci95_one_sided_low": 120.0,
+          "difference": 120.0,
+          "paired_n": 3,
+          "treatment_mean": 120.0
+        },
+        "memory_evidence_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_explain_calls": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "baseline_mean": 400.0,
+          "ci95_high": -160.0,
+          "ci95_low": -160.0,
+          "ci95_one_sided_low": -160.0,
+          "difference": -160.0,
+          "paired_n": 3,
+          "treatment_mean": 240.0
+        },
+        "memory_history_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "baseline_mean": 80.0,
+          "ci95_high": -50.0,
+          "ci95_low": -50.0,
+          "ci95_one_sided_low": -50.0,
+          "difference": -50.0,
+          "paired_n": 3,
+          "treatment_mean": 30.0
+        },
+        "memory_tool_calls": {
+          "baseline_mean": 1.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 1.0
+        },
+        "memory_tool_schema_tokens": {
+          "baseline_mean": 2719.0,
+          "ci95_high": -980.0,
+          "ci95_low": -980.0,
+          "ci95_one_sided_low": -980.0,
+          "difference": -980.0,
+          "paired_n": 3,
+          "treatment_mean": 1739.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "provider_input_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "provider_output_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        }
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "complete_provider_usage_n": 0,
+      "expected_provider_input_tokens_per_success": {
+        "baseline": null,
+        "paired_n": 0,
+        "treatment": null
+      },
+      "functional_success": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "ci95_one_sided_low": 0.0,
+        "difference": 0.0
+      },
+      "median_provider_input_reduction": null,
+      "paired_n": 3,
+      "provider_input_tokens": null,
+      "safety": {
+        "baseline_stale_memory_uses": 0,
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "treatment_stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hit_rate": 1.0,
+        "delta_hits": 3,
+        "full_fallback_rate": 0.0,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      },
+      "token_roi": {
+        "mean_tokens_saved": null,
+        "paired_n": 0,
+        "status": "unavailable",
+        "success_delta": null,
+        "success_delta_per_token_saved": null
+      },
+      "transparency": {
+        "cost_complete": false,
+        "counter_kinds": [
+          "estimated"
+        ],
+        "memory_accounting_complete": false,
+        "other_memory_operation_attribution_complete": true,
+        "policy_hash_complete": true,
+        "provider_usage_complete": false,
+        "schema_hash_complete": true,
+        "study_config_hash_complete": true,
+        "tokenizers": [
+          "unicode-heuristic-v1"
+        ]
+      },
+      "worst_groups": {
+        "degraded_groups": [],
+        "evaluated_dimensions": [
+          "agent_version",
+          "contested",
+          "intent",
+          "repository"
+        ],
+        "groups": [],
+        "insufficient_groups": [
+          "agent_version=deterministic-protocol-fixture-v1",
+          "contested=false",
+          "intent=current_decision",
+          "repository=dry-repo-0",
+          "repository=dry-repo-1",
+          "repository=dry-repo-2"
+        ]
+      }
+    },
+    "msc_full": {
+      "accounting": {
+        "cached_input_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "cost_usd": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "latency_seconds": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_context_text_tokens": {
+          "baseline_mean": 320.0,
+          "ci95_high": -200.0,
+          "ci95_low": -200.0,
+          "ci95_one_sided_low": -200.0,
+          "difference": -200.0,
+          "paired_n": 3,
+          "treatment_mean": 120.0
+        },
+        "memory_delivery_payload_tokens": {
+          "baseline_mean": 400.0,
+          "ci95_high": -220.0,
+          "ci95_low": -220.0,
+          "ci95_one_sided_low": -220.0,
+          "difference": -220.0,
+          "paired_n": 3,
+          "treatment_mean": 180.0
+        },
+        "memory_delta_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_evidence_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_explain_calls": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "baseline_mean": 400.0,
+          "ci95_high": -160.0,
+          "ci95_low": -160.0,
+          "ci95_one_sided_low": -160.0,
+          "difference": -160.0,
+          "paired_n": 3,
+          "treatment_mean": 240.0
+        },
+        "memory_history_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "baseline_mean": 80.0,
+          "ci95_high": -20.0,
+          "ci95_low": -20.0,
+          "ci95_one_sided_low": -20.0,
+          "difference": -20.0,
+          "paired_n": 3,
+          "treatment_mean": 60.0
+        },
+        "memory_tool_calls": {
+          "baseline_mean": 1.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 1.0
+        },
+        "memory_tool_schema_tokens": {
+          "baseline_mean": 2719.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 2719.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "provider_input_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "provider_output_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        }
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "complete_provider_usage_n": 0,
+      "expected_provider_input_tokens_per_success": {
+        "baseline": null,
+        "paired_n": 0,
+        "treatment": null
+      },
+      "functional_success": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "ci95_one_sided_low": 0.0,
+        "difference": 0.0
+      },
+      "median_provider_input_reduction": null,
+      "paired_n": 3,
+      "provider_input_tokens": null,
+      "safety": {
+        "baseline_stale_memory_uses": 0,
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "treatment_stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hit_rate": null,
+        "delta_hits": 0,
+        "full_fallback_rate": null,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      },
+      "token_roi": {
+        "mean_tokens_saved": null,
+        "paired_n": 0,
+        "status": "unavailable",
+        "success_delta": null,
+        "success_delta_per_token_saved": null
+      },
+      "transparency": {
+        "cost_complete": false,
+        "counter_kinds": [
+          "estimated"
+        ],
+        "memory_accounting_complete": false,
+        "other_memory_operation_attribution_complete": true,
+        "policy_hash_complete": true,
+        "provider_usage_complete": false,
+        "schema_hash_complete": true,
+        "study_config_hash_complete": true,
+        "tokenizers": [
+          "unicode-heuristic-v1"
+        ]
+      },
+      "worst_groups": {
+        "degraded_groups": [],
+        "evaluated_dimensions": [
+          "agent_version",
+          "contested",
+          "intent",
+          "repository"
+        ],
+        "groups": [],
+        "insufficient_groups": [
+          "agent_version=deterministic-protocol-fixture-v1",
+          "contested=false",
+          "intent=current_decision",
+          "repository=dry-repo-0",
+          "repository=dry-repo-1",
+          "repository=dry-repo-2"
+        ]
+      }
+    },
+    "msc_progressive": {
+      "accounting": {
+        "cached_input_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "cost_usd": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "latency_seconds": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_context_text_tokens": {
+          "baseline_mean": 320.0,
+          "ci95_high": -200.0,
+          "ci95_low": -200.0,
+          "ci95_one_sided_low": -200.0,
+          "difference": -200.0,
+          "paired_n": 3,
+          "treatment_mean": 120.0
+        },
+        "memory_delivery_payload_tokens": {
+          "baseline_mean": 400.0,
+          "ci95_high": -220.0,
+          "ci95_low": -220.0,
+          "ci95_one_sided_low": -220.0,
+          "difference": -220.0,
+          "paired_n": 3,
+          "treatment_mean": 180.0
+        },
+        "memory_delta_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_evidence_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_explain_calls": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "baseline_mean": 400.0,
+          "ci95_high": -160.0,
+          "ci95_low": -160.0,
+          "ci95_one_sided_low": -160.0,
+          "difference": -160.0,
+          "paired_n": 3,
+          "treatment_mean": 240.0
+        },
+        "memory_history_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "baseline_mean": 80.0,
+          "ci95_high": -20.0,
+          "ci95_low": -20.0,
+          "ci95_one_sided_low": -20.0,
+          "difference": -20.0,
+          "paired_n": 3,
+          "treatment_mean": 60.0
+        },
+        "memory_tool_calls": {
+          "baseline_mean": 1.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 1.0
+        },
+        "memory_tool_schema_tokens": {
+          "baseline_mean": 2719.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 2719.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "baseline_mean": 0.0,
+          "ci95_high": 0.0,
+          "ci95_low": 0.0,
+          "ci95_one_sided_low": 0.0,
+          "difference": 0.0,
+          "paired_n": 3,
+          "treatment_mean": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "provider_input_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        },
+        "provider_output_tokens": {
+          "baseline_mean": null,
+          "ci95_high": null,
+          "ci95_low": null,
+          "difference": null,
+          "paired_n": 0,
+          "treatment_mean": null
+        }
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "complete_provider_usage_n": 0,
+      "expected_provider_input_tokens_per_success": {
+        "baseline": null,
+        "paired_n": 0,
+        "treatment": null
+      },
+      "functional_success": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "ci95_one_sided_low": 0.0,
+        "difference": 0.0
+      },
+      "median_provider_input_reduction": null,
+      "paired_n": 3,
+      "provider_input_tokens": null,
+      "safety": {
+        "baseline_stale_memory_uses": 0,
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "treatment_stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hit_rate": null,
+        "delta_hits": 0,
+        "full_fallback_rate": null,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      },
+      "token_roi": {
+        "mean_tokens_saved": null,
+        "paired_n": 0,
+        "status": "unavailable",
+        "success_delta": null,
+        "success_delta_per_token_saved": null
+      },
+      "transparency": {
+        "cost_complete": false,
+        "counter_kinds": [
+          "estimated"
+        ],
+        "memory_accounting_complete": false,
+        "other_memory_operation_attribution_complete": true,
+        "policy_hash_complete": true,
+        "provider_usage_complete": false,
+        "schema_hash_complete": true,
+        "study_config_hash_complete": true,
+        "tokenizers": [
+          "unicode-heuristic-v1"
+        ]
+      },
+      "worst_groups": {
+        "degraded_groups": [],
+        "evaluated_dimensions": [
+          "agent_version",
+          "contested",
+          "intent",
+          "repository"
+        ],
+        "groups": [],
+        "insufficient_groups": [
+          "agent_version=deterministic-protocol-fixture-v1",
+          "contested=false",
+          "intent=current_decision",
+          "repository=dry-repo-0",
+          "repository=dry-repo-1",
+          "repository=dry-repo-2"
+        ]
+      }
+    }
+  },
+  "condition_aggregates": {
+    "legacy_full": {
+      "accounting": {
+        "cached_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "cost_usd": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "latency_seconds": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_context_text_tokens": {
+          "complete_n": 3,
+          "mean": 320.0,
+          "total": 960.0
+        },
+        "memory_delivery_payload_tokens": {
+          "complete_n": 3,
+          "mean": 400.0,
+          "total": 1200.0
+        },
+        "memory_delta_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_evidence_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_explain_calls": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "complete_n": 3,
+          "mean": 400.0,
+          "total": 1200.0
+        },
+        "memory_history_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "complete_n": 3,
+          "mean": 80.0,
+          "total": 240.0
+        },
+        "memory_tool_calls": {
+          "complete_n": 3,
+          "mean": 1.0,
+          "total": 3.0
+        },
+        "memory_tool_schema_tokens": {
+          "complete_n": 3,
+          "mean": 2719.0,
+          "total": 8157.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        }
+      },
+      "attribution": {
+        "counter_kinds": [
+          "estimated"
+        ],
+        "counter_versions": [
+          "1.0.0"
+        ],
+        "dataset_sha256": [
+          "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600"
+        ],
+        "dataset_tiers": [
+          "fixture"
+        ],
+        "other_memory_operation_token_attribution": [
+          "exact_zero"
+        ],
+        "policy_sha256": [
+          "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9"
+        ],
+        "provider_token_attribution": [
+          "unavailable"
+        ],
+        "runtime_sha256": [
+          "9999999999999999999999999999999999999999999999999999999999999999"
+        ],
+        "tokenizer_ids": [
+          "unicode-heuristic-v1"
+        ],
+        "tokenizer_sha256": [
+          "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538"
+        ],
+        "tool_profiles": [
+          "all"
+        ],
+        "tool_schema_sha256": [
+          "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+        ]
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "functional_success_rate": 1.0,
+      "runs": 3,
+      "safety": {
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hits": 0,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      }
+    },
+    "msc_delta": {
+      "accounting": {
+        "cached_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "cost_usd": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "latency_seconds": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_context_text_tokens": {
+          "complete_n": 3,
+          "mean": 90.0,
+          "total": 270.0
+        },
+        "memory_delivery_payload_tokens": {
+          "complete_n": 3,
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delta_tokens": {
+          "complete_n": 3,
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_evidence_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_explain_calls": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "complete_n": 3,
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "memory_history_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "complete_n": 3,
+          "mean": 30.0,
+          "total": 90.0
+        },
+        "memory_tool_calls": {
+          "complete_n": 3,
+          "mean": 1.0,
+          "total": 3.0
+        },
+        "memory_tool_schema_tokens": {
+          "complete_n": 3,
+          "mean": 2719.0,
+          "total": 8157.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        }
+      },
+      "attribution": {
+        "counter_kinds": [
+          "estimated"
+        ],
+        "counter_versions": [
+          "1.0.0"
+        ],
+        "dataset_sha256": [
+          "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600"
+        ],
+        "dataset_tiers": [
+          "fixture"
+        ],
+        "other_memory_operation_token_attribution": [
+          "exact_zero"
+        ],
+        "policy_sha256": [
+          "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9"
+        ],
+        "provider_token_attribution": [
+          "unavailable"
+        ],
+        "runtime_sha256": [
+          "9999999999999999999999999999999999999999999999999999999999999999"
+        ],
+        "tokenizer_ids": [
+          "unicode-heuristic-v1"
+        ],
+        "tokenizer_sha256": [
+          "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538"
+        ],
+        "tool_profiles": [
+          "all"
+        ],
+        "tool_schema_sha256": [
+          "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+        ]
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "functional_success_rate": 1.0,
+      "runs": 3,
+      "safety": {
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hits": 3,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      }
+    },
+    "msc_delta_core": {
+      "accounting": {
+        "cached_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "cost_usd": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "latency_seconds": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_context_text_tokens": {
+          "complete_n": 3,
+          "mean": 90.0,
+          "total": 270.0
+        },
+        "memory_delivery_payload_tokens": {
+          "complete_n": 3,
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delta_tokens": {
+          "complete_n": 3,
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_evidence_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_explain_calls": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "complete_n": 3,
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "memory_history_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "complete_n": 3,
+          "mean": 30.0,
+          "total": 90.0
+        },
+        "memory_tool_calls": {
+          "complete_n": 3,
+          "mean": 1.0,
+          "total": 3.0
+        },
+        "memory_tool_schema_tokens": {
+          "complete_n": 3,
+          "mean": 1739.0,
+          "total": 5217.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        }
+      },
+      "attribution": {
+        "counter_kinds": [
+          "estimated"
+        ],
+        "counter_versions": [
+          "1.0.0"
+        ],
+        "dataset_sha256": [
+          "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600"
+        ],
+        "dataset_tiers": [
+          "fixture"
+        ],
+        "other_memory_operation_token_attribution": [
+          "exact_zero"
+        ],
+        "policy_sha256": [
+          "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9"
+        ],
+        "provider_token_attribution": [
+          "unavailable"
+        ],
+        "runtime_sha256": [
+          "9999999999999999999999999999999999999999999999999999999999999999"
+        ],
+        "tokenizer_ids": [
+          "unicode-heuristic-v1"
+        ],
+        "tokenizer_sha256": [
+          "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538"
+        ],
+        "tool_profiles": [
+          "core"
+        ],
+        "tool_schema_sha256": [
+          "6ebb6074e7e45144cd7f991bdd510526b2634845f8b0406ce30ece7c3e0b7c7a"
+        ]
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "functional_success_rate": 1.0,
+      "runs": 3,
+      "safety": {
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hits": 3,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      }
+    },
+    "msc_full": {
+      "accounting": {
+        "cached_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "cost_usd": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "latency_seconds": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_context_text_tokens": {
+          "complete_n": 3,
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delivery_payload_tokens": {
+          "complete_n": 3,
+          "mean": 180.0,
+          "total": 540.0
+        },
+        "memory_delta_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_evidence_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_explain_calls": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "complete_n": 3,
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "memory_history_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "complete_n": 3,
+          "mean": 60.0,
+          "total": 180.0
+        },
+        "memory_tool_calls": {
+          "complete_n": 3,
+          "mean": 1.0,
+          "total": 3.0
+        },
+        "memory_tool_schema_tokens": {
+          "complete_n": 3,
+          "mean": 2719.0,
+          "total": 8157.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        }
+      },
+      "attribution": {
+        "counter_kinds": [
+          "estimated"
+        ],
+        "counter_versions": [
+          "1.0.0"
+        ],
+        "dataset_sha256": [
+          "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600"
+        ],
+        "dataset_tiers": [
+          "fixture"
+        ],
+        "other_memory_operation_token_attribution": [
+          "exact_zero"
+        ],
+        "policy_sha256": [
+          "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9"
+        ],
+        "provider_token_attribution": [
+          "unavailable"
+        ],
+        "runtime_sha256": [
+          "9999999999999999999999999999999999999999999999999999999999999999"
+        ],
+        "tokenizer_ids": [
+          "unicode-heuristic-v1"
+        ],
+        "tokenizer_sha256": [
+          "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538"
+        ],
+        "tool_profiles": [
+          "all"
+        ],
+        "tool_schema_sha256": [
+          "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+        ]
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "functional_success_rate": 1.0,
+      "runs": 3,
+      "safety": {
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hits": 0,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      }
+    },
+    "msc_progressive": {
+      "accounting": {
+        "cached_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "context_compilation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "context_compilation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "cost_usd": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "latency_seconds": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_context_text_tokens": {
+          "complete_n": 3,
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delivery_payload_tokens": {
+          "complete_n": 3,
+          "mean": 180.0,
+          "total": 540.0
+        },
+        "memory_delta_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_evidence_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_explain_calls": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_full_equivalent_tokens": {
+          "complete_n": 3,
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "memory_history_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "memory_payload_overhead_tokens": {
+          "complete_n": 3,
+          "mean": 60.0,
+          "total": 180.0
+        },
+        "memory_tool_calls": {
+          "complete_n": 3,
+          "mean": 1.0,
+          "total": 3.0
+        },
+        "memory_tool_schema_tokens": {
+          "complete_n": 3,
+          "mean": 2719.0,
+          "total": 8157.0
+        },
+        "other_memory_operation_llm_input_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_memory_operation_llm_output_tokens": {
+          "complete_n": 3,
+          "mean": 0.0,
+          "total": 0.0
+        },
+        "other_tool_schema_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null,
+          "total": null
+        }
+      },
+      "attribution": {
+        "counter_kinds": [
+          "estimated"
+        ],
+        "counter_versions": [
+          "1.0.0"
+        ],
+        "dataset_sha256": [
+          "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600"
+        ],
+        "dataset_tiers": [
+          "fixture"
+        ],
+        "other_memory_operation_token_attribution": [
+          "exact_zero"
+        ],
+        "policy_sha256": [
+          "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9"
+        ],
+        "provider_token_attribution": [
+          "unavailable"
+        ],
+        "runtime_sha256": [
+          "9999999999999999999999999999999999999999999999999999999999999999"
+        ],
+        "tokenizer_ids": [
+          "unicode-heuristic-v1"
+        ],
+        "tokenizer_sha256": [
+          "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538"
+        ],
+        "tool_profiles": [
+          "all"
+        ],
+        "tool_schema_sha256": [
+          "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+        ]
+      },
+      "behavior": {
+        "blocked_actions": 0,
+        "context_rebases": 0,
+        "repeated_file_opens": 0,
+        "repeated_searches": 0
+      },
+      "functional_success_rate": 1.0,
+      "runs": 3,
+      "safety": {
+        "constraint_loss": 0,
+        "contested_bundle_split": 0,
+        "cross_project_leaks": 0,
+        "facts_without_evidence": 0,
+        "stale_memory_uses": 0
+      },
+      "system": {
+        "delta_hits": 0,
+        "full_fallbacks": 0,
+        "snapshot_misses": 0
+      }
+    }
+  },
+  "condition_run_count": 15,
+  "config": {
+    "activation_condition": "msc_progressive",
+    "alpha_one_sided": 0.05,
+    "analysis_version": "context-efficiency-v1",
+    "bootstrap_rounds": 1000,
+    "bootstrap_seed": 20260815,
+    "condition_order_seed": 20260815,
+    "condition_ordering": "latin_square",
+    "conditions": [
+      "legacy_full",
+      "msc_full",
+      "msc_progressive",
+      "msc_delta",
+      "msc_delta_core"
+    ],
+    "delta_thresholds": [
+      0.5,
+      0.65,
+      0.8,
+      0.9
+    ],
+    "expected_paired_discordance_rate": 0.1,
+    "frozen_at": "2026-08-15T11:00:00Z",
+    "minimum_cross_step_tasks": 20,
+    "minimum_repositories": 3,
+    "minimum_sequences": 10,
+    "minimum_tasks": 50,
+    "schema_version": "1.0",
+    "success_noninferiority_margin": 0.02,
+    "target_power": 0.8,
+    "token_median_reduction_minimum": 0.25,
+    "worst_group_minimum_n": 5
+  },
+  "config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+  "confirmatory_status": {
+    "default_compiler_mode": "legacy",
+    "effect_claim": "none",
+    "power_required_tasks": 1546,
+    "provider_usage_available": false,
+    "real_agent_tasks_completed": 0,
+    "required_minimum_tasks": 50,
+    "state": "evidence_pending"
+  },
+  "dataset_sha256": [
+    "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600"
+  ],
+  "default_mode_decision": "legacy",
+  "delta_threshold_sensitivity": {
+    "msc_delta": {
+      "0.5": {
+        "delta_hit_rate": 0.0,
+        "delta_hits": 0,
+        "full_fallback_rate": 1.0,
+        "full_fallbacks": 3,
+        "functional_success_rate": 1.0,
+        "memory_delivery_payload_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "memory_delta_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_full_equivalent_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "policy_sha256": [
+          "34ad0ba62e0c5ec278b837098d142c2ba36194e6ce52b006979dd78bb5d38a88"
+        ],
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "runs": 3
+      },
+      "0.65": {
+        "delta_hit_rate": 1.0,
+        "delta_hits": 3,
+        "full_fallback_rate": 0.0,
+        "full_fallbacks": 0,
+        "functional_success_rate": 1.0,
+        "memory_delivery_payload_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delta_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_full_equivalent_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "policy_sha256": [
+          "3d655742983431f9210e59927688c431ed4e066ddbaad122d67ff6916ad9dc93"
+        ],
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "runs": 3
+      },
+      "0.8": {
+        "delta_hit_rate": 1.0,
+        "delta_hits": 3,
+        "full_fallback_rate": 0.0,
+        "full_fallbacks": 0,
+        "functional_success_rate": 1.0,
+        "memory_delivery_payload_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delta_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_full_equivalent_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "policy_sha256": [
+          "004075f97c58499f36db3156a53c9978323f51e2b8f4fc809ff9b3bb61090384"
+        ],
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "runs": 3
+      },
+      "0.9": {
+        "delta_hit_rate": 1.0,
+        "delta_hits": 3,
+        "full_fallback_rate": 0.0,
+        "full_fallbacks": 0,
+        "functional_success_rate": 1.0,
+        "memory_delivery_payload_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delta_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_full_equivalent_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "policy_sha256": [
+          "e784bf1a30059e6f4bcd8d44fb636156bb8c76aa5456b883174a77495186a7af"
+        ],
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "runs": 3
+      }
+    },
+    "msc_delta_core": {
+      "0.5": {
+        "delta_hit_rate": 0.0,
+        "delta_hits": 0,
+        "full_fallback_rate": 1.0,
+        "full_fallbacks": 3,
+        "functional_success_rate": 1.0,
+        "memory_delivery_payload_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "memory_delta_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_full_equivalent_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "policy_sha256": [
+          "d4e3cea2fd9d961954840ba4cf1fe817a118678e58086b68bab81c326c74d798"
+        ],
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "runs": 3
+      },
+      "0.65": {
+        "delta_hit_rate": 1.0,
+        "delta_hits": 3,
+        "full_fallback_rate": 0.0,
+        "full_fallbacks": 0,
+        "functional_success_rate": 1.0,
+        "memory_delivery_payload_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delta_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_full_equivalent_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "policy_sha256": [
+          "5cacc4e3f5e1d495346c730944d70258117c0c2ecab5d202f387a9063669067f"
+        ],
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "runs": 3
+      },
+      "0.8": {
+        "delta_hit_rate": 1.0,
+        "delta_hits": 3,
+        "full_fallback_rate": 0.0,
+        "full_fallbacks": 0,
+        "functional_success_rate": 1.0,
+        "memory_delivery_payload_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delta_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_full_equivalent_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "policy_sha256": [
+          "3e0b865593203f68dd98289c4fe4b4c04ba75b3576f8326f8e888f83c59c6c0e"
+        ],
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "runs": 3
+      },
+      "0.9": {
+        "delta_hit_rate": 1.0,
+        "delta_hits": 3,
+        "full_fallback_rate": 0.0,
+        "full_fallbacks": 0,
+        "functional_success_rate": 1.0,
+        "memory_delivery_payload_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_delta_tokens": {
+          "mean": 120.0,
+          "total": 360.0
+        },
+        "memory_full_equivalent_tokens": {
+          "mean": 240.0,
+          "total": 720.0
+        },
+        "policy_sha256": [
+          "27035ac0bb8ecfdb605480a3ae641f52a84d90ffb6413dac31dd2aa287b1811e"
+        ],
+        "provider_input_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "provider_output_tokens": {
+          "complete_n": 0,
+          "mean": null
+        },
+        "runs": 3
+      }
+    }
+  },
+  "effect_claim": "none",
+  "evidence_level": "deterministic_protocol_fixture",
+  "finished_at": "2026-08-15T12:01:00+00:00",
+  "mode": "dry_run",
+  "power": {
+    "assumption": {
+      "alpha_one_sided": 0.05,
+      "noninferiority_margin": 0.02,
+      "paired_discordance_rate": 0.1
+    },
+    "estimated_achieved": 0.062353958059,
+    "paired_n": 3,
+    "qualified": false,
+    "required_n": 1546,
+    "target": 0.8
+  },
+  "protocol_errors": [],
+  "protocol_valid": true,
+  "records": [
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "legacy_full",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 0,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": false,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 320,
+      "memory_delivery_payload_tokens": 400,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 400,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 80,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "d9e8f5b8ac4660a5249c84a94c8ab0569c9cbc6ab1bcc3120edfab316d00dc66",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "f45516e730b2ff53f46f07c36e7b8f13eeb2b7956fd0f930f8e5f4096d520aad",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-0",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-0",
+      "sequence_index": 0,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "25062fead22fcbe802c05015507cdd4baba1c2b8ed7725e4419c816bcf4adb48",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_delta",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 1,
+      "delta_threshold_results": [
+        {
+          "agent_completed": true,
+          "delta_hits": 0,
+          "execution_valid": true,
+          "full_fallbacks": 1,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 240,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "8d49147d67a706dae4a30984110c8f633d4686a8a19aeb5cc6f6c11444bc98ce",
+          "policy_sha256": "34ad0ba62e0c5ec278b837098d142c2ba36194e6ce52b006979dd78bb5d38a88",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.5
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "c95b41b7280ac84da2bead13a08dd2ccf0460a2b4903e81882127932f5478303",
+          "policy_sha256": "3d655742983431f9210e59927688c431ed4e066ddbaad122d67ff6916ad9dc93",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.65
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "bee7a2cbc1ab05b77d0decd3ec4d6589dad2b140d29aa2c14a6cacd4399c4832",
+          "policy_sha256": "004075f97c58499f36db3156a53c9978323f51e2b8f4fc809ff9b3bb61090384",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.8
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "7502b44a4153aa9b26ca33cb5a25c196f0b79b3a12b816d9f24e2b2b2ae497a6",
+          "policy_sha256": "e784bf1a30059e6f4bcd8d44fb636156bb8c76aa5456b883174a77495186a7af",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.9
+        }
+      ],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 3,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": false,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 90,
+      "memory_delivery_payload_tokens": 120,
+      "memory_delta_tokens": 120,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 30,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "d9e8f5b8ac4660a5249c84a94c8ab0569c9cbc6ab1bcc3120edfab316d00dc66",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "f45516e730b2ff53f46f07c36e7b8f13eeb2b7956fd0f930f8e5f4096d520aad",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-0",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-0",
+      "sequence_index": 0,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "25062fead22fcbe802c05015507cdd4baba1c2b8ed7725e4419c816bcf4adb48",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_delta_core",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 1,
+      "delta_threshold_results": [
+        {
+          "agent_completed": true,
+          "delta_hits": 0,
+          "execution_valid": true,
+          "full_fallbacks": 1,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 240,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "d44adf5da7b25ebe75e07bb19b650edc5036e4333a7ef1aabbc740ed082dd896",
+          "policy_sha256": "d4e3cea2fd9d961954840ba4cf1fe817a118678e58086b68bab81c326c74d798",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.5
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "70b97ceb9b3eace54541ee169df3f0f29a08a79c5b7845e22c0e69f5ea480b89",
+          "policy_sha256": "5cacc4e3f5e1d495346c730944d70258117c0c2ecab5d202f387a9063669067f",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.65
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "06a1b24a385d04951a81f54b1861d3abcd3c9ac2c85db0cf52d2ef7466429ad7",
+          "policy_sha256": "3e0b865593203f68dd98289c4fe4b4c04ba75b3576f8326f8e888f83c59c6c0e",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.8
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "0aff7ee3c0b12ec074b8d0b7d484de109693a0568ddebce19ff38e2a1d006785",
+          "policy_sha256": "27035ac0bb8ecfdb605480a3ae641f52a84d90ffb6413dac31dd2aa287b1811e",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.9
+        }
+      ],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 4,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": false,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 90,
+      "memory_delivery_payload_tokens": 120,
+      "memory_delta_tokens": 120,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 30,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 1739,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "d9e8f5b8ac4660a5249c84a94c8ab0569c9cbc6ab1bcc3120edfab316d00dc66",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "f45516e730b2ff53f46f07c36e7b8f13eeb2b7956fd0f930f8e5f4096d520aad",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-0",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-0",
+      "sequence_index": 0,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "25062fead22fcbe802c05015507cdd4baba1c2b8ed7725e4419c816bcf4adb48",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "core",
+      "tool_schema_sha256": "6ebb6074e7e45144cd7f991bdd510526b2634845f8b0406ce30ece7c3e0b7c7a"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_full",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 1,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": false,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 120,
+      "memory_delivery_payload_tokens": 180,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 60,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "d9e8f5b8ac4660a5249c84a94c8ab0569c9cbc6ab1bcc3120edfab316d00dc66",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "f45516e730b2ff53f46f07c36e7b8f13eeb2b7956fd0f930f8e5f4096d520aad",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-0",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-0",
+      "sequence_index": 0,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "25062fead22fcbe802c05015507cdd4baba1c2b8ed7725e4419c816bcf4adb48",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_progressive",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 2,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": false,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 120,
+      "memory_delivery_payload_tokens": 180,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 60,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "d9e8f5b8ac4660a5249c84a94c8ab0569c9cbc6ab1bcc3120edfab316d00dc66",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "f45516e730b2ff53f46f07c36e7b8f13eeb2b7956fd0f930f8e5f4096d520aad",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-0",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-0",
+      "sequence_index": 0,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "25062fead22fcbe802c05015507cdd4baba1c2b8ed7725e4419c816bcf4adb48",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "legacy_full",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 9,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 320,
+      "memory_delivery_payload_tokens": 400,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 400,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 80,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "75bd6d3666ed793611c5c6f75ec733679fa0365021b6f54d43997c2cd5d9f2f2",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "bc5ca77589a75530a767dde15eed2afc7a4756e7dfaf7bd765111460ce2ce3e6",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-1",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-1",
+      "sequence_index": 1,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "4325726afe9a71f3e65622e0d0ff18191c6a7b6516dcae17421fb31ad4c45bd3",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-1",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_delta",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 1,
+      "delta_threshold_results": [
+        {
+          "agent_completed": true,
+          "delta_hits": 0,
+          "execution_valid": true,
+          "full_fallbacks": 1,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 240,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "04d004e1a5ceff7130a20c4129d795d7da1a53a100a44ac462d73739dafdff43",
+          "policy_sha256": "34ad0ba62e0c5ec278b837098d142c2ba36194e6ce52b006979dd78bb5d38a88",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.5
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "af399c0b30a47d551450102c69a6fce358d915500e95ddee0abec02c3afcacc1",
+          "policy_sha256": "3d655742983431f9210e59927688c431ed4e066ddbaad122d67ff6916ad9dc93",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.65
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "c703d99a6d12b06e56425584e4907aa94b3f8f1a15647bc2b901de0304f0fa15",
+          "policy_sha256": "004075f97c58499f36db3156a53c9978323f51e2b8f4fc809ff9b3bb61090384",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.8
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "10108c5d5aa0342359a4f3273b77a24cd9f045ff11d5e1cbc5264afe697e5c9c",
+          "policy_sha256": "e784bf1a30059e6f4bcd8d44fb636156bb8c76aa5456b883174a77495186a7af",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.9
+        }
+      ],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 7,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 90,
+      "memory_delivery_payload_tokens": 120,
+      "memory_delta_tokens": 120,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 30,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "75bd6d3666ed793611c5c6f75ec733679fa0365021b6f54d43997c2cd5d9f2f2",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "bc5ca77589a75530a767dde15eed2afc7a4756e7dfaf7bd765111460ce2ce3e6",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-1",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-1",
+      "sequence_index": 1,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "4325726afe9a71f3e65622e0d0ff18191c6a7b6516dcae17421fb31ad4c45bd3",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-1",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_delta_core",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 1,
+      "delta_threshold_results": [
+        {
+          "agent_completed": true,
+          "delta_hits": 0,
+          "execution_valid": true,
+          "full_fallbacks": 1,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 240,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "9e81483ecbe8fbb262151472195360cdc0a70b55ea2784c7408eebf99502a2a5",
+          "policy_sha256": "d4e3cea2fd9d961954840ba4cf1fe817a118678e58086b68bab81c326c74d798",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.5
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "4b614d833655cd9c5a0b079f2a8f119321460ae8ac322119ee4cb6ce22ebe363",
+          "policy_sha256": "5cacc4e3f5e1d495346c730944d70258117c0c2ecab5d202f387a9063669067f",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.65
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "311ec07bec99a2739c098e2d987024e05c4fb4b5b67c7510d5de3eccb14a7daf",
+          "policy_sha256": "3e0b865593203f68dd98289c4fe4b4c04ba75b3576f8326f8e888f83c59c6c0e",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.8
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "3fa3457e1d844918cee2ba0e57bfdee95543834d86c4718c830ed3f266e3adcc",
+          "policy_sha256": "27035ac0bb8ecfdb605480a3ae641f52a84d90ffb6413dac31dd2aa287b1811e",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.9
+        }
+      ],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 8,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 90,
+      "memory_delivery_payload_tokens": 120,
+      "memory_delta_tokens": 120,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 30,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 1739,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "75bd6d3666ed793611c5c6f75ec733679fa0365021b6f54d43997c2cd5d9f2f2",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "bc5ca77589a75530a767dde15eed2afc7a4756e7dfaf7bd765111460ce2ce3e6",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-1",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-1",
+      "sequence_index": 1,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "4325726afe9a71f3e65622e0d0ff18191c6a7b6516dcae17421fb31ad4c45bd3",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-1",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "core",
+      "tool_schema_sha256": "6ebb6074e7e45144cd7f991bdd510526b2634845f8b0406ce30ece7c3e0b7c7a"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_full",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 5,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 120,
+      "memory_delivery_payload_tokens": 180,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 60,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "75bd6d3666ed793611c5c6f75ec733679fa0365021b6f54d43997c2cd5d9f2f2",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "bc5ca77589a75530a767dde15eed2afc7a4756e7dfaf7bd765111460ce2ce3e6",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-1",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-1",
+      "sequence_index": 1,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "4325726afe9a71f3e65622e0d0ff18191c6a7b6516dcae17421fb31ad4c45bd3",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-1",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_progressive",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 6,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 120,
+      "memory_delivery_payload_tokens": 180,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 60,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "75bd6d3666ed793611c5c6f75ec733679fa0365021b6f54d43997c2cd5d9f2f2",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "bc5ca77589a75530a767dde15eed2afc7a4756e7dfaf7bd765111460ce2ce3e6",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-1",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-1",
+      "sequence_index": 1,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "4325726afe9a71f3e65622e0d0ff18191c6a7b6516dcae17421fb31ad4c45bd3",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-1",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "legacy_full",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 13,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 320,
+      "memory_delivery_payload_tokens": 400,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 400,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 80,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "c955a254a06e9ffe7920419141f88e49705638f99217de7ad8c6a1f873a005c3",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "88a8c340f63f3f4dbb308ef5d1d694a432dc3e64934c86a4d2aad03847f18fd2",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-2",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-2",
+      "sequence_index": 2,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "1df2661e7918d5e8c3e00201e71567af2da9ca5d7a527f3b0fb5967dea1acaad",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-2",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_delta",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 1,
+      "delta_threshold_results": [
+        {
+          "agent_completed": true,
+          "delta_hits": 0,
+          "execution_valid": true,
+          "full_fallbacks": 1,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 240,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "97b416116927df1b3a091828d27ca7fc75919e2fef23ec9fa61bad38b09c38e3",
+          "policy_sha256": "34ad0ba62e0c5ec278b837098d142c2ba36194e6ce52b006979dd78bb5d38a88",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.5
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "336add7e5a31adf08365f90b9fcc05f529fca0edcd6f805531c1731319f25794",
+          "policy_sha256": "3d655742983431f9210e59927688c431ed4e066ddbaad122d67ff6916ad9dc93",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.65
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "bcccf531748e999214f8dfb0d092330fc0be4350df2fb63eaacc2a930dd2700d",
+          "policy_sha256": "004075f97c58499f36db3156a53c9978323f51e2b8f4fc809ff9b3bb61090384",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.8
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "eed59ec1ae362ae440823ee7c8cad95c50a1956d2b42299f71354ace47a1f2da",
+          "policy_sha256": "e784bf1a30059e6f4bcd8d44fb636156bb8c76aa5456b883174a77495186a7af",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.9
+        }
+      ],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 11,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 90,
+      "memory_delivery_payload_tokens": 120,
+      "memory_delta_tokens": 120,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 30,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "c955a254a06e9ffe7920419141f88e49705638f99217de7ad8c6a1f873a005c3",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "88a8c340f63f3f4dbb308ef5d1d694a432dc3e64934c86a4d2aad03847f18fd2",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-2",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-2",
+      "sequence_index": 2,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "1df2661e7918d5e8c3e00201e71567af2da9ca5d7a527f3b0fb5967dea1acaad",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-2",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_delta_core",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 1,
+      "delta_threshold_results": [
+        {
+          "agent_completed": true,
+          "delta_hits": 0,
+          "execution_valid": true,
+          "full_fallbacks": 1,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 240,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "73fcca6f3d6fab435c8e2ed145deb96c358f6925d66ba91f5d8199c50a49c279",
+          "policy_sha256": "d4e3cea2fd9d961954840ba4cf1fe817a118678e58086b68bab81c326c74d798",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.5
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "71f962311ee5e3921f3573dc72fac2f46d96cebd69e6ae8e2e3ebc6854f8c813",
+          "policy_sha256": "5cacc4e3f5e1d495346c730944d70258117c0c2ecab5d202f387a9063669067f",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.65
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "95fe098ced4b176e4982e42069971eaadeb3752a4bce1b43e27f4fca03a53a05",
+          "policy_sha256": "3e0b865593203f68dd98289c4fe4b4c04ba75b3576f8326f8e888f83c59c6c0e",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.8
+        },
+        {
+          "agent_completed": true,
+          "delta_hits": 1,
+          "execution_valid": true,
+          "full_fallbacks": 0,
+          "hidden_test_success": true,
+          "memory_delivery_payload_tokens": 120,
+          "memory_delta_tokens": 120,
+          "memory_full_equivalent_tokens": 240,
+          "patch_sha256": "541dce8c7898d4c80658b691361b68ee48bf5681f48b8566140b9b7fa096739b",
+          "policy_sha256": "27035ac0bb8ecfdb605480a3ae641f52a84d90ffb6413dac31dd2aa287b1811e",
+          "provider_input_tokens": null,
+          "provider_output_tokens": null,
+          "threshold": 0.9
+        }
+      ],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 12,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 90,
+      "memory_delivery_payload_tokens": 120,
+      "memory_delta_tokens": 120,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 30,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 1739,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "c955a254a06e9ffe7920419141f88e49705638f99217de7ad8c6a1f873a005c3",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "88a8c340f63f3f4dbb308ef5d1d694a432dc3e64934c86a4d2aad03847f18fd2",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-2",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-2",
+      "sequence_index": 2,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "1df2661e7918d5e8c3e00201e71567af2da9ca5d7a527f3b0fb5967dea1acaad",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-2",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "core",
+      "tool_schema_sha256": "6ebb6074e7e45144cd7f991bdd510526b2634845f8b0406ce30ece7c3e0b7c7a"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_full",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 14,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 120,
+      "memory_delivery_payload_tokens": 180,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 60,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "c955a254a06e9ffe7920419141f88e49705638f99217de7ad8c6a1f873a005c3",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "88a8c340f63f3f4dbb308ef5d1d694a432dc3e64934c86a4d2aad03847f18fd2",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-2",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-2",
+      "sequence_index": 2,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "1df2661e7918d5e8c3e00201e71567af2da9ca5d7a527f3b0fb5967dea1acaad",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-2",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    },
+    {
+      "adversarial_tags": [],
+      "agent_completed": true,
+      "agent_version": "deterministic-protocol-fixture-v1",
+      "blocked_actions": 0,
+      "cached_input_tokens": null,
+      "condition": "msc_progressive",
+      "constraint_loss": 0,
+      "contested": false,
+      "contested_bundle_split": 0,
+      "context_compilation_llm_input_tokens": 0,
+      "context_compilation_llm_output_tokens": 0,
+      "context_rebases": 0,
+      "cost_usd": null,
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "cross_project_leaks": 0,
+      "dataset_sha256": "dbd3ba9cb7fee1bea57047cee3867101321480cf9a6567bee8a1633589c37600",
+      "dataset_tier": "fixture",
+      "delta_hits": 0,
+      "delta_threshold_results": [],
+      "evidence_type": "deterministic_fixture",
+      "execution_index": 10,
+      "execution_valid": true,
+      "facts_without_evidence": 0,
+      "full_fallbacks": 0,
+      "hidden_test_success": true,
+      "image_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "current_decision",
+      "is_cross_step": true,
+      "latency_seconds": 0.0,
+      "memory_context_text_tokens": 120,
+      "memory_delivery_payload_tokens": 180,
+      "memory_delta_tokens": 0,
+      "memory_evidence_tokens": 0,
+      "memory_explain_calls": 0,
+      "memory_full_equivalent_tokens": 240,
+      "memory_history_tokens": 0,
+      "memory_payload_overhead_tokens": 60,
+      "memory_tool_calls": 1,
+      "memory_tool_schema_tokens": 2719,
+      "model": "no-provider-model",
+      "other_memory_operation_llm_input_tokens": 0,
+      "other_memory_operation_llm_output_tokens": 0,
+      "other_memory_operation_token_attribution": "exact_zero",
+      "other_tool_schema_tokens": null,
+      "patch_sha256": "c955a254a06e9ffe7920419141f88e49705638f99217de7ad8c6a1f873a005c3",
+      "policy_sha256": "c46595910d89c69a359561dda0f1fcd5ab3ce3cc0da8f820c0a46296ab9095a9",
+      "prompt_sha256": "88a8c340f63f3f4dbb308ef5d1d694a432dc3e64934c86a4d2aad03847f18fd2",
+      "provider_input_tokens": null,
+      "provider_output_tokens": null,
+      "provider_token_attribution": "unavailable",
+      "repeated_file_opens": 0,
+      "repeated_searches": 0,
+      "repository_id": "dry-repo-2",
+      "runtime_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "sequence_id": "dry-sequence-2",
+      "sequence_index": 2,
+      "snapshot_misses": 0,
+      "stale_memory_uses": 0,
+      "starting_state_sha256": "1df2661e7918d5e8c3e00201e71567af2da9ca5d7a527f3b0fb5967dea1acaad",
+      "study_config_sha256": "69b1ed484e36b7f895ba71c8160ddaa575ff53764b1637ac486bf2f6bb674f7d",
+      "task_id": "dry-task-2",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tokenizer_sha256": "8536d38b8bcc32f44ccd36721b155718456360a82f8f9a0418cda893cba25538",
+      "tool_profile": "all",
+      "tool_schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2"
+    }
+  ],
+  "records_sha256": "73c021d566f9883bc434dd1d1e81d8c169c5e6b249d896592472baa399ea9567",
+  "release_gates": {
+    "protocol": {
+      "passed": false,
+      "required": "valid preregistered confirmatory execution"
+    },
+    "provider_input_tokens": {
+      "median_reduction_minimum": 0.25,
+      "passed": false
+    },
+    "safety": {
+      "passed": true,
+      "required": "zero critical safety regressions"
+    },
+    "success_noninferiority": {
+      "margin": 0.02,
+      "passed": false,
+      "power_qualified": false
+    },
+    "transparency": {
+      "passed": false,
+      "required": "complete Provider Usage and reproducibility hashes"
+    },
+    "worst_groups": {
+      "minimum_group_n": 5,
+      "passed": false
+    }
+  },
+  "run_id": "context-efficiency-deterministic-dry-run-v1",
+  "sample_size": 3,
+  "schema_snapshots": {
+    "all": {
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "estimated_schema_tokens": 2719,
+      "profile": "all",
+      "schema_sha256": "2e71d041af75104184cf5a055ff92711b1cdd1b71414c061c0cd6c1867c1cea2",
+      "schema_version": "1.0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tool_names": [
+        "memory_context",
+        "memory_search",
+        "memory_propose",
+        "memory_confirm",
+        "memory_forget",
+        "memory_history",
+        "memory_explain",
+        "memory_current_truth",
+        "memory_feedback",
+        "memory_consolidate",
+        "memory_refresh",
+        "memory_debug_context"
+      ],
+      "tools": [
+        {
+          "description": "Build the most relevant project-memory context for a coding task.",
+          "inputSchema": {
+            "$defs": {
+              "BudgetProfile": {
+                "enum": [
+                  "auto",
+                  "tiny",
+                  "small",
+                  "medium",
+                  "large"
+                ],
+                "title": "BudgetProfile",
+                "type": "string"
+              },
+              "DetailLevel": {
+                "enum": [
+                  "index",
+                  "fact",
+                  "evidence",
+                  "history"
+                ],
+                "title": "DetailLevel",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "branch": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Branch"
+              },
+              "budget": {
+                "default": 6000,
+                "title": "Budget",
+                "type": "integer"
+              },
+              "budget_profile": {
+                "$ref": "#/$defs/BudgetProfile",
+                "default": "auto"
+              },
+              "budget_tokens": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Budget Tokens"
+              },
+              "detail_level": {
+                "$ref": "#/$defs/DetailLevel",
+                "default": "fact"
+              },
+              "hard_token_budget": {
+                "default": false,
+                "title": "Hard Token Budget",
+                "type": "boolean"
+              },
+              "include_historical": {
+                "default": false,
+                "title": "Include Historical",
+                "type": "boolean"
+              },
+              "previous_context_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Previous Context Id"
+              },
+              "repo": {
+                "title": "Repo",
+                "type": "string"
+              },
+              "response_mode": {
+                "default": "auto",
+                "enum": [
+                  "auto",
+                  "full",
+                  "delta"
+                ],
+                "title": "Response Mode",
+                "type": "string"
+              },
+              "task": {
+                "title": "Task",
+                "type": "string"
+              },
+              "task_scope": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Task Scope"
+              },
+              "tokenizer_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Tokenizer Id"
+              },
+              "workspace": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Workspace"
+              }
+            },
+            "required": [
+              "task",
+              "repo"
+            ],
+            "title": "memory_contextArguments",
+            "type": "object"
+          },
+          "name": "memory_context",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_contextDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Search memory with FTS5 and optional scope, type, and status filters.",
+          "inputSchema": {
+            "$defs": {
+              "MemoryStatus": {
+                "enum": [
+                  "candidate",
+                  "active",
+                  "superseded",
+                  "expired",
+                  "forgotten",
+                  "rejected"
+                ],
+                "title": "MemoryStatus",
+                "type": "string"
+              },
+              "MemoryType": {
+                "enum": [
+                  "semantic",
+                  "episodic",
+                  "procedural",
+                  "preference",
+                  "project",
+                  "working"
+                ],
+                "title": "MemoryType",
+                "type": "string"
+              },
+              "ScopeType": {
+                "enum": [
+                  "user",
+                  "workspace",
+                  "repository",
+                  "branch",
+                  "task"
+                ],
+                "title": "ScopeType",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "include_history": {
+                "default": false,
+                "title": "Include History",
+                "type": "boolean"
+              },
+              "limit": {
+                "default": 50,
+                "title": "Limit",
+                "type": "integer"
+              },
+              "memory_type": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MemoryType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "query": {
+                "title": "Query",
+                "type": "string"
+              },
+              "scope_key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Scope Key"
+              },
+              "scope_type": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScopeType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MemoryStatus"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "title": "memory_searchArguments",
+            "type": "object"
+          },
+          "name": "memory_search",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_searchDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Submit a source-backed candidate memory. Agent writes never become active directly.",
+          "inputSchema": {
+            "$defs": {
+              "MemoryType": {
+                "enum": [
+                  "semantic",
+                  "episodic",
+                  "procedural",
+                  "preference",
+                  "project",
+                  "working"
+                ],
+                "title": "MemoryType",
+                "type": "string"
+              },
+              "ScopeType": {
+                "enum": [
+                  "user",
+                  "workspace",
+                  "repository",
+                  "branch",
+                  "task"
+                ],
+                "title": "ScopeType",
+                "type": "string"
+              },
+              "SourceType": {
+                "enum": [
+                  "conversation",
+                  "manual",
+                  "git_commit",
+                  "file_reference",
+                  "agent",
+                  "import"
+                ],
+                "title": "SourceType",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "category": {
+                "title": "Category",
+                "type": "string"
+              },
+              "confidence": {
+                "default": 0.8,
+                "title": "Confidence",
+                "type": "number"
+              },
+              "content": {
+                "title": "Content",
+                "type": "string"
+              },
+              "importance": {
+                "default": 0.5,
+                "title": "Importance",
+                "type": "number"
+              },
+              "key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Key"
+              },
+              "memory_type": {
+                "$ref": "#/$defs/MemoryType"
+              },
+              "scope_key": {
+                "title": "Scope Key",
+                "type": "string"
+              },
+              "scope_type": {
+                "$ref": "#/$defs/ScopeType"
+              },
+              "source_excerpt": {
+                "title": "Source Excerpt",
+                "type": "string"
+              },
+              "source_ref": {
+                "title": "Source Ref",
+                "type": "string"
+              },
+              "source_type": {
+                "$ref": "#/$defs/SourceType"
+              },
+              "subject": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subject"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "ttl_seconds": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Ttl Seconds"
+              }
+            },
+            "required": [
+              "title",
+              "content",
+              "scope_type",
+              "scope_key",
+              "memory_type",
+              "category",
+              "source_type",
+              "source_ref",
+              "source_excerpt"
+            ],
+            "title": "memory_proposeArguments",
+            "type": "object"
+          },
+          "name": "memory_propose",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_proposeDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Confirm a candidate; conflicts require supersede, keep_both, or reject.",
+          "inputSchema": {
+            "$defs": {
+              "ConflictStrategy": {
+                "enum": [
+                  "supersede",
+                  "keep_both",
+                  "reject"
+                ],
+                "title": "ConflictStrategy",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              },
+              "rationale": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Rationale"
+              },
+              "strategy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ConflictStrategy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "memory_id"
+            ],
+            "title": "memory_confirmArguments",
+            "type": "object"
+          },
+          "name": "memory_confirm",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_confirmDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Logically forget a memory while retaining its minimal audit history.",
+          "inputSchema": {
+            "properties": {
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "memory_id"
+            ],
+            "title": "memory_forgetArguments",
+            "type": "object"
+          },
+          "name": "memory_forget",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_forgetDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Return the complete status and supersession timeline for a memory or semantic key.",
+          "inputSchema": {
+            "properties": {
+              "key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Key"
+              },
+              "memory_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Memory Id"
+              }
+            },
+            "title": "memory_historyArguments",
+            "type": "object"
+          },
+          "name": "memory_history",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_historyDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Explain provenance, content hash, scope, creator, status, and replacement links.",
+          "inputSchema": {
+            "properties": {
+              "budget_tokens": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Budget Tokens"
+              },
+              "expected_atom_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Expected Atom Sha256"
+              },
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              },
+              "sections": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Sections"
+              }
+            },
+            "required": [
+              "memory_id"
+            ],
+            "title": "memory_explainArguments",
+            "type": "object"
+          },
+          "name": "memory_explain",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_explainDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Query resolved, contested, stale, or unknown bitemporal project truth.",
+          "inputSchema": {
+            "$defs": {
+              "ScopeType": {
+                "enum": [
+                  "user",
+                  "workspace",
+                  "repository",
+                  "branch",
+                  "task"
+                ],
+                "title": "ScopeType",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "as_known_at": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "As Known At"
+              },
+              "as_of_valid_time": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "As Of Valid Time"
+              },
+              "predicate": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Predicate"
+              },
+              "query": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Query"
+              },
+              "scope_key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Scope Key"
+              },
+              "scope_type": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScopeType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "subject": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subject"
+              }
+            },
+            "title": "memory_current_truthArguments",
+            "type": "object"
+          },
+          "name": "memory_current_truth",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_current_truthDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Record auditable helpful/unhelpful retrieval feedback without changing truth.",
+          "inputSchema": {
+            "$defs": {
+              "FeedbackValue": {
+                "enum": [
+                  "yes",
+                  "no",
+                  "unknown"
+                ],
+                "title": "FeedbackValue",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "actor": {
+                "default": "agent",
+                "title": "Actor",
+                "type": "string"
+              },
+              "helpful": {
+                "$ref": "#/$defs/FeedbackValue"
+              },
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              },
+              "reason": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Reason"
+              },
+              "retrieval_run_id": {
+                "title": "Retrieval Run Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "retrieval_run_id",
+              "memory_id",
+              "helpful"
+            ],
+            "title": "memory_feedbackArguments",
+            "type": "object"
+          },
+          "name": "memory_feedback",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_feedbackDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Generate traceable consolidation candidates; dry-run is the default.",
+          "inputSchema": {
+            "$defs": {
+              "ScopeType": {
+                "enum": [
+                  "user",
+                  "workspace",
+                  "repository",
+                  "branch",
+                  "task"
+                ],
+                "title": "ScopeType",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "dry_run": {
+                "default": true,
+                "title": "Dry Run",
+                "type": "boolean"
+              },
+              "minimum_sources": {
+                "default": 3,
+                "title": "Minimum Sources",
+                "type": "integer"
+              },
+              "minimum_span_days": {
+                "default": 7,
+                "title": "Minimum Span Days",
+                "type": "integer"
+              },
+              "scope_key": {
+                "title": "Scope Key",
+                "type": "string"
+              },
+              "scope_type": {
+                "$ref": "#/$defs/ScopeType"
+              }
+            },
+            "required": [
+              "scope_type",
+              "scope_key"
+            ],
+            "title": "memory_consolidateArguments",
+            "type": "object"
+          },
+          "name": "memory_consolidate",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_consolidateDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Refresh Git anchor freshness and optionally create a replacement candidate.",
+          "inputSchema": {
+            "properties": {
+              "create_replacement_candidate": {
+                "default": false,
+                "title": "Create Replacement Candidate",
+                "type": "boolean"
+              },
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              },
+              "repository_path": {
+                "title": "Repository Path",
+                "type": "string"
+              }
+            },
+            "required": [
+              "memory_id",
+              "repository_path"
+            ],
+            "title": "memory_refreshArguments",
+            "type": "object"
+          },
+          "name": "memory_refresh",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_refreshDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Return query plan, RRF channels, filters, manifest, and final context selection.",
+          "inputSchema": {
+            "properties": {
+              "branch": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Branch"
+              },
+              "budget": {
+                "default": 6000,
+                "title": "Budget",
+                "type": "integer"
+              },
+              "include_historical": {
+                "default": false,
+                "title": "Include Historical",
+                "type": "boolean"
+              },
+              "repo": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Repo"
+              },
+              "retrieval_run_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Retrieval Run Id"
+              },
+              "task": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Task"
+              },
+              "task_scope": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Task Scope"
+              },
+              "workspace": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Workspace"
+              }
+            },
+            "title": "memory_debug_contextArguments",
+            "type": "object"
+          },
+          "name": "memory_debug_context",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_debug_contextDictOutput",
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "core": {
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "estimated_schema_tokens": 1739,
+      "profile": "core",
+      "schema_sha256": "6ebb6074e7e45144cd7f991bdd510526b2634845f8b0406ce30ece7c3e0b7c7a",
+      "schema_version": "1.0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tool_names": [
+        "memory_context",
+        "memory_search",
+        "memory_propose",
+        "memory_confirm",
+        "memory_explain",
+        "memory_current_truth"
+      ],
+      "tools": [
+        {
+          "description": "Build the most relevant project-memory context for a coding task.",
+          "inputSchema": {
+            "$defs": {
+              "BudgetProfile": {
+                "enum": [
+                  "auto",
+                  "tiny",
+                  "small",
+                  "medium",
+                  "large"
+                ],
+                "title": "BudgetProfile",
+                "type": "string"
+              },
+              "DetailLevel": {
+                "enum": [
+                  "index",
+                  "fact",
+                  "evidence",
+                  "history"
+                ],
+                "title": "DetailLevel",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "branch": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Branch"
+              },
+              "budget": {
+                "default": 6000,
+                "title": "Budget",
+                "type": "integer"
+              },
+              "budget_profile": {
+                "$ref": "#/$defs/BudgetProfile",
+                "default": "auto"
+              },
+              "budget_tokens": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Budget Tokens"
+              },
+              "detail_level": {
+                "$ref": "#/$defs/DetailLevel",
+                "default": "fact"
+              },
+              "hard_token_budget": {
+                "default": false,
+                "title": "Hard Token Budget",
+                "type": "boolean"
+              },
+              "include_historical": {
+                "default": false,
+                "title": "Include Historical",
+                "type": "boolean"
+              },
+              "previous_context_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Previous Context Id"
+              },
+              "repo": {
+                "title": "Repo",
+                "type": "string"
+              },
+              "response_mode": {
+                "default": "auto",
+                "enum": [
+                  "auto",
+                  "full",
+                  "delta"
+                ],
+                "title": "Response Mode",
+                "type": "string"
+              },
+              "task": {
+                "title": "Task",
+                "type": "string"
+              },
+              "task_scope": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Task Scope"
+              },
+              "tokenizer_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Tokenizer Id"
+              },
+              "workspace": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Workspace"
+              }
+            },
+            "required": [
+              "task",
+              "repo"
+            ],
+            "title": "memory_contextArguments",
+            "type": "object"
+          },
+          "name": "memory_context",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_contextDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Search memory with FTS5 and optional scope, type, and status filters.",
+          "inputSchema": {
+            "$defs": {
+              "MemoryStatus": {
+                "enum": [
+                  "candidate",
+                  "active",
+                  "superseded",
+                  "expired",
+                  "forgotten",
+                  "rejected"
+                ],
+                "title": "MemoryStatus",
+                "type": "string"
+              },
+              "MemoryType": {
+                "enum": [
+                  "semantic",
+                  "episodic",
+                  "procedural",
+                  "preference",
+                  "project",
+                  "working"
+                ],
+                "title": "MemoryType",
+                "type": "string"
+              },
+              "ScopeType": {
+                "enum": [
+                  "user",
+                  "workspace",
+                  "repository",
+                  "branch",
+                  "task"
+                ],
+                "title": "ScopeType",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "include_history": {
+                "default": false,
+                "title": "Include History",
+                "type": "boolean"
+              },
+              "limit": {
+                "default": 50,
+                "title": "Limit",
+                "type": "integer"
+              },
+              "memory_type": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MemoryType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "query": {
+                "title": "Query",
+                "type": "string"
+              },
+              "scope_key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Scope Key"
+              },
+              "scope_type": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScopeType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MemoryStatus"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "title": "memory_searchArguments",
+            "type": "object"
+          },
+          "name": "memory_search",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_searchDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Submit a source-backed candidate memory. Agent writes never become active directly.",
+          "inputSchema": {
+            "$defs": {
+              "MemoryType": {
+                "enum": [
+                  "semantic",
+                  "episodic",
+                  "procedural",
+                  "preference",
+                  "project",
+                  "working"
+                ],
+                "title": "MemoryType",
+                "type": "string"
+              },
+              "ScopeType": {
+                "enum": [
+                  "user",
+                  "workspace",
+                  "repository",
+                  "branch",
+                  "task"
+                ],
+                "title": "ScopeType",
+                "type": "string"
+              },
+              "SourceType": {
+                "enum": [
+                  "conversation",
+                  "manual",
+                  "git_commit",
+                  "file_reference",
+                  "agent",
+                  "import"
+                ],
+                "title": "SourceType",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "category": {
+                "title": "Category",
+                "type": "string"
+              },
+              "confidence": {
+                "default": 0.8,
+                "title": "Confidence",
+                "type": "number"
+              },
+              "content": {
+                "title": "Content",
+                "type": "string"
+              },
+              "importance": {
+                "default": 0.5,
+                "title": "Importance",
+                "type": "number"
+              },
+              "key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Key"
+              },
+              "memory_type": {
+                "$ref": "#/$defs/MemoryType"
+              },
+              "scope_key": {
+                "title": "Scope Key",
+                "type": "string"
+              },
+              "scope_type": {
+                "$ref": "#/$defs/ScopeType"
+              },
+              "source_excerpt": {
+                "title": "Source Excerpt",
+                "type": "string"
+              },
+              "source_ref": {
+                "title": "Source Ref",
+                "type": "string"
+              },
+              "source_type": {
+                "$ref": "#/$defs/SourceType"
+              },
+              "subject": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subject"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "ttl_seconds": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Ttl Seconds"
+              }
+            },
+            "required": [
+              "title",
+              "content",
+              "scope_type",
+              "scope_key",
+              "memory_type",
+              "category",
+              "source_type",
+              "source_ref",
+              "source_excerpt"
+            ],
+            "title": "memory_proposeArguments",
+            "type": "object"
+          },
+          "name": "memory_propose",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_proposeDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Confirm a candidate; conflicts require supersede, keep_both, or reject.",
+          "inputSchema": {
+            "$defs": {
+              "ConflictStrategy": {
+                "enum": [
+                  "supersede",
+                  "keep_both",
+                  "reject"
+                ],
+                "title": "ConflictStrategy",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              },
+              "rationale": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Rationale"
+              },
+              "strategy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ConflictStrategy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "memory_id"
+            ],
+            "title": "memory_confirmArguments",
+            "type": "object"
+          },
+          "name": "memory_confirm",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_confirmDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Explain provenance, content hash, scope, creator, status, and replacement links.",
+          "inputSchema": {
+            "properties": {
+              "budget_tokens": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Budget Tokens"
+              },
+              "expected_atom_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Expected Atom Sha256"
+              },
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              },
+              "sections": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Sections"
+              }
+            },
+            "required": [
+              "memory_id"
+            ],
+            "title": "memory_explainArguments",
+            "type": "object"
+          },
+          "name": "memory_explain",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_explainDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Query resolved, contested, stale, or unknown bitemporal project truth.",
+          "inputSchema": {
+            "$defs": {
+              "ScopeType": {
+                "enum": [
+                  "user",
+                  "workspace",
+                  "repository",
+                  "branch",
+                  "task"
+                ],
+                "title": "ScopeType",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "as_known_at": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "As Known At"
+              },
+              "as_of_valid_time": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "As Of Valid Time"
+              },
+              "predicate": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Predicate"
+              },
+              "query": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Query"
+              },
+              "scope_key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Scope Key"
+              },
+              "scope_type": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScopeType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "subject": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subject"
+              }
+            },
+            "title": "memory_current_truthArguments",
+            "type": "object"
+          },
+          "name": "memory_current_truth",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_current_truthDictOutput",
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "debug": {
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "estimated_schema_tokens": 372,
+      "profile": "debug",
+      "schema_sha256": "685b59aabb24116b9d94c7acc6bec493e96374dfa4dec5aaf9406dc8086c89b2",
+      "schema_version": "1.0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tool_names": [
+        "memory_history",
+        "memory_debug_context"
+      ],
+      "tools": [
+        {
+          "description": "Return the complete status and supersession timeline for a memory or semantic key.",
+          "inputSchema": {
+            "properties": {
+              "key": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Key"
+              },
+              "memory_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Memory Id"
+              }
+            },
+            "title": "memory_historyArguments",
+            "type": "object"
+          },
+          "name": "memory_history",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_historyDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Return query plan, RRF channels, filters, manifest, and final context selection.",
+          "inputSchema": {
+            "properties": {
+              "branch": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Branch"
+              },
+              "budget": {
+                "default": 6000,
+                "title": "Budget",
+                "type": "integer"
+              },
+              "include_historical": {
+                "default": false,
+                "title": "Include Historical",
+                "type": "boolean"
+              },
+              "repo": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Repo"
+              },
+              "retrieval_run_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Retrieval Run Id"
+              },
+              "task": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Task"
+              },
+              "task_scope": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Task Scope"
+              },
+              "workspace": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Workspace"
+              }
+            },
+            "title": "memory_debug_contextArguments",
+            "type": "object"
+          },
+          "name": "memory_debug_context",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_debug_contextDictOutput",
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "governance": {
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "estimated_schema_tokens": 609,
+      "profile": "governance",
+      "schema_sha256": "e2ed398c66774f399d6ca27fefaf04cd666cf3df00dcf034fac8f53dd88b4286",
+      "schema_version": "1.0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tool_names": [
+        "memory_forget",
+        "memory_feedback",
+        "memory_consolidate",
+        "memory_refresh"
+      ],
+      "tools": [
+        {
+          "description": "Logically forget a memory while retaining its minimal audit history.",
+          "inputSchema": {
+            "properties": {
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "memory_id"
+            ],
+            "title": "memory_forgetArguments",
+            "type": "object"
+          },
+          "name": "memory_forget",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_forgetDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Record auditable helpful/unhelpful retrieval feedback without changing truth.",
+          "inputSchema": {
+            "$defs": {
+              "FeedbackValue": {
+                "enum": [
+                  "yes",
+                  "no",
+                  "unknown"
+                ],
+                "title": "FeedbackValue",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "actor": {
+                "default": "agent",
+                "title": "Actor",
+                "type": "string"
+              },
+              "helpful": {
+                "$ref": "#/$defs/FeedbackValue"
+              },
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              },
+              "reason": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Reason"
+              },
+              "retrieval_run_id": {
+                "title": "Retrieval Run Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "retrieval_run_id",
+              "memory_id",
+              "helpful"
+            ],
+            "title": "memory_feedbackArguments",
+            "type": "object"
+          },
+          "name": "memory_feedback",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_feedbackDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Generate traceable consolidation candidates; dry-run is the default.",
+          "inputSchema": {
+            "$defs": {
+              "ScopeType": {
+                "enum": [
+                  "user",
+                  "workspace",
+                  "repository",
+                  "branch",
+                  "task"
+                ],
+                "title": "ScopeType",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "dry_run": {
+                "default": true,
+                "title": "Dry Run",
+                "type": "boolean"
+              },
+              "minimum_sources": {
+                "default": 3,
+                "title": "Minimum Sources",
+                "type": "integer"
+              },
+              "minimum_span_days": {
+                "default": 7,
+                "title": "Minimum Span Days",
+                "type": "integer"
+              },
+              "scope_key": {
+                "title": "Scope Key",
+                "type": "string"
+              },
+              "scope_type": {
+                "$ref": "#/$defs/ScopeType"
+              }
+            },
+            "required": [
+              "scope_type",
+              "scope_key"
+            ],
+            "title": "memory_consolidateArguments",
+            "type": "object"
+          },
+          "name": "memory_consolidate",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_consolidateDictOutput",
+            "type": "object"
+          }
+        },
+        {
+          "description": "Refresh Git anchor freshness and optionally create a replacement candidate.",
+          "inputSchema": {
+            "properties": {
+              "create_replacement_candidate": {
+                "default": false,
+                "title": "Create Replacement Candidate",
+                "type": "boolean"
+              },
+              "memory_id": {
+                "title": "Memory Id",
+                "type": "string"
+              },
+              "repository_path": {
+                "title": "Repository Path",
+                "type": "string"
+              }
+            },
+            "required": [
+              "memory_id",
+              "repository_path"
+            ],
+            "title": "memory_refreshArguments",
+            "type": "object"
+          },
+          "name": "memory_refresh",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_refreshDictOutput",
+            "type": "object"
+          }
+        }
+      ]
+    }
+  },
+  "schema_version": "2.3",
+  "started_at": "2026-08-15T12:00:00+00:00",
+  "status": "completed",
+  "study": "context_efficiency",
+  "truthfulness": "Dry-run and deterministic-fixture evidence cannot authorize activation."
+}

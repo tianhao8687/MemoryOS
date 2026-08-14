@@ -2,6 +2,8 @@
 
 > [开发问题总复盘：开发中遇到的问题、失败实验、修复证据与遗留风险](docs/DEVELOPMENT_PROBLEMS_RETROSPECTIVE.md)
 >
+> [V2.3 最小充分上下文：瘦响应、Token 分账、Context Atom、Delta、证据门禁与当前限制](docs/MINIMUM_SUFFICIENT_CONTEXT.md)
+>
 > [V2.2 Hardening Report：H-001～H-008 修复、迁移、测试、基准与限制](HARDENING_REPORT.md)
 
 <!-- MEMORYOS:READINESS:START -->
@@ -25,17 +27,26 @@
 6. Need a passing explicit promotion decision before any atomic activation can be considered.
 <!-- MEMORYOS:READINESS:END -->
 
-MemoryOS V2.2 是面向编码 Agent 的本地优先 Reality Intelligence 层。它在 V2.1 的不可变 ClaimVersion、双时态 Current Truth、Git-aware freshness 与任务上下文之上，进一步强化 Source Anchor 不可变性、真实产品路径评测、Claim/Relation 检索正确性、双时态查询扩展性和性能证据分层。MCP、HTTP、CLI 和 React Workbench 继续共享同一 SQLite 事实源。
+MemoryOS V2.3 是面向编码 Agent 的本地优先 Reality Intelligence 层。它在 V2.2 的不可变证据、双时态 Current Truth、Git-aware freshness、检索硬化和真实工作负载协议之上，新增可回退的 Minimum Sufficient Context 编译层。MCP、HTTP、CLI 和 React Workbench 继续共享同一 SQLite 事实源。
 
-当前版本：`2.2.0`。H-001～H-008 的实现、测试、基准和限制见 [V2.2 Hardening Report](HARDENING_REPORT.md)。合并后应在干净 `main` 上重建发行包并运行：
+当前源码版本：`2.3.0`。MSC 的语义、配置、证据和限制见 [V2.3 最小充分上下文](docs/MINIMUM_SUFFICIENT_CONTEXT.md)。当前 confirmatory real-agent 证据不足，所以默认 compiler 仍是 `legacy`、`effect_claim=none`；没有自动激活 MSC 或 learned retrieval profile 的路径。合并后应在干净 `main` 上重建发行包并运行：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\main_release_smoke.py --distribution .\release\MemoryOS
 ```
 
-V2.1 的历史验收映射和不可变机器报告继续保留在 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) 与 `docs/verification/v2.1/`；V2.2 证据位于 `docs/verification/v2.2/`。
+V2.1 的历史验收映射和不可变机器报告继续保留在 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) 与 `docs/verification/v2.1/`；V2.2 历史证据位于 `docs/verification/v2.2/`；V2.3 Golden 和 dry-run 工件位于 `docs/verification/v2.3/`。
 
-## V2.2 能力
+## V2.3 能力
+
+- 三档 Context Compiler 模式：字节兼容 `legacy`、只存诊断的 `msc_shadow` 和瘦生产响应 `msc`；证据门禁通过前默认保持 legacy。
+- `budget` 仍是旧字符预算；新增带 exact/estimated 来源的 Token Counter、384/768/1536/3072 Profile、AUTO 策略和完整 payload 预算。
+- 确定性 INDEX/FACT Atom、按需 EVIDENCE/HISTORY，以及覆盖极性、限定词、Truth/Freshness、有效时间和证据指针的 Atom hash。
+- Pinned Constraint 和 Contested Bundle 原子安全下限；精确去重只合并完全等价事实并保留所有证据，语义去重仍是 Shadow-only。
+- 兼容扩展 `memory_explain` 的 expected hash/sections/Token 预算，以及会在变更时失效的一次证据展开。
+- 显式 `previous_context_id` Delta、Scope/Policy/Tokenizer/TTL/完整性校验、低效 Delta 的 Full Rebase 和不进长期备份的可丢弃 Snapshot 缓存。
+- 启动时固定的 `all/core/governance/debug` MCP Profile，工具顺序与 Schema hash 确定；服务端 Schema 减少不被冒充为 Provider Token 节省。
+- 独立 Context Efficiency Study 分开 Provider input/output、缓存、成本、延迟、记忆交付/证据/历史/Delta、Schema、安全和最差组，并固定 0.5/0.65/0.8/0.9 Delta 阈值敏感性；dry run 可复现但不授权默认激活。
 
 - 保留 V1 的五级 scope、六类 memory、candidate-first 生命周期、来源、审计、TTL、逻辑忘却、备份和 7 个 MCP 工具。
 - 从 evidence span 生成标准化 Claim；实体别名只在同 scope/type 内解析，可审计合并与 redirect。
@@ -50,7 +61,7 @@ V2.1 的历史验收映射和不可变机器报告继续保留在 [docs/ACCEPTAN
 - Grounded consolidation 校验 supporting/counter memory IDs 与独立来源；离线 extractive fallback 明确标注。所有抽象与 distillation 只生成 candidate，永不自动激活。
 - Memory Health 用可解释分数管理 Hot/Warm/Cold/Archived；归档可逆，唯一 accepted current truth 不可归档，Cold/Archived 才能参与 distillation。
 - helpful/unhelpful feedback 可审计，只影响 retrieval utility，不修改事实状态。
-- 12 个 stdio MCP 工具、V2.2 HTTP API/CLI，以及包含 Current Truth 版本、Possible Conflicts、Memory Health 与向量诊断的 Workbench。
+- 12 个 stdio MCP 工具的兼容 `all` Profile、V2.3 HTTP API/CLI，以及包含 Current Truth 版本、Possible Conflicts、Memory Health 与向量诊断的 Workbench。
 - CodingMemoryBench Fixture Regression 分离 runtime input 与 gold scorer，包含 hard negatives、时间和冲突三模式对照，并对满分给出过拟合警告；另有独立 production-path integration suite，二者均不声明真实 Agent 效果。
 - 实测 100,000 记录 FTS-first RetrievalPipeline + ContextCompiler P95；该 Tier 1 fixture 未执行 embedding、Claim/Relation 或模型通道，也不声明模型收益。
 
@@ -84,7 +95,7 @@ Tree-sitter language pack 是 V2 core dependency。若要启用可选 SQLite ANN
 .\release\MemoryOS\MemoryOS.exe --data-dir .\memoryos-data serve
 ```
 
-发行形式为 PyInstaller `onedir`，必须保留整个 `release\MemoryOS` 目录。生产 smoke 会从真实 `0001_initial` 数据库启动，验证自动迁移到 `0004_anchor_observation_hardening`、旧数据与不可变 anchor 基线保留、12 个 MCP 工具、HTTP/UI/CLI、fixture benchmark 资源、sqlite-vec runtime 和重启持久化。Production-path integration benchmark 作为源码验证证据单独保存在 `docs/verification/v2.2/`，不冒充打包内置功能。
+发行形式为 PyInstaller `onedir`，必须保留整个 `release\MemoryOS` 目录。V2.3 生产 smoke 会从真实 `0001_initial` 数据库启动，验证自动迁移到 `0005_context_efficiency`、旧数据与不可变 anchor 基线保留、all/core/governance/debug 四个确定性 MCP Profile、HTTP/UI/CLI、fixture benchmark 资源、sqlite-vec runtime 和重启持久化。当前已有的 V2.2 包是历史证据；合并后的 clean-main V2.3 包复验完成前不声称新二进制已发布。
 
 ## CLI 示例
 
@@ -236,6 +247,7 @@ MemoryOS 不做全仓源码收藏或云同步。Source Anchor 只读取被明确
 ## 文档
 
 - [架构](ARCHITECTURE.md)
+- [V2.3 最小充分上下文](docs/MINIMUM_SUFFICIENT_CONTEXT.md)
 - [安全模型](SECURITY.md)
 - [MCP 接入](MCP_SETUP.md)
 - [验收证据](docs/ACCEPTANCE.md)

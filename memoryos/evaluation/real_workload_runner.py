@@ -344,7 +344,27 @@ class RealWorkloadRunner:
                 retrieval_routes=list(usage.retrieval_routes),
                 scoring_profile_sha256=usage.scoring_profile_sha256,
                 routing_profile_sha256=usage.routing_profile_sha256,
+                memory_context_text_tokens=usage.memory_context_text_tokens,
+                memory_delivery_payload_tokens=usage.memory_delivery_payload_tokens,
+                memory_payload_overhead_tokens=usage.memory_payload_overhead_tokens,
+                memory_evidence_tokens=usage.memory_evidence_tokens,
+                memory_history_tokens=usage.memory_history_tokens,
+                memory_delta_tokens=usage.memory_delta_tokens,
+                memory_full_equivalent_tokens=usage.memory_full_equivalent_tokens,
+                context_compilation_llm_input_tokens=(usage.context_compilation_llm_input_tokens),
+                context_compilation_llm_output_tokens=(usage.context_compilation_llm_output_tokens),
+                other_memory_operation_llm_input_tokens=(
+                    usage.other_memory_operation_llm_input_tokens
+                ),
+                other_memory_operation_llm_output_tokens=(
+                    usage.other_memory_operation_llm_output_tokens
+                ),
+                token_attribution_kind=usage.token_attribution_kind,
+                tokenizer_ids=list(usage.tokenizer_ids),
+                counter_kinds=list(usage.counter_kinds),
+                context_usages=list(usage.context_usages),
                 input_tokens=execution.result.input_tokens,
+                cached_input_tokens=execution.result.cached_input_tokens,
                 output_tokens=execution.result.output_tokens,
                 cost_usd=execution.result.cost_usd,
                 latency_seconds=execution.container.duration_seconds,

@@ -8,7 +8,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from platformdirs import user_data_path
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -47,6 +47,15 @@ class MemoryOSSettings(BaseSettings):
     reranker_model: str | None = None
     consolidation_model: str | None = None
     ann_enabled: bool = True
+    context_compiler_mode: str = "legacy"
+    context_budget_tiny_tokens: int = Field(default=384, ge=64, le=50000)
+    context_budget_small_tokens: int = Field(default=768, ge=64, le=50000)
+    context_budget_medium_tokens: int = Field(default=1536, ge=64, le=50000)
+    context_budget_large_tokens: int = Field(default=3072, ge=64, le=50000)
+    context_snapshot_ttl_seconds: int = Field(default=604_800, ge=60, le=31_536_000)
+    context_snapshot_cleanup_batch_size: int = Field(default=100, ge=1, le=10_000)
+    context_delta_fallback_ratio: float = Field(default=0.8, gt=0, le=1)
+    mcp_tool_profile: str = "all"
 
     @field_validator("host")
     @classmethod
@@ -93,6 +102,34 @@ class MemoryOSSettings(BaseSettings):
         if normalized not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
             raise ValueError("log level must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
         return normalized
+
+    @field_validator("context_compiler_mode")
+    @classmethod
+    def require_known_context_compiler_mode(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in {"legacy", "msc_shadow", "msc"}:
+            raise ValueError("context compiler mode must be legacy, msc_shadow, or msc")
+        return normalized
+
+    @field_validator("mcp_tool_profile")
+    @classmethod
+    def require_known_tool_profile(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in {"all", "core", "governance", "debug"}:
+            raise ValueError("MCP tool profile must be all, core, governance, or debug")
+        return normalized
+
+    @model_validator(mode="after")
+    def require_monotonic_context_budget_profiles(self) -> MemoryOSSettings:
+        profiles = (
+            self.context_budget_tiny_tokens,
+            self.context_budget_small_tokens,
+            self.context_budget_medium_tokens,
+            self.context_budget_large_tokens,
+        )
+        if profiles != tuple(sorted(profiles)):
+            raise ValueError("context token budget profiles must be monotonic from tiny to large")
+        return self
 
     @field_validator("data_dir", mode="before")
     @classmethod

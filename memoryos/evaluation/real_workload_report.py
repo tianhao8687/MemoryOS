@@ -4,7 +4,7 @@ import json
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -47,6 +47,26 @@ class ConditionRunRecord(BaseModel):
     retrieval_routes: list[dict[str, Any]] = Field(default_factory=list)
     scoring_profile_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     routing_profile_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    memory_context_text_tokens: int | None = Field(default=None, ge=0)
+    memory_delivery_payload_tokens: int | None = Field(default=None, ge=0)
+    memory_payload_overhead_tokens: int | None = Field(default=None, ge=0)
+    memory_evidence_tokens: int | None = Field(default=None, ge=0)
+    memory_history_tokens: int | None = Field(default=None, ge=0)
+    memory_delta_tokens: int | None = Field(default=None, ge=0)
+    memory_full_equivalent_tokens: int | None = Field(default=None, ge=0)
+    context_compilation_llm_input_tokens: int = Field(default=0, ge=0)
+    context_compilation_llm_output_tokens: int = Field(default=0, ge=0)
+    other_memory_operation_llm_input_tokens: int | None = Field(default=None, ge=0)
+    other_memory_operation_llm_output_tokens: int | None = Field(default=None, ge=0)
+    memory_tool_schema_tokens: int | None = Field(default=None, ge=0)
+    other_tool_schema_tokens: int | None = Field(default=None, ge=0)
+    cached_input_tokens: int | None = Field(default=None, ge=0)
+    token_attribution_kind: Literal["exact", "estimated", "unavailable"] = Field(
+        default_factory=lambda: "unavailable"
+    )
+    tokenizer_ids: list[str] = Field(default_factory=list)
+    counter_kinds: list[str] = Field(default_factory=list)
+    context_usages: list[dict[str, Any]] = Field(default_factory=list)
     input_tokens: int | None = Field(default=None, ge=0)
     output_tokens: int | None = Field(default=None, ge=0)
     cost_usd: float | None = Field(default=None, ge=0)
@@ -297,6 +317,38 @@ class RealWorkloadReportBuilder:
                     [right.latency_seconds for _, right in paired],
                 ),
             }
+            optional_metrics = {
+                "provider_input_tokens": "input_tokens",
+                "provider_output_tokens": "output_tokens",
+                "memory_context_text_tokens": "memory_context_text_tokens",
+                "memory_delivery_payload_tokens": "memory_delivery_payload_tokens",
+                "memory_payload_overhead_tokens": "memory_payload_overhead_tokens",
+                "memory_evidence_tokens": "memory_evidence_tokens",
+                "memory_history_tokens": "memory_history_tokens",
+                "memory_delta_tokens": "memory_delta_tokens",
+                "memory_full_equivalent_tokens": "memory_full_equivalent_tokens",
+                "other_memory_operation_llm_input_tokens": (
+                    "other_memory_operation_llm_input_tokens"
+                ),
+                "other_memory_operation_llm_output_tokens": (
+                    "other_memory_operation_llm_output_tokens"
+                ),
+                "memory_tool_schema_tokens": "memory_tool_schema_tokens",
+                "other_tool_schema_tokens": "other_tool_schema_tokens",
+                "cached_input_tokens": "cached_input_tokens",
+            }
+            for metric_name, field_name in optional_metrics.items():
+                complete = [
+                    (getattr(left, field_name), getattr(right, field_name))
+                    for left, right in paired
+                    if getattr(left, field_name) is not None
+                    and getattr(right, field_name) is not None
+                ]
+                if complete:
+                    values[metric_name] = (
+                        [float(left) for left, _ in complete],
+                        [float(right) for _, right in complete],
+                    )
             for metric_index, (name, (left, right)) in enumerate(values.items()):
                 metrics[name] = bootstrap_mean_difference(
                     left,
@@ -347,7 +399,36 @@ def _aggregate(records: list[ConditionRunRecord]) -> dict[str, Any]:
         "total_output_tokens": sum(outputs) if outputs else None,
         "memory_tool_calls": sum(record.memory_tool_calls for record in records),
         "retrieval_runs": sum(record.retrieval_runs for record in records),
+        "memory_context_text_tokens": _optional_sum(records, "memory_context_text_tokens"),
+        "memory_delivery_payload_tokens": _optional_sum(records, "memory_delivery_payload_tokens"),
+        "memory_payload_overhead_tokens": _optional_sum(records, "memory_payload_overhead_tokens"),
+        "memory_evidence_tokens": _optional_sum(records, "memory_evidence_tokens"),
+        "memory_history_tokens": _optional_sum(records, "memory_history_tokens"),
+        "memory_delta_tokens": _optional_sum(records, "memory_delta_tokens"),
+        "memory_full_equivalent_tokens": _optional_sum(records, "memory_full_equivalent_tokens"),
+        "context_compilation_llm_input_tokens": sum(
+            record.context_compilation_llm_input_tokens for record in records
+        ),
+        "context_compilation_llm_output_tokens": sum(
+            record.context_compilation_llm_output_tokens for record in records
+        ),
+        "other_memory_operation_llm_input_tokens": _optional_sum(
+            records, "other_memory_operation_llm_input_tokens"
+        ),
+        "other_memory_operation_llm_output_tokens": _optional_sum(
+            records, "other_memory_operation_llm_output_tokens"
+        ),
+        "memory_tool_schema_tokens": _optional_sum(records, "memory_tool_schema_tokens"),
+        "other_tool_schema_tokens": _optional_sum(records, "other_tool_schema_tokens"),
+        "cached_input_tokens": _optional_sum(records, "cached_input_tokens"),
     }
+
+
+def _optional_sum(records: list[ConditionRunRecord], field: str) -> int | None:
+    values = [getattr(record, field) for record in records]
+    if not values or any(value is None for value in values):
+        return None
+    return sum(int(value) for value in values)
 
 
 def _aware_utc(value: datetime, *, field_name: str) -> datetime:

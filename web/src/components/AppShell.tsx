@@ -219,7 +219,7 @@ export function AppShell() {
         <div className="sidebar-status">
           <span><Boxes aria-hidden="true" />Local store</span>
           <strong>{status.data ? 'OK' : '—'}</strong>
-          <small>v{status.data?.version ?? '2.2.0'}</small>
+          <small>v{status.data?.version ?? '2.3.0'}</small>
         </div>
       </aside>
       {mobileOpen ? <button className="scrim" onClick={() => setMobileOpen(false)} aria-label="Close navigation" /> : null}

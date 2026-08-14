@@ -25,7 +25,8 @@ def main() -> int:
     package_upgrade = (
         package.get("result") == "PASS"
         and package.get("v1_to_v2_migration") is True
-        and package.get("schema_version") == "0004_anchor_observation_hardening"
+        and package.get("v1_to_v23_migration") is True
+        and package.get("schema_version") == "0005_context_efficiency"
         and int(package.get("mcp_tools", 0)) >= 12
         and package.get("ui_health") is True
         and package.get("cli_status") is True

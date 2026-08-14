@@ -24,6 +24,7 @@ from sqlalchemy import text
 
 from memoryos.config import settings_for
 from memoryos.db import Database
+from memoryos.mcp_server.tool_registry import PROFILE_TOOLS, ToolProfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -278,6 +279,32 @@ async def _mcp_write(executable: Path, data_dir: Path) -> tuple[str, int]:
         return memory_id, len(names)
 
 
+async def _mcp_profile_snapshot(executable: Path, data_dir: Path) -> dict[str, list[str]]:
+    expected = {profile.value: list(PROFILE_TOOLS[profile]) for profile in ToolProfile}
+    actual: dict[str, list[str]] = {}
+    for profile, expected_names in expected.items():
+        parameters = StdioServerParameters(
+            command=str(executable),
+            args=[
+                "--data-dir",
+                str(data_dir),
+                "mcp",
+                "--tool-profile",
+                profile,
+            ],
+        )
+        async with (
+            stdio_client(parameters) as (read_stream, write_stream),
+            ClientSession(read_stream, write_stream) as session,
+        ):
+            await session.initialize()
+            names = [tool.name for tool in (await session.list_tools()).tools]
+        if names != expected_names:
+            raise RuntimeError(f"packaged MCP profile {profile} is not deterministic: {names}")
+        actual[profile] = names
+    return actual
+
+
 def _assert_http_state(
     base_url: str,
     token: str,
@@ -361,9 +388,10 @@ def main() -> None:
                 trust_env=False,
             ) as client:
                 first_status = client.get("/api/status").json()
-            if first_status.get("schema_version") != "0004_anchor_observation_hardening":
-                raise RuntimeError("packaged app did not migrate the V1 database to V2.2")
+            if first_status.get("schema_version") != "0005_context_efficiency":
+                raise RuntimeError("packaged app did not migrate the V1 database to V2.3")
             memory_id, mcp_tool_count = asyncio.run(_mcp_write(executable, data_dir))
+            mcp_profiles = asyncio.run(_mcp_profile_snapshot(executable, data_dir))
             anchor_repository = _prepare_anchor_repository(clean_root)
             anchor = _run_packaged_json(
                 executable,
@@ -413,11 +441,13 @@ def main() -> None:
         "first_health": first_health,
         "second_health": second_health,
         "mcp_tools": mcp_tool_count,
+        "mcp_profiles": mcp_profiles,
         "memory_id": memory_id,
         "legacy_memory_id": legacy_id,
         "v1_to_v2_migration": True,
         "v1_to_v21_migration": True,
         "v1_to_v22_migration": True,
+        "v1_to_v23_migration": True,
         "schema_version": first_status["schema_version"],
         "memorybench_bundled": True,
         "coding_memory_bench_bundled": True,

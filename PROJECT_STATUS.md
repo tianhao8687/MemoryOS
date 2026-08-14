@@ -23,8 +23,8 @@
 
 ## 当前结论
 
-- 版本：V2.2.0
-- 状态：**V2.2 Hardening H-001～H-008 已通过分支级验证；合并后 clean-main 发行复验是二进制发布前的剩余门禁**
+- 版本：V2.3.0
+- 状态：**V2.3 Minimum Sufficient Context 源码实现与确定性 dry run 已完成；真实 Agent confirmatory 证据与合并后 clean-main 发行复验待完成，默认保持 legacy**
 - 日期：2026-08-15（Asia/Shanghai）
 - 干净 V2 基线：commit `b0cae26dfab0141876ceffa1fde97cc5e2b92591`，dirty=false，16/16 PASS
 - V2.1 合并提交：`eaf10ba700455513f4eb4a392f4c042a6b4ea125`
@@ -32,6 +32,8 @@
 - 最终 A52 clean-main 基线：commit `9f2e2e7909c547b4a6b19d3e7a1ef40031d5ebe6`，dirty=false，package smoke PASS
 - V2.1 历史验收入口：`.\.venv\Scripts\python.exe scripts\verify_v21.py`
 - V2.1 历史验收范围：V1 A01–A14、V2 A15–A32 回归，V2.1 A33–A52
+- V2.3 MSC（2026-08-15）：已实现 legacy/msc_shadow/msc 三模式、完整 payload Token 预算、Context Atom/确定性去重、Pinned/Contested 原子安全下限、按需 Explain、显式 Delta/Full Rebase、可丢弃 Snapshot、all/core/governance/debug 固定 MCP Profile 与独立 Context Efficiency Study。Study 分开 Provider input/output/cached、成本、延迟、delivery/evidence/history/delta/full-equivalent、Schema 和安全/行为/系统指标，并哈希绑定 0.5/0.65/0.8/0.9 阈值矩阵。V2.2 Golden 基线和 V2.3 dry run 均可重建。Dry run 为 deterministic fixture，无 Provider Usage，`effect_claim=none`；预注册 2pp 非劣界限在 10% 不一致假设下约需 1,546 个独立配对任务，因此未切换默认。
+- V2.3 本地分支验证（2026-08-15）：V2.3 专项 36 passed；Ruff/format PASS，Mypy 检查 115 个源码文件 0 issues，后端全量 332 passed/0 failed（仅 2 条已知上游 warning）；前端 typecheck/ESLint PASS，Vitest 4 files/11 tests PASS，Vite 生产构建 1,745 modules PASS。这是源码回归证据，不代替 clean-main 打包 smoke 或 real-agent confirmatory evidence。
 - V2.2 开发状态（2026-08-11）：仓库级三组真实 workload 框架已实现；固定 MarkupSafe 历史提交的 1-task/3-condition 公共 smoke 协议有效、隐藏测试全过、MemoryOS 产生真实 retrieval run。任务发布时间、跨项目来源仓库、agent commit 补丁、宿主 Git 控制面及 `real_coding_agent` 证据门禁均已机器校验；全仓后端回归 142 passed，确定性 fixture 仍明确 `effect_claim=none`
 - Retrieval calibration（2026-08-12）：首版 `memoryos-git-silver-v1` 已从 7 个固定公开仓库生成，包含 6 个查询仓库、5 种语言、300 queries、3,656 candidates、9,600 judgments；train/dev/test=200/50/50，manifest digest `52e670691d4c723680f7d2c67efcce31701001c88218bd3d915c82de5013eb3a`。标签明确为 Git path-overlap silver，不冒充人工 gold。
 - Human review pilot（2026-08-12）：`memoryos-human-review-v1-pilot` 已生成 61 个盲标案例、每位评审 1,922 个候选判断，双份候选顺序独立、test 封存、构建不读 qrels，并包含来源映射与过耦合审计；manifest digest `ecf532c8ebbe7b3f9866623eab0e9fb53cd979abe486fb29359cb9ca7f20729f`。当前状态严格为 `pilot_unlabeled`，双人独立标注、仲裁、外部仓库 holdout 和真实 Agent shadow evidence 尚未完成。
@@ -44,6 +46,20 @@
 - Current Truth 批量化（2026-08-14）：同机、同一 1/10/1000 identity 合成语料的前后对照中，1000 identities 从 7,046 条 SQL、P50/P95 1217.033/1311.148 ms 降到恒定 9 条 SQL、76.094/82.460 ms；完整原始结果保存在 `docs/verification/v2.2/current-truth-performance.json`，不外推为真实 Agent 效果。
 
 MemoryOS V2.1 发布快照中的 A47 因当时未提供真实 coding-agent endpoint 与凭据而走 `external_blocker` 路径；该历史验收记录保持不变。2026-08-12 当前开发环境开始接入隔离的真实 Codex runtime，先取得 Requests 的 2 个 full/minus pair，随后扩展到上述 9 个协议有效 pair；它们仍不足以回写旧版 50-task 验收或作 confirmatory 产品效果声明。50-task fixture 仍只证明 harness/metrics/CI plumbing。
+
+## V2.3 最小充分上下文交付范围
+
+| 领域 | 已交付内容 | 状态 |
+| --- | --- | --- |
+| Compatibility | `budget` 永久保持字符语义；legacy 响应保留；MSC 为显式模式 | Complete |
+| Token accounting | deterministic estimated counter、exact counter 注入、完整 payload 预算、Provider/记忆分账 | Complete; real Provider Usage pending |
+| Atoms and safety | INDEX/FACT、Evidence/History 边界、Atom hash、Pinned/Contested bundle、exact dedup | Complete |
+| Progressive disclosure | 兼容扩展 `memory_explain`，hash 失效、section 预算、多来源一次证据回溯 | Complete |
+| Delta | 显式游标、Scope/Policy/Tokenizer/TTL/integrity 校验、可解释 Full Rebase | Complete |
+| Migration/backup | `0005_context_efficiency`；Snapshot 是有界可丢弃缓存，不进长期备份，Restore 后安全 rebase | Complete |
+| MCP profiles | deterministic `all/core/governance/debug`；四个 Schema Snapshot/hash | Complete |
+| Evaluation | 独立五条件 Study、完整分账、paired bootstrap、阈值矩阵、power、safety/transparency/worst-group gates | Dry run complete; confirmatory pending |
+| Activation | 默认 `legacy`，显式 `msc_shadow`/`msc` 可用，无自动激活 | Evidence gate retained |
 
 ## V2.2 交付范围
 
@@ -103,6 +119,8 @@ Playwright 的 7 个 skip 是明确的设备矩阵不适用项：移动布局断
 - 19-gate 总验证：`docs/verification/v2.1/verify-summary.json`
 - package smoke：`docs/verification/package-smoke.json`
 - V2.2 MarkupSafe 公共三组回放：`docs/verification/v2.2/markupsafe-public-smoke/{report,run-metadata}.json`
+- V2.3 的 V2.2 Context Golden：`docs/verification/v2.3/v22-context-compiler-golden.json`
+- V2.3 Context Efficiency deterministic dry run：`docs/verification/v2.3/context-efficiency-dry-run.json`
 - AI calibration Requests 真实消融摘要：`benchmarks/ai_calibration_v1/evidence/requests-6028-real-agent-ablation-v1.json`
 - Public BGE/RRF Shadow 摘要：`benchmarks/ai_calibration_v1/evidence/public-rrf-shadow-v1.json`
 - wheel：`build/wheel/memoryos-2.1.0-py3-none-any.whl`
@@ -112,6 +130,8 @@ Playwright 的 7 个 skip 是明确的设备矩阵不适用项：移动布局断
 
 ## 已知边界
 
+- MSC 当前只有实现/协议/安全回归证据；还没有满足预注册 power、完整 Provider Usage 和最差组门禁的真实 coding-agent confirmatory set。因此不声称 Token 降幅或任务成功改善，也不将 `msc` 设为默认。
+- `unicode-heuristic-v1` 是确定性估算而非特定 Provider exact tokenizer；MCP Profile 的 Schema 估算也不是 Provider 实际 input token。
 - 当前已有一个可放入隔离容器的真实 Codex runtime，但仍缺至少两个独立 provider/模型家族、短期凭据与 allowlisted gateway、完整 cost 计量、跨仓库 train/dev 证据，以及 50-task × 2 unseen-agent sealed promotion 矩阵；现有 Requests 结果只作探索性校准证据。
 - Public RRF Shadow 只覆盖两个 public test 仓库，bootstrap 区间跨零且存在 Pandas 域回退；不能用其 19/81 比例替换生产 50/50 基线。下一轮需增加独立仓库，并直接做 frozen-baseline 与 candidate-weight 的成对 Agent Shadow，而不是重复同标签生成器的数据。
 - router v2 已删除 query-time confidence 阈值和虚构概率，规则分类只输出原因码，但 recipe 选择仍是确定性候选；它解决执行拓扑和可观测性问题，没有证明“哪个 recipe 对真实 Agent 最好”。80/1000 pool、40 rerank window、冻结 RRF/Lexical MMR 等结构参数仍是版本化启发式基线。在跨仓库、跨模型成对 Shadow 与 sealed promotion 通过前，不得接入默认服务。

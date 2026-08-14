@@ -296,8 +296,18 @@ def create_app(settings: MemoryOSSettings) -> FastAPI:
         return {"ok": True, "memory": service.forget(memory_id, actor="http")}
 
     @app.get("/api/memories/{memory_id}/explain")
-    def explain_memory(memory_id: str) -> dict[str, Any]:
-        return service.explain(memory_id)
+    def explain_memory(
+        memory_id: str,
+        expected_atom_sha256: Annotated[str | None, Query(min_length=64, max_length=64)] = None,
+        sections: Annotated[list[str] | None, Query()] = None,
+        budget_tokens: Annotated[int | None, Query(ge=1, le=50_000)] = None,
+    ) -> dict[str, Any]:
+        return service.explain(
+            memory_id,
+            expected_atom_sha256=expected_atom_sha256,
+            sections=sections,
+            budget_tokens=budget_tokens,
+        )
 
     @app.get("/api/memories/{memory_id}/history")
     def memory_history(memory_id: str) -> list[dict[str, Any]]:

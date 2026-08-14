@@ -1,0 +1,2734 @@
+{
+  "artifact": "v22_context_compiler_golden",
+  "baseline_commit": "d958ab77118f613dff368140ccf284f10949cfad",
+  "budget_contract": {
+    "field": "budget",
+    "scope": "legacy text only",
+    "token_semantics": false,
+    "unit": "characters"
+  },
+  "canonical_mcp_tool_result": {
+    "ok": true,
+    "result": {
+      "branch": null,
+      "budget": 50000,
+      "budget_exceeded": false,
+      "characters_used": 1020,
+      "debug": {
+        "candidates": [
+          {
+            "claim_ids": [
+              "c_resolved_01"
+            ],
+            "cost": 161,
+            "exclusion_reason": null,
+            "freshness": "unknown",
+            "included": true,
+            "inclusion_reason": "required coverage: decision",
+            "memory_id": "m_resolved",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts",
+                "graph"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 4,
+              "fused_score": 0.02864087,
+              "graph_rank": 3,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "resolved",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "truth_state": "resolved",
+            "utility": 0.01526935
+          },
+          {
+            "claim_ids": [
+              "c_contested_right_01"
+            ],
+            "cost": 169,
+            "exclusion_reason": null,
+            "freshness": "unknown",
+            "included": true,
+            "inclusion_reason": "highest utility per context cost",
+            "memory_id": "m_contested_right",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts",
+                "graph"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 3,
+              "fused_score": 0.02931564,
+              "graph_rank": 1,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "contested",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "truth_state": "contested",
+            "utility": 0.01562908
+          },
+          {
+            "claim_ids": [
+              "c_contested_left_01"
+            ],
+            "cost": 172,
+            "exclusion_reason": null,
+            "freshness": "unknown",
+            "included": true,
+            "inclusion_reason": "contested group completeness: m_contested_right",
+            "memory_id": "m_contested_left",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts",
+                "graph"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 1,
+              "fused_score": 0.02961925,
+              "graph_rank": 2,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "contested",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "truth_state": "contested",
+            "utility": 0.01579095
+          },
+          {
+            "claim_ids": [
+              "c_constraint_01"
+            ],
+            "cost": 198,
+            "exclusion_reason": null,
+            "freshness": "unknown",
+            "included": true,
+            "inclusion_reason": "required coverage: constraint",
+            "memory_id": "m_constraint",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 7,
+              "fused_score": 0.01492537,
+              "graph_rank": null,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "resolved",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "truth_state": "resolved",
+            "utility": 0.00795718
+          },
+          {
+            "claim_ids": [],
+            "cost": 198,
+            "exclusion_reason": null,
+            "freshness": "unknown",
+            "included": true,
+            "inclusion_reason": "highest utility per context cost",
+            "memory_id": "m_source_grounded",
+            "retrieval_trace": {
+              "evidence_count": 0,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 6,
+              "fused_score": 0.01515152,
+              "graph_rank": null,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "unknown",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "truth_state": "unknown",
+            "utility": 0.00769309
+          },
+          {
+            "claim_ids": [
+              "c_suspect_01"
+            ],
+            "cost": 171,
+            "exclusion_reason": null,
+            "freshness": "suspect",
+            "included": true,
+            "inclusion_reason": "highest utility per context cost",
+            "memory_id": "m_suspect",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts",
+                "suspect freshness downweighted"
+              ],
+              "freshness": "suspect",
+              "freshness_factor": 0.35,
+              "fts_rank": 2,
+              "fused_score": 0.01612903,
+              "graph_rank": null,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "resolved",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "truth_state": "resolved",
+            "utility": 0.00128032
+          },
+          {
+            "claim_ids": [
+              "c_stale_01"
+            ],
+            "cost": 160,
+            "exclusion_reason": null,
+            "freshness": "stale",
+            "included": true,
+            "inclusion_reason": "highest utility per context cost",
+            "memory_id": "m_stale",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts"
+              ],
+              "freshness": "stale",
+              "freshness_factor": 0.0,
+              "fts_rank": 5,
+              "fused_score": 0.01538462,
+              "graph_rank": null,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "stale",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "truth_state": "stale",
+            "utility": 0.0
+          }
+        ],
+        "config_hash": "34997d5d67ff5bf408da02eeb5e7922eb71b51e1f671e97e1ee25589d495c452",
+        "reranker": "disabled",
+        "routing_profile_sha256": null,
+        "scoring_profile_sha256": null
+      },
+      "manifest": [
+        {
+          "claim_ids": [
+            "c_resolved_01"
+          ],
+          "cost": 161,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "required coverage: decision",
+          "memory_id": "m_resolved",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 4,
+            "fused_score": 0.02864087,
+            "graph_rank": 3,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "resolved",
+          "utility": 0.01526935
+        },
+        {
+          "claim_ids": [
+            "c_contested_right_01"
+          ],
+          "cost": 169,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "highest utility per context cost",
+          "memory_id": "m_contested_right",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 3,
+            "fused_score": 0.02931564,
+            "graph_rank": 1,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "contested",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "contested",
+          "utility": 0.01562908
+        },
+        {
+          "claim_ids": [
+            "c_contested_left_01"
+          ],
+          "cost": 172,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "contested group completeness: m_contested_right",
+          "memory_id": "m_contested_left",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 1,
+            "fused_score": 0.02961925,
+            "graph_rank": 2,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "contested",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "contested",
+          "utility": 0.01579095
+        },
+        {
+          "claim_ids": [
+            "c_constraint_01"
+          ],
+          "cost": 198,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "required coverage: constraint",
+          "memory_id": "m_constraint",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 7,
+            "fused_score": 0.01492537,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "resolved",
+          "utility": 0.00795718
+        },
+        {
+          "claim_ids": [],
+          "cost": 198,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "highest utility per context cost",
+          "memory_id": "m_source_grounded",
+          "retrieval_trace": {
+            "evidence_count": 0,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 6,
+            "fused_score": 0.01515152,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "unknown",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "unknown",
+          "utility": 0.00769309
+        },
+        {
+          "claim_ids": [
+            "c_suspect_01"
+          ],
+          "cost": 171,
+          "exclusion_reason": null,
+          "freshness": "suspect",
+          "included": true,
+          "inclusion_reason": "highest utility per context cost",
+          "memory_id": "m_suspect",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "suspect freshness downweighted"
+            ],
+            "freshness": "suspect",
+            "freshness_factor": 0.35,
+            "fts_rank": 2,
+            "fused_score": 0.01612903,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "resolved",
+          "utility": 0.00128032
+        },
+        {
+          "claim_ids": [
+            "c_stale_01"
+          ],
+          "cost": 160,
+          "exclusion_reason": null,
+          "freshness": "stale",
+          "included": true,
+          "inclusion_reason": "highest utility per context cost",
+          "memory_id": "m_stale",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "stale",
+            "freshness_factor": 0.0,
+            "fts_rank": 5,
+            "fused_score": 0.01538462,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "stale",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "stale",
+          "utility": 0.0
+        }
+      ],
+      "query_plan": {
+        "as_known_at": null,
+        "as_of_valid_time": null,
+        "entities": [
+          "django",
+          "fastapi"
+        ],
+        "exact_terms": [],
+        "intent": "constraint_lookup",
+        "intent_reason_code": "constraint_keyword",
+        "requested_evidence_type": "claim",
+        "routing": {
+          "active_channels": [
+            "fts",
+            "vector",
+            "graph",
+            "temporal"
+          ],
+          "candidate_pool_max": 1000,
+          "candidate_pool_min": 80,
+          "channel_execution": [
+            {
+              "attempted": true,
+              "available": true,
+              "candidate_count": 7,
+              "channel": "fts",
+              "duration_ms": 0.0,
+              "eligible_candidate_count": 7,
+              "executed": true,
+              "reason_code": null,
+              "requested": true,
+              "shared_stage": "lexical_vector",
+              "status": "executed"
+            },
+            {
+              "attempted": false,
+              "available": false,
+              "candidate_count": 0,
+              "channel": "vector",
+              "duration_ms": 0.0,
+              "eligible_candidate_count": 0,
+              "executed": false,
+              "reason_code": "embedding_provider_not_configured",
+              "requested": true,
+              "shared_stage": "lexical_vector",
+              "status": "unavailable"
+            },
+            {
+              "attempted": false,
+              "available": true,
+              "candidate_count": 0,
+              "channel": "source_anchor",
+              "duration_ms": null,
+              "eligible_candidate_count": 0,
+              "executed": false,
+              "reason_code": null,
+              "requested": false,
+              "shared_stage": null,
+              "status": "not_requested"
+            },
+            {
+              "attempted": true,
+              "available": true,
+              "candidate_count": 3,
+              "channel": "graph",
+              "duration_ms": 0.0,
+              "eligible_candidate_count": 3,
+              "executed": true,
+              "reason_code": null,
+              "requested": true,
+              "shared_stage": null,
+              "status": "executed"
+            },
+            {
+              "attempted": false,
+              "available": true,
+              "candidate_count": 0,
+              "channel": "temporal",
+              "duration_ms": null,
+              "eligible_candidate_count": 0,
+              "executed": false,
+              "reason_code": "non_temporal_intent",
+              "requested": true,
+              "shared_stage": null,
+              "status": "not_applicable"
+            }
+          ],
+          "contributing_channels": [
+            "fts",
+            "graph"
+          ],
+          "decision_basis": "planner_intent",
+          "degraded_channels": [
+            "vector"
+          ],
+          "diversity_policy": "mmr",
+          "executed_channels": [
+            "fts",
+            "graph"
+          ],
+          "executed_recipe_id": "safe-hybrid-v1",
+          "executed_recipe_sha256": "23b111ff16fd7cb464c87fdde01ca587e180b4d8815e988a785527ba0ec8149b",
+          "execution_mode": "frozen_production_baseline",
+          "fallback_recipe_id": "safe-hybrid-v1",
+          "fallback_used": false,
+          "features": {
+            "clause_count": 1,
+            "entity_count": 2,
+            "exact_term_count": 0,
+            "has_exact_signal": false,
+            "has_relational_signal": false,
+            "has_temporal_signal": false,
+            "intent_reason_code": "constraint_keyword"
+          },
+          "fusion": "rrf",
+          "fusion_weights": {
+            "fts": 1.0,
+            "graph": 0.82,
+            "temporal": 0.9,
+            "vector": 1.0
+          },
+          "reason_codes": [
+            "semantic_intent"
+          ],
+          "reasons": [
+            "natural-language intent uses semantic hybrid retrieval"
+          ],
+          "recommended_recipe_id": "semantic-hybrid-v1",
+          "recommended_recipe_sha256": "0cc956bef7d2a2231c65f6a30fb26f8ae71f984cabc886b5603906ad1e5be6f4",
+          "requested_channels": [
+            "fts",
+            "vector",
+            "graph",
+            "temporal"
+          ],
+          "rerank_window": 40,
+          "reranker_mode": "disabled",
+          "reranker_policy": "cross_encoder_if_available",
+          "route": "semantic",
+          "router_version": "approved-recipe-router-v2",
+          "rrf_k": 60,
+          "score_contract": "legacy_raw_rrf_v1",
+          "source_anchor_weight_policy": null,
+          "stage_timings_ms": {
+            "candidate_retrieval": 0.0,
+            "diversity": 0.0,
+            "fusion": 0.0,
+            "governance_scoring": 0.0,
+            "rerank": 0.0
+          }
+        },
+        "scope_chain": [
+          "user",
+          "repository:golden-repo"
+        ]
+      },
+      "repository": "golden-repo",
+      "retrieval_mode": "rrf-fts5",
+      "retrieval_run_id": "run_v22_golden",
+      "sections": {
+        "ACTIVE CONSTRAINTS": [
+          {
+            "category": "constraint",
+            "confidence": 0.8,
+            "content": "Timeout must not exceed 30 seconds except offline migration jobs.",
+            "created_at": "2026-08-15T00:00:00+00:00",
+            "created_by": "manual",
+            "freshness": "unknown",
+            "id": "m_constraint",
+            "importance": 0.5,
+            "key": "runtime.timeout.constraint",
+            "memory_type": "project",
+            "metadata": {},
+            "provenance_ref": "golden:runtime.timeout.constraint",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 7,
+              "fused_score": 0.01492537,
+              "graph_rank": null,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "resolved",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "scope_key": "golden-repo",
+            "scope_type": "repository",
+            "score": 0.01155224,
+            "sensitivity": "normal",
+            "status": "active",
+            "subject": null,
+            "supersedes_id": null,
+            "title": "Timeout safety constraint",
+            "truth_state": "resolved",
+            "ttl_seconds": null,
+            "updated_at": "2026-08-15T00:00:00+00:00",
+            "valid_from": null,
+            "valid_to": null
+          }
+        ],
+        "CURRENT BRANCH / TASK STATE": [
+          {
+            "category": "state",
+            "confidence": 0.8,
+            "content": "The deployment state is blue-green in the operator runbook.",
+            "created_at": "2026-08-15T00:00:00+00:00",
+            "created_by": "manual",
+            "freshness": "unknown",
+            "id": "m_source_grounded",
+            "importance": 0.5,
+            "key": "deployment.state",
+            "memory_type": "project",
+            "metadata": {},
+            "provenance_ref": "golden:deployment.state",
+            "retrieval_trace": {
+              "evidence_count": 0,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 6,
+              "fused_score": 0.01515152,
+              "graph_rank": null,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "unknown",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "scope_key": "golden-repo",
+            "scope_type": "repository",
+            "score": 0.01172727,
+            "sensitivity": "normal",
+            "status": "active",
+            "subject": null,
+            "supersedes_id": null,
+            "title": "Source-grounded deployment state",
+            "truth_state": "unknown",
+            "ttl_seconds": null,
+            "updated_at": "2026-08-15T00:00:00+00:00",
+            "valid_from": null,
+            "valid_to": null
+          },
+          {
+            "category": "state",
+            "confidence": 0.8,
+            "content": "The legacy queue uses Celery.",
+            "created_at": "2026-08-15T00:00:00+00:00",
+            "created_by": "manual",
+            "freshness": "stale",
+            "id": "m_stale",
+            "importance": 0.5,
+            "key": "legacy.queue.framework",
+            "memory_type": "project",
+            "metadata": {},
+            "provenance_ref": "golden:legacy.queue.framework",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts"
+              ],
+              "freshness": "stale",
+              "freshness_factor": 0.0,
+              "fts_rank": 5,
+              "fused_score": 0.01538462,
+              "graph_rank": null,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "stale",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "scope_key": "golden-repo",
+            "scope_type": "repository",
+            "score": 0.0,
+            "sensitivity": "normal",
+            "status": "active",
+            "subject": null,
+            "supersedes_id": null,
+            "title": "Stale Celery queue",
+            "truth_state": "stale",
+            "ttl_seconds": null,
+            "updated_at": "2026-08-15T00:00:00+00:00",
+            "valid_from": null,
+            "valid_to": null
+          }
+        ],
+        "CURRENT DECISIONS": [
+          {
+            "category": "decision",
+            "confidence": 0.8,
+            "content": "The API framework is FastAPI.",
+            "created_at": "2026-08-15T00:00:00+00:00",
+            "created_by": "manual",
+            "freshness": "unknown",
+            "id": "m_resolved",
+            "importance": 0.5,
+            "key": "architecture.api.framework",
+            "memory_type": "project",
+            "metadata": {},
+            "provenance_ref": "golden:architecture.api.framework",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts",
+                "graph"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 4,
+              "fused_score": 0.02864087,
+              "graph_rank": 3,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "resolved",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "scope_key": "golden-repo",
+            "scope_type": "repository",
+            "score": 0.02216804,
+            "sensitivity": "normal",
+            "status": "active",
+            "subject": null,
+            "supersedes_id": null,
+            "title": "Resolved FastAPI decision",
+            "truth_state": "resolved",
+            "ttl_seconds": null,
+            "updated_at": "2026-08-15T00:00:00+00:00",
+            "valid_from": null,
+            "valid_to": null
+          },
+          {
+            "category": "decision",
+            "confidence": 0.8,
+            "content": "The worker framework is Django.",
+            "created_at": "2026-08-15T00:00:00+00:00",
+            "created_by": "agent",
+            "freshness": "unknown",
+            "id": "m_contested_right",
+            "importance": 0.5,
+            "key": "worker.framework.django",
+            "memory_type": "project",
+            "metadata": {},
+            "provenance_ref": "golden:worker.framework.django",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts",
+                "graph"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 3,
+              "fused_score": 0.02931564,
+              "graph_rank": 1,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "contested",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "scope_key": "golden-repo",
+            "scope_type": "repository",
+            "score": 0.0226903,
+            "sensitivity": "normal",
+            "status": "active",
+            "subject": null,
+            "supersedes_id": null,
+            "title": "Contested worker Django",
+            "truth_state": "contested",
+            "ttl_seconds": null,
+            "updated_at": "2026-08-15T00:00:00+00:00",
+            "valid_from": null,
+            "valid_to": null
+          },
+          {
+            "category": "decision",
+            "confidence": 0.8,
+            "content": "The worker framework is FastAPI.",
+            "created_at": "2026-08-15T00:00:00+00:00",
+            "created_by": "manual",
+            "freshness": "unknown",
+            "id": "m_contested_left",
+            "importance": 0.5,
+            "key": "worker.framework.fastapi",
+            "memory_type": "project",
+            "metadata": {},
+            "provenance_ref": "golden:worker.framework.fastapi",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts",
+                "graph"
+              ],
+              "freshness": "unknown",
+              "freshness_factor": 0.86,
+              "fts_rank": 1,
+              "fused_score": 0.02961925,
+              "graph_rank": 2,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "contested",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "scope_key": "golden-repo",
+            "scope_type": "repository",
+            "score": 0.0229253,
+            "sensitivity": "normal",
+            "status": "active",
+            "subject": null,
+            "supersedes_id": null,
+            "title": "Contested worker FastAPI",
+            "truth_state": "contested",
+            "ttl_seconds": null,
+            "updated_at": "2026-08-15T00:00:00+00:00",
+            "valid_from": null,
+            "valid_to": null
+          }
+        ],
+        "KNOWN FAILURES / DO NOT REPEAT": [
+          {
+            "category": "failure",
+            "confidence": 0.8,
+            "content": "The worker retry budget is 3.",
+            "created_at": "2026-08-15T00:00:00+00:00",
+            "created_by": "manual",
+            "freshness": "suspect",
+            "id": "m_suspect",
+            "importance": 0.5,
+            "key": "worker.retry.budget",
+            "memory_type": "project",
+            "metadata": {},
+            "provenance_ref": "golden:worker.retry.budget",
+            "retrieval_trace": {
+              "evidence_count": 1,
+              "feedback_factor": 1.0,
+              "final_reason": [
+                "fts",
+                "suspect freshness downweighted"
+              ],
+              "freshness": "suspect",
+              "freshness_factor": 0.35,
+              "fts_rank": 2,
+              "fused_score": 0.01612903,
+              "graph_rank": null,
+              "helpful_feedback_count": 0,
+              "memory_confidence": 0.8,
+              "memory_importance": 0.5,
+              "reranker_score": null,
+              "scope_factor": 0.9,
+              "scope_match": "repository",
+              "temporal_rank": null,
+              "truth_state": "resolved",
+              "unhelpful_feedback_count": 0,
+              "vector_rank": null
+            },
+            "scope_key": "golden-repo",
+            "scope_type": "repository",
+            "score": 0.00508065,
+            "sensitivity": "normal",
+            "status": "active",
+            "subject": null,
+            "supersedes_id": null,
+            "title": "Suspect retry budget",
+            "truth_state": "resolved",
+            "ttl_seconds": null,
+            "updated_at": "2026-08-15T00:00:00+00:00",
+            "valid_from": null,
+            "valid_to": null
+          }
+        ]
+      },
+      "task": "FastAPI Django timeout retry Celery deployment worker architecture constraint state",
+      "text": "Project Memory Context\n\nCURRENT DECISIONS\n- [m_resolved] Resolved FastAPI decision: The API framework is FastAPI. (source: golden:architecture.api.framework)\n- [m_contested_right] CONTESTED: Contested worker Django: The worker framework is Django. (source: golden:worker.framework.django)\n- [m_contested_left] CONTESTED: Contested worker FastAPI: The worker framework is FastAPI. (source: golden:worker.framework.fastapi)\n\nACTIVE CONSTRAINTS\n- [m_constraint] Timeout safety constraint: Timeout must not exceed 30 seconds except offline migration jobs. (source: golden:runtime.timeout.constraint)\n\nKNOWN FAILURES / DO NOT REPEAT\n- [m_suspect] SUSPECT: Suspect retry budget: The worker retry budget is 3. (source: golden:worker.retry.budget)\n\nCURRENT BRANCH / TASK STATE\n- [m_source_grounded] Source-grounded deployment state: The deployment state is blue-green in the operator runbook. (source: golden:deployment.state)\n- [m_stale] Stale Celery queue: The legacy queue uses Celery. (source: golden:legacy.queue.framework)",
+      "truth_state": "contested"
+    }
+  },
+  "captured_at": "2026-08-15T00:00:00+00:00",
+  "context_response": {
+    "branch": null,
+    "budget": 50000,
+    "budget_exceeded": false,
+    "characters_used": 1020,
+    "debug": {
+      "candidates": [
+        {
+          "claim_ids": [
+            "c_resolved_01"
+          ],
+          "cost": 161,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "required coverage: decision",
+          "memory_id": "m_resolved",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 4,
+            "fused_score": 0.02864087,
+            "graph_rank": 3,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "resolved",
+          "utility": 0.01526935
+        },
+        {
+          "claim_ids": [
+            "c_contested_right_01"
+          ],
+          "cost": 169,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "highest utility per context cost",
+          "memory_id": "m_contested_right",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 3,
+            "fused_score": 0.02931564,
+            "graph_rank": 1,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "contested",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "contested",
+          "utility": 0.01562908
+        },
+        {
+          "claim_ids": [
+            "c_contested_left_01"
+          ],
+          "cost": 172,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "contested group completeness: m_contested_right",
+          "memory_id": "m_contested_left",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 1,
+            "fused_score": 0.02961925,
+            "graph_rank": 2,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "contested",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "contested",
+          "utility": 0.01579095
+        },
+        {
+          "claim_ids": [
+            "c_constraint_01"
+          ],
+          "cost": 198,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "required coverage: constraint",
+          "memory_id": "m_constraint",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 7,
+            "fused_score": 0.01492537,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "resolved",
+          "utility": 0.00795718
+        },
+        {
+          "claim_ids": [],
+          "cost": 198,
+          "exclusion_reason": null,
+          "freshness": "unknown",
+          "included": true,
+          "inclusion_reason": "highest utility per context cost",
+          "memory_id": "m_source_grounded",
+          "retrieval_trace": {
+            "evidence_count": 0,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 6,
+            "fused_score": 0.01515152,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "unknown",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "unknown",
+          "utility": 0.00769309
+        },
+        {
+          "claim_ids": [
+            "c_suspect_01"
+          ],
+          "cost": 171,
+          "exclusion_reason": null,
+          "freshness": "suspect",
+          "included": true,
+          "inclusion_reason": "highest utility per context cost",
+          "memory_id": "m_suspect",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "suspect freshness downweighted"
+            ],
+            "freshness": "suspect",
+            "freshness_factor": 0.35,
+            "fts_rank": 2,
+            "fused_score": 0.01612903,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "resolved",
+          "utility": 0.00128032
+        },
+        {
+          "claim_ids": [
+            "c_stale_01"
+          ],
+          "cost": 160,
+          "exclusion_reason": null,
+          "freshness": "stale",
+          "included": true,
+          "inclusion_reason": "highest utility per context cost",
+          "memory_id": "m_stale",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "stale",
+            "freshness_factor": 0.0,
+            "fts_rank": 5,
+            "fused_score": 0.01538462,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "stale",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "truth_state": "stale",
+          "utility": 0.0
+        }
+      ],
+      "config_hash": "34997d5d67ff5bf408da02eeb5e7922eb71b51e1f671e97e1ee25589d495c452",
+      "reranker": "disabled",
+      "routing_profile_sha256": null,
+      "scoring_profile_sha256": null
+    },
+    "manifest": [
+      {
+        "claim_ids": [
+          "c_resolved_01"
+        ],
+        "cost": 161,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "required coverage: decision",
+        "memory_id": "m_resolved",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts",
+            "graph"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 4,
+          "fused_score": 0.02864087,
+          "graph_rank": 3,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "resolved",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "resolved",
+        "utility": 0.01526935
+      },
+      {
+        "claim_ids": [
+          "c_contested_right_01"
+        ],
+        "cost": 169,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "highest utility per context cost",
+        "memory_id": "m_contested_right",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts",
+            "graph"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 3,
+          "fused_score": 0.02931564,
+          "graph_rank": 1,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "contested",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "contested",
+        "utility": 0.01562908
+      },
+      {
+        "claim_ids": [
+          "c_contested_left_01"
+        ],
+        "cost": 172,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "contested group completeness: m_contested_right",
+        "memory_id": "m_contested_left",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts",
+            "graph"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 1,
+          "fused_score": 0.02961925,
+          "graph_rank": 2,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "contested",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "contested",
+        "utility": 0.01579095
+      },
+      {
+        "claim_ids": [
+          "c_constraint_01"
+        ],
+        "cost": 198,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "required coverage: constraint",
+        "memory_id": "m_constraint",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 7,
+          "fused_score": 0.01492537,
+          "graph_rank": null,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "resolved",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "resolved",
+        "utility": 0.00795718
+      },
+      {
+        "claim_ids": [],
+        "cost": 198,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "highest utility per context cost",
+        "memory_id": "m_source_grounded",
+        "retrieval_trace": {
+          "evidence_count": 0,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 6,
+          "fused_score": 0.01515152,
+          "graph_rank": null,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "unknown",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "unknown",
+        "utility": 0.00769309
+      },
+      {
+        "claim_ids": [
+          "c_suspect_01"
+        ],
+        "cost": 171,
+        "exclusion_reason": null,
+        "freshness": "suspect",
+        "included": true,
+        "inclusion_reason": "highest utility per context cost",
+        "memory_id": "m_suspect",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts",
+            "suspect freshness downweighted"
+          ],
+          "freshness": "suspect",
+          "freshness_factor": 0.35,
+          "fts_rank": 2,
+          "fused_score": 0.01612903,
+          "graph_rank": null,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "resolved",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "resolved",
+        "utility": 0.00128032
+      },
+      {
+        "claim_ids": [
+          "c_stale_01"
+        ],
+        "cost": 160,
+        "exclusion_reason": null,
+        "freshness": "stale",
+        "included": true,
+        "inclusion_reason": "highest utility per context cost",
+        "memory_id": "m_stale",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts"
+          ],
+          "freshness": "stale",
+          "freshness_factor": 0.0,
+          "fts_rank": 5,
+          "fused_score": 0.01538462,
+          "graph_rank": null,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "stale",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "stale",
+        "utility": 0.0
+      }
+    ],
+    "query_plan": {
+      "as_known_at": null,
+      "as_of_valid_time": null,
+      "entities": [
+        "django",
+        "fastapi"
+      ],
+      "exact_terms": [],
+      "intent": "constraint_lookup",
+      "intent_reason_code": "constraint_keyword",
+      "requested_evidence_type": "claim",
+      "routing": {
+        "active_channels": [
+          "fts",
+          "vector",
+          "graph",
+          "temporal"
+        ],
+        "candidate_pool_max": 1000,
+        "candidate_pool_min": 80,
+        "channel_execution": [
+          {
+            "attempted": true,
+            "available": true,
+            "candidate_count": 7,
+            "channel": "fts",
+            "duration_ms": 0.0,
+            "eligible_candidate_count": 7,
+            "executed": true,
+            "reason_code": null,
+            "requested": true,
+            "shared_stage": "lexical_vector",
+            "status": "executed"
+          },
+          {
+            "attempted": false,
+            "available": false,
+            "candidate_count": 0,
+            "channel": "vector",
+            "duration_ms": 0.0,
+            "eligible_candidate_count": 0,
+            "executed": false,
+            "reason_code": "embedding_provider_not_configured",
+            "requested": true,
+            "shared_stage": "lexical_vector",
+            "status": "unavailable"
+          },
+          {
+            "attempted": false,
+            "available": true,
+            "candidate_count": 0,
+            "channel": "source_anchor",
+            "duration_ms": null,
+            "eligible_candidate_count": 0,
+            "executed": false,
+            "reason_code": null,
+            "requested": false,
+            "shared_stage": null,
+            "status": "not_requested"
+          },
+          {
+            "attempted": true,
+            "available": true,
+            "candidate_count": 3,
+            "channel": "graph",
+            "duration_ms": 0.0,
+            "eligible_candidate_count": 3,
+            "executed": true,
+            "reason_code": null,
+            "requested": true,
+            "shared_stage": null,
+            "status": "executed"
+          },
+          {
+            "attempted": false,
+            "available": true,
+            "candidate_count": 0,
+            "channel": "temporal",
+            "duration_ms": null,
+            "eligible_candidate_count": 0,
+            "executed": false,
+            "reason_code": "non_temporal_intent",
+            "requested": true,
+            "shared_stage": null,
+            "status": "not_applicable"
+          }
+        ],
+        "contributing_channels": [
+          "fts",
+          "graph"
+        ],
+        "decision_basis": "planner_intent",
+        "degraded_channels": [
+          "vector"
+        ],
+        "diversity_policy": "mmr",
+        "executed_channels": [
+          "fts",
+          "graph"
+        ],
+        "executed_recipe_id": "safe-hybrid-v1",
+        "executed_recipe_sha256": "23b111ff16fd7cb464c87fdde01ca587e180b4d8815e988a785527ba0ec8149b",
+        "execution_mode": "frozen_production_baseline",
+        "fallback_recipe_id": "safe-hybrid-v1",
+        "fallback_used": false,
+        "features": {
+          "clause_count": 1,
+          "entity_count": 2,
+          "exact_term_count": 0,
+          "has_exact_signal": false,
+          "has_relational_signal": false,
+          "has_temporal_signal": false,
+          "intent_reason_code": "constraint_keyword"
+        },
+        "fusion": "rrf",
+        "fusion_weights": {
+          "fts": 1.0,
+          "graph": 0.82,
+          "temporal": 0.9,
+          "vector": 1.0
+        },
+        "reason_codes": [
+          "semantic_intent"
+        ],
+        "reasons": [
+          "natural-language intent uses semantic hybrid retrieval"
+        ],
+        "recommended_recipe_id": "semantic-hybrid-v1",
+        "recommended_recipe_sha256": "0cc956bef7d2a2231c65f6a30fb26f8ae71f984cabc886b5603906ad1e5be6f4",
+        "requested_channels": [
+          "fts",
+          "vector",
+          "graph",
+          "temporal"
+        ],
+        "rerank_window": 40,
+        "reranker_mode": "disabled",
+        "reranker_policy": "cross_encoder_if_available",
+        "route": "semantic",
+        "router_version": "approved-recipe-router-v2",
+        "rrf_k": 60,
+        "score_contract": "legacy_raw_rrf_v1",
+        "source_anchor_weight_policy": null,
+        "stage_timings_ms": {
+          "candidate_retrieval": 0.0,
+          "diversity": 0.0,
+          "fusion": 0.0,
+          "governance_scoring": 0.0,
+          "rerank": 0.0
+        }
+      },
+      "scope_chain": [
+        "user",
+        "repository:golden-repo"
+      ]
+    },
+    "repository": "golden-repo",
+    "retrieval_mode": "rrf-fts5",
+    "retrieval_run_id": "run_v22_golden",
+    "sections": {
+      "ACTIVE CONSTRAINTS": [
+        {
+          "category": "constraint",
+          "confidence": 0.8,
+          "content": "Timeout must not exceed 30 seconds except offline migration jobs.",
+          "created_at": "2026-08-15T00:00:00+00:00",
+          "created_by": "manual",
+          "freshness": "unknown",
+          "id": "m_constraint",
+          "importance": 0.5,
+          "key": "runtime.timeout.constraint",
+          "memory_type": "project",
+          "metadata": {},
+          "provenance_ref": "golden:runtime.timeout.constraint",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 7,
+            "fused_score": 0.01492537,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "scope_key": "golden-repo",
+          "scope_type": "repository",
+          "score": 0.01155224,
+          "sensitivity": "normal",
+          "status": "active",
+          "subject": null,
+          "supersedes_id": null,
+          "title": "Timeout safety constraint",
+          "truth_state": "resolved",
+          "ttl_seconds": null,
+          "updated_at": "2026-08-15T00:00:00+00:00",
+          "valid_from": null,
+          "valid_to": null
+        }
+      ],
+      "CURRENT BRANCH / TASK STATE": [
+        {
+          "category": "state",
+          "confidence": 0.8,
+          "content": "The deployment state is blue-green in the operator runbook.",
+          "created_at": "2026-08-15T00:00:00+00:00",
+          "created_by": "manual",
+          "freshness": "unknown",
+          "id": "m_source_grounded",
+          "importance": 0.5,
+          "key": "deployment.state",
+          "memory_type": "project",
+          "metadata": {},
+          "provenance_ref": "golden:deployment.state",
+          "retrieval_trace": {
+            "evidence_count": 0,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 6,
+            "fused_score": 0.01515152,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "unknown",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "scope_key": "golden-repo",
+          "scope_type": "repository",
+          "score": 0.01172727,
+          "sensitivity": "normal",
+          "status": "active",
+          "subject": null,
+          "supersedes_id": null,
+          "title": "Source-grounded deployment state",
+          "truth_state": "unknown",
+          "ttl_seconds": null,
+          "updated_at": "2026-08-15T00:00:00+00:00",
+          "valid_from": null,
+          "valid_to": null
+        },
+        {
+          "category": "state",
+          "confidence": 0.8,
+          "content": "The legacy queue uses Celery.",
+          "created_at": "2026-08-15T00:00:00+00:00",
+          "created_by": "manual",
+          "freshness": "stale",
+          "id": "m_stale",
+          "importance": 0.5,
+          "key": "legacy.queue.framework",
+          "memory_type": "project",
+          "metadata": {},
+          "provenance_ref": "golden:legacy.queue.framework",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts"
+            ],
+            "freshness": "stale",
+            "freshness_factor": 0.0,
+            "fts_rank": 5,
+            "fused_score": 0.01538462,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "stale",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "scope_key": "golden-repo",
+          "scope_type": "repository",
+          "score": 0.0,
+          "sensitivity": "normal",
+          "status": "active",
+          "subject": null,
+          "supersedes_id": null,
+          "title": "Stale Celery queue",
+          "truth_state": "stale",
+          "ttl_seconds": null,
+          "updated_at": "2026-08-15T00:00:00+00:00",
+          "valid_from": null,
+          "valid_to": null
+        }
+      ],
+      "CURRENT DECISIONS": [
+        {
+          "category": "decision",
+          "confidence": 0.8,
+          "content": "The API framework is FastAPI.",
+          "created_at": "2026-08-15T00:00:00+00:00",
+          "created_by": "manual",
+          "freshness": "unknown",
+          "id": "m_resolved",
+          "importance": 0.5,
+          "key": "architecture.api.framework",
+          "memory_type": "project",
+          "metadata": {},
+          "provenance_ref": "golden:architecture.api.framework",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 4,
+            "fused_score": 0.02864087,
+            "graph_rank": 3,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "scope_key": "golden-repo",
+          "scope_type": "repository",
+          "score": 0.02216804,
+          "sensitivity": "normal",
+          "status": "active",
+          "subject": null,
+          "supersedes_id": null,
+          "title": "Resolved FastAPI decision",
+          "truth_state": "resolved",
+          "ttl_seconds": null,
+          "updated_at": "2026-08-15T00:00:00+00:00",
+          "valid_from": null,
+          "valid_to": null
+        },
+        {
+          "category": "decision",
+          "confidence": 0.8,
+          "content": "The worker framework is Django.",
+          "created_at": "2026-08-15T00:00:00+00:00",
+          "created_by": "agent",
+          "freshness": "unknown",
+          "id": "m_contested_right",
+          "importance": 0.5,
+          "key": "worker.framework.django",
+          "memory_type": "project",
+          "metadata": {},
+          "provenance_ref": "golden:worker.framework.django",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 3,
+            "fused_score": 0.02931564,
+            "graph_rank": 1,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "contested",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "scope_key": "golden-repo",
+          "scope_type": "repository",
+          "score": 0.0226903,
+          "sensitivity": "normal",
+          "status": "active",
+          "subject": null,
+          "supersedes_id": null,
+          "title": "Contested worker Django",
+          "truth_state": "contested",
+          "ttl_seconds": null,
+          "updated_at": "2026-08-15T00:00:00+00:00",
+          "valid_from": null,
+          "valid_to": null
+        },
+        {
+          "category": "decision",
+          "confidence": 0.8,
+          "content": "The worker framework is FastAPI.",
+          "created_at": "2026-08-15T00:00:00+00:00",
+          "created_by": "manual",
+          "freshness": "unknown",
+          "id": "m_contested_left",
+          "importance": 0.5,
+          "key": "worker.framework.fastapi",
+          "memory_type": "project",
+          "metadata": {},
+          "provenance_ref": "golden:worker.framework.fastapi",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "graph"
+            ],
+            "freshness": "unknown",
+            "freshness_factor": 0.86,
+            "fts_rank": 1,
+            "fused_score": 0.02961925,
+            "graph_rank": 2,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "contested",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "scope_key": "golden-repo",
+          "scope_type": "repository",
+          "score": 0.0229253,
+          "sensitivity": "normal",
+          "status": "active",
+          "subject": null,
+          "supersedes_id": null,
+          "title": "Contested worker FastAPI",
+          "truth_state": "contested",
+          "ttl_seconds": null,
+          "updated_at": "2026-08-15T00:00:00+00:00",
+          "valid_from": null,
+          "valid_to": null
+        }
+      ],
+      "KNOWN FAILURES / DO NOT REPEAT": [
+        {
+          "category": "failure",
+          "confidence": 0.8,
+          "content": "The worker retry budget is 3.",
+          "created_at": "2026-08-15T00:00:00+00:00",
+          "created_by": "manual",
+          "freshness": "suspect",
+          "id": "m_suspect",
+          "importance": 0.5,
+          "key": "worker.retry.budget",
+          "memory_type": "project",
+          "metadata": {},
+          "provenance_ref": "golden:worker.retry.budget",
+          "retrieval_trace": {
+            "evidence_count": 1,
+            "feedback_factor": 1.0,
+            "final_reason": [
+              "fts",
+              "suspect freshness downweighted"
+            ],
+            "freshness": "suspect",
+            "freshness_factor": 0.35,
+            "fts_rank": 2,
+            "fused_score": 0.01612903,
+            "graph_rank": null,
+            "helpful_feedback_count": 0,
+            "memory_confidence": 0.8,
+            "memory_importance": 0.5,
+            "reranker_score": null,
+            "scope_factor": 0.9,
+            "scope_match": "repository",
+            "temporal_rank": null,
+            "truth_state": "resolved",
+            "unhelpful_feedback_count": 0,
+            "vector_rank": null
+          },
+          "scope_key": "golden-repo",
+          "scope_type": "repository",
+          "score": 0.00508065,
+          "sensitivity": "normal",
+          "status": "active",
+          "subject": null,
+          "supersedes_id": null,
+          "title": "Suspect retry budget",
+          "truth_state": "resolved",
+          "ttl_seconds": null,
+          "updated_at": "2026-08-15T00:00:00+00:00",
+          "valid_from": null,
+          "valid_to": null
+        }
+      ]
+    },
+    "task": "FastAPI Django timeout retry Celery deployment worker architecture constraint state",
+    "text": "Project Memory Context\n\nCURRENT DECISIONS\n- [m_resolved] Resolved FastAPI decision: The API framework is FastAPI. (source: golden:architecture.api.framework)\n- [m_contested_right] CONTESTED: Contested worker Django: The worker framework is Django. (source: golden:worker.framework.django)\n- [m_contested_left] CONTESTED: Contested worker FastAPI: The worker framework is FastAPI. (source: golden:worker.framework.fastapi)\n\nACTIVE CONSTRAINTS\n- [m_constraint] Timeout safety constraint: Timeout must not exceed 30 seconds except offline migration jobs. (source: golden:runtime.timeout.constraint)\n\nKNOWN FAILURES / DO NOT REPEAT\n- [m_suspect] SUSPECT: Suspect retry budget: The worker retry budget is 3. (source: golden:worker.retry.budget)\n\nCURRENT BRANCH / TASK STATE\n- [m_source_grounded] Source-grounded deployment state: The deployment state is blue-green in the operator runbook. (source: golden:deployment.state)\n- [m_stale] Stale Celery queue: The legacy queue uses Celery. (source: golden:legacy.queue.framework)",
+    "truth_state": "contested"
+  },
+  "coverage_cases": [
+    "resolved",
+    "contested",
+    "suspect",
+    "stale",
+    "constraint",
+    "source_grounded"
+  ],
+  "normalization": "UUIDs, timestamps, and timing fields are normalized; payload structure and semantic values are preserved.",
+  "payload_size_breakdown": {
+    "context_response_total": {
+      "characters": 21248,
+      "estimated_tokens": 5312,
+      "utf8_bytes": 21248
+    },
+    "counter_kind": "estimated",
+    "counter_version": "1.0.0",
+    "debug": {
+      "characters": 4803,
+      "estimated_tokens": 1201,
+      "utf8_bytes": 4803
+    },
+    "manifest": {
+      "characters": 4625,
+      "estimated_tokens": 1157,
+      "utf8_bytes": 4625
+    },
+    "mcp_tool_result_total": {
+      "characters": 21269,
+      "estimated_tokens": 5318,
+      "utf8_bytes": 21269
+    },
+    "sections": {
+      "characters": 7551,
+      "estimated_tokens": 1888,
+      "utf8_bytes": 7551
+    },
+    "text": {
+      "characters": 1020,
+      "estimated_tokens": 255,
+      "utf8_bytes": 1020
+    },
+    "tokenizer_id": "unicode-heuristic-v1"
+  },
+  "real_workload_report": {
+    "effect_claim": "none",
+    "path": "docs/verification/v2.2/markupsafe-public-smoke/report.json",
+    "role": "v2.2 public one-task protocol smoke; not an MSC effect claim",
+    "sha256": "09fcde26aabe653e3e7100d86ea261ee81ea5edb002449335316a1a653ad12d9"
+  },
+  "request": {
+    "as_known_at": null,
+    "as_of_valid_time": null,
+    "branch": null,
+    "budget": 50000,
+    "include_historical": true,
+    "repository": "golden-repo",
+    "task": "FastAPI Django timeout retry Celery deployment worker architecture constraint state",
+    "task_scope": null,
+    "workspace": null
+  },
+  "retrieval_run": {
+    "candidate_features": [
+      {
+        "evidence_count": 1,
+        "feedback_factor": 1.0,
+        "final_reason": [
+          "fts",
+          "graph"
+        ],
+        "freshness": "unknown",
+        "freshness_factor": 0.86,
+        "fts_rank": 1,
+        "fused_score": 0.02961925,
+        "graph_rank": 2,
+        "helpful_feedback_count": 0,
+        "memory_confidence": 0.8,
+        "memory_id": "m_contested_left",
+        "memory_importance": 0.5,
+        "reranker_score": null,
+        "scope_factor": 0.9,
+        "scope_match": "repository",
+        "temporal_rank": null,
+        "truth_state": "contested",
+        "unhelpful_feedback_count": 0,
+        "vector_rank": null
+      },
+      {
+        "evidence_count": 1,
+        "feedback_factor": 1.0,
+        "final_reason": [
+          "fts",
+          "graph"
+        ],
+        "freshness": "unknown",
+        "freshness_factor": 0.86,
+        "fts_rank": 3,
+        "fused_score": 0.02931564,
+        "graph_rank": 1,
+        "helpful_feedback_count": 0,
+        "memory_confidence": 0.8,
+        "memory_id": "m_contested_right",
+        "memory_importance": 0.5,
+        "reranker_score": null,
+        "scope_factor": 0.9,
+        "scope_match": "repository",
+        "temporal_rank": null,
+        "truth_state": "contested",
+        "unhelpful_feedback_count": 0,
+        "vector_rank": null
+      },
+      {
+        "evidence_count": 1,
+        "feedback_factor": 1.0,
+        "final_reason": [
+          "fts",
+          "graph"
+        ],
+        "freshness": "unknown",
+        "freshness_factor": 0.86,
+        "fts_rank": 4,
+        "fused_score": 0.02864087,
+        "graph_rank": 3,
+        "helpful_feedback_count": 0,
+        "memory_confidence": 0.8,
+        "memory_id": "m_resolved",
+        "memory_importance": 0.5,
+        "reranker_score": null,
+        "scope_factor": 0.9,
+        "scope_match": "repository",
+        "temporal_rank": null,
+        "truth_state": "resolved",
+        "unhelpful_feedback_count": 0,
+        "vector_rank": null
+      },
+      {
+        "evidence_count": 0,
+        "feedback_factor": 1.0,
+        "final_reason": [
+          "fts"
+        ],
+        "freshness": "unknown",
+        "freshness_factor": 0.86,
+        "fts_rank": 6,
+        "fused_score": 0.01515152,
+        "graph_rank": null,
+        "helpful_feedback_count": 0,
+        "memory_confidence": 0.8,
+        "memory_id": "m_source_grounded",
+        "memory_importance": 0.5,
+        "reranker_score": null,
+        "scope_factor": 0.9,
+        "scope_match": "repository",
+        "temporal_rank": null,
+        "truth_state": "unknown",
+        "unhelpful_feedback_count": 0,
+        "vector_rank": null
+      },
+      {
+        "evidence_count": 1,
+        "feedback_factor": 1.0,
+        "final_reason": [
+          "fts"
+        ],
+        "freshness": "unknown",
+        "freshness_factor": 0.86,
+        "fts_rank": 7,
+        "fused_score": 0.01492537,
+        "graph_rank": null,
+        "helpful_feedback_count": 0,
+        "memory_confidence": 0.8,
+        "memory_id": "m_constraint",
+        "memory_importance": 0.5,
+        "reranker_score": null,
+        "scope_factor": 0.9,
+        "scope_match": "repository",
+        "temporal_rank": null,
+        "truth_state": "resolved",
+        "unhelpful_feedback_count": 0,
+        "vector_rank": null
+      },
+      {
+        "evidence_count": 1,
+        "feedback_factor": 1.0,
+        "final_reason": [
+          "fts",
+          "suspect freshness downweighted"
+        ],
+        "freshness": "suspect",
+        "freshness_factor": 0.35,
+        "fts_rank": 2,
+        "fused_score": 0.01612903,
+        "graph_rank": null,
+        "helpful_feedback_count": 0,
+        "memory_confidence": 0.8,
+        "memory_id": "m_suspect",
+        "memory_importance": 0.5,
+        "reranker_score": null,
+        "scope_factor": 0.9,
+        "scope_match": "repository",
+        "temporal_rank": null,
+        "truth_state": "resolved",
+        "unhelpful_feedback_count": 0,
+        "vector_rank": null
+      },
+      {
+        "evidence_count": 1,
+        "feedback_factor": 1.0,
+        "final_reason": [
+          "fts"
+        ],
+        "freshness": "stale",
+        "freshness_factor": 0.0,
+        "fts_rank": 5,
+        "fused_score": 0.01538462,
+        "graph_rank": null,
+        "helpful_feedback_count": 0,
+        "memory_confidence": 0.8,
+        "memory_id": "m_stale",
+        "memory_importance": 0.5,
+        "reranker_score": null,
+        "scope_factor": 0.9,
+        "scope_match": "repository",
+        "temporal_rank": null,
+        "truth_state": "stale",
+        "unhelpful_feedback_count": 0,
+        "vector_rank": null
+      }
+    ],
+    "config_hash": "34997d5d67ff5bf408da02eeb5e7922eb71b51e1f671e97e1ee25589d495c452",
+    "context_manifest": [
+      {
+        "claim_ids": [
+          "c_resolved_01"
+        ],
+        "cost": 161,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "required coverage: decision",
+        "memory_id": "m_resolved",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts",
+            "graph"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 4,
+          "fused_score": 0.02864087,
+          "graph_rank": 3,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "resolved",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "resolved",
+        "utility": 0.01526935
+      },
+      {
+        "claim_ids": [
+          "c_contested_right_01"
+        ],
+        "cost": 169,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "highest utility per context cost",
+        "memory_id": "m_contested_right",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts",
+            "graph"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 3,
+          "fused_score": 0.02931564,
+          "graph_rank": 1,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "contested",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "contested",
+        "utility": 0.01562908
+      },
+      {
+        "claim_ids": [
+          "c_contested_left_01"
+        ],
+        "cost": 172,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "contested group completeness: m_contested_right",
+        "memory_id": "m_contested_left",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts",
+            "graph"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 1,
+          "fused_score": 0.02961925,
+          "graph_rank": 2,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "contested",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "contested",
+        "utility": 0.01579095
+      },
+      {
+        "claim_ids": [
+          "c_constraint_01"
+        ],
+        "cost": 198,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "required coverage: constraint",
+        "memory_id": "m_constraint",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 7,
+          "fused_score": 0.01492537,
+          "graph_rank": null,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "resolved",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "resolved",
+        "utility": 0.00795718
+      },
+      {
+        "claim_ids": [],
+        "cost": 198,
+        "exclusion_reason": null,
+        "freshness": "unknown",
+        "included": true,
+        "inclusion_reason": "highest utility per context cost",
+        "memory_id": "m_source_grounded",
+        "retrieval_trace": {
+          "evidence_count": 0,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts"
+          ],
+          "freshness": "unknown",
+          "freshness_factor": 0.86,
+          "fts_rank": 6,
+          "fused_score": 0.01515152,
+          "graph_rank": null,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "unknown",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "unknown",
+        "utility": 0.00769309
+      },
+      {
+        "claim_ids": [
+          "c_suspect_01"
+        ],
+        "cost": 171,
+        "exclusion_reason": null,
+        "freshness": "suspect",
+        "included": true,
+        "inclusion_reason": "highest utility per context cost",
+        "memory_id": "m_suspect",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts",
+            "suspect freshness downweighted"
+          ],
+          "freshness": "suspect",
+          "freshness_factor": 0.35,
+          "fts_rank": 2,
+          "fused_score": 0.01612903,
+          "graph_rank": null,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "resolved",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "resolved",
+        "utility": 0.00128032
+      },
+      {
+        "claim_ids": [
+          "c_stale_01"
+        ],
+        "cost": 160,
+        "exclusion_reason": null,
+        "freshness": "stale",
+        "included": true,
+        "inclusion_reason": "highest utility per context cost",
+        "memory_id": "m_stale",
+        "retrieval_trace": {
+          "evidence_count": 1,
+          "feedback_factor": 1.0,
+          "final_reason": [
+            "fts"
+          ],
+          "freshness": "stale",
+          "freshness_factor": 0.0,
+          "fts_rank": 5,
+          "fused_score": 0.01538462,
+          "graph_rank": null,
+          "helpful_feedback_count": 0,
+          "memory_confidence": 0.8,
+          "memory_importance": 0.5,
+          "reranker_score": null,
+          "scope_factor": 0.9,
+          "scope_match": "repository",
+          "temporal_rank": null,
+          "truth_state": "stale",
+          "unhelpful_feedback_count": 0,
+          "vector_rank": null
+        },
+        "truth_state": "stale",
+        "utility": 0.0
+      }
+    ],
+    "created_at": "2026-08-15T00:00:00+00:00",
+    "id": "run_v22_golden",
+    "query": "FastAPI Django timeout retry Celery deployment worker architecture constraint state",
+    "scope": {
+      "allowed": [
+        [
+          "repository",
+          "golden-repo"
+        ],
+        [
+          "user",
+          null
+        ]
+      ],
+      "retrieval_plan": {
+        "as_known_at": null,
+        "as_of_valid_time": null,
+        "entities": [
+          "django",
+          "fastapi"
+        ],
+        "exact_terms": [],
+        "intent": "constraint_lookup",
+        "intent_reason_code": "constraint_keyword",
+        "requested_evidence_type": "claim",
+        "routing": {
+          "active_channels": [
+            "fts",
+            "vector",
+            "graph",
+            "temporal"
+          ],
+          "candidate_pool_max": 1000,
+          "candidate_pool_min": 80,
+          "channel_execution": [
+            {
+              "attempted": true,
+              "available": true,
+              "candidate_count": 7,
+              "channel": "fts",
+              "duration_ms": 0.0,
+              "eligible_candidate_count": 7,
+              "executed": true,
+              "reason_code": null,
+              "requested": true,
+              "shared_stage": "lexical_vector",
+              "status": "executed"
+            },
+            {
+              "attempted": false,
+              "available": false,
+              "candidate_count": 0,
+              "channel": "vector",
+              "duration_ms": 0.0,
+              "eligible_candidate_count": 0,
+              "executed": false,
+              "reason_code": "embedding_provider_not_configured",
+              "requested": true,
+              "shared_stage": "lexical_vector",
+              "status": "unavailable"
+            },
+            {
+              "attempted": false,
+              "available": true,
+              "candidate_count": 0,
+              "channel": "source_anchor",
+              "duration_ms": null,
+              "eligible_candidate_count": 0,
+              "executed": false,
+              "reason_code": null,
+              "requested": false,
+              "shared_stage": null,
+              "status": "not_requested"
+            },
+            {
+              "attempted": true,
+              "available": true,
+              "candidate_count": 3,
+              "channel": "graph",
+              "duration_ms": 0.0,
+              "eligible_candidate_count": 3,
+              "executed": true,
+              "reason_code": null,
+              "requested": true,
+              "shared_stage": null,
+              "status": "executed"
+            },
+            {
+              "attempted": false,
+              "available": true,
+              "candidate_count": 0,
+              "channel": "temporal",
+              "duration_ms": null,
+              "eligible_candidate_count": 0,
+              "executed": false,
+              "reason_code": "non_temporal_intent",
+              "requested": true,
+              "shared_stage": null,
+              "status": "not_applicable"
+            }
+          ],
+          "contributing_channels": [
+            "fts",
+            "graph"
+          ],
+          "decision_basis": "planner_intent",
+          "degraded_channels": [
+            "vector"
+          ],
+          "diversity_policy": "mmr",
+          "executed_channels": [
+            "fts",
+            "graph"
+          ],
+          "executed_recipe_id": "safe-hybrid-v1",
+          "executed_recipe_sha256": "23b111ff16fd7cb464c87fdde01ca587e180b4d8815e988a785527ba0ec8149b",
+          "execution_mode": "frozen_production_baseline",
+          "fallback_recipe_id": "safe-hybrid-v1",
+          "fallback_used": false,
+          "features": {
+            "clause_count": 1,
+            "entity_count": 2,
+            "exact_term_count": 0,
+            "has_exact_signal": false,
+            "has_relational_signal": false,
+            "has_temporal_signal": false,
+            "intent_reason_code": "constraint_keyword"
+          },
+          "fusion": "rrf",
+          "fusion_weights": {
+            "fts": 1.0,
+            "graph": 0.82,
+            "temporal": 0.9,
+            "vector": 1.0
+          },
+          "reason_codes": [
+            "semantic_intent"
+          ],
+          "reasons": [
+            "natural-language intent uses semantic hybrid retrieval"
+          ],
+          "recommended_recipe_id": "semantic-hybrid-v1",
+          "recommended_recipe_sha256": "0cc956bef7d2a2231c65f6a30fb26f8ae71f984cabc886b5603906ad1e5be6f4",
+          "requested_channels": [
+            "fts",
+            "vector",
+            "graph",
+            "temporal"
+          ],
+          "rerank_window": 40,
+          "reranker_mode": "disabled",
+          "reranker_policy": "cross_encoder_if_available",
+          "route": "semantic",
+          "router_version": "approved-recipe-router-v2",
+          "rrf_k": 60,
+          "score_contract": "legacy_raw_rrf_v1",
+          "source_anchor_weight_policy": null,
+          "stage_timings_ms": {
+            "candidate_retrieval": 0.0,
+            "diversity": 0.0,
+            "fusion": 0.0,
+            "governance_scoring": 0.0,
+            "rerank": 0.0
+          }
+        },
+        "scope_chain": [
+          "user",
+          "repository:golden-repo"
+        ]
+      }
+    },
+    "selected_memory_ids": [
+      "m_constraint",
+      "m_resolved",
+      "m_contested_right",
+      "m_contested_left",
+      "m_source_grounded",
+      "m_suspect",
+      "m_stale"
+    ],
+    "task": "FastAPI Django timeout retry Celery deployment worker architecture constraint state"
+  },
+  "schema_version": "1.0"
+}

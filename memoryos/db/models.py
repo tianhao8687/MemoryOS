@@ -485,8 +485,36 @@ class RetrievalRunRow(Base):
     context_manifest: Mapped[list[dict[str, Any]]] = mapped_column(
         JSON, nullable=False, default=list
     )
+    context_usage_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    context_policy_manifest: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
+    context_diagnostics_json: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
+    context_shadow_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     config_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class ContextSnapshotRow(Base):
+    __tablename__ = "context_snapshots"
+    __table_args__ = (
+        Index("ix_context_snapshots_scope_expiry", "scope_fingerprint", "expires_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    base_snapshot_id: Mapped[str | None] = mapped_column(String(36))
+    request_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    scope_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    policy_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    tokenizer_id: Mapped[str] = mapped_column(String(300), nullable=False)
+    counter_kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    items_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    full_text_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    full_estimated_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class MemoryFeedbackRow(Base):
