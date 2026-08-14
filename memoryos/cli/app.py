@@ -38,6 +38,7 @@ from memoryos.domain.schemas import (
 )
 from memoryos.engine import MemoryService
 from memoryos.mcp_server.server import run_mcp
+from memoryos.mcp_server.tool_registry import ToolProfile
 
 app = typer.Typer(no_args_is_help=True, help="Local-first memory for coding agents")
 console = Console()
@@ -108,9 +109,12 @@ def serve(
 
 
 @app.command()
-def mcp(context: typer.Context) -> None:
+def mcp(
+    context: typer.Context,
+    tool_profile: Annotated[ToolProfile | None, typer.Option("--tool-profile")] = None,
+) -> None:
     """Run the MCP server over standard input/output."""
-    run_mcp(_runtime(context).settings)
+    run_mcp(_runtime(context).settings, tool_profile)
 
 
 @app.command()

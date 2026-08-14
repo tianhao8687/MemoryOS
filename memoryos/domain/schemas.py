@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -177,6 +177,41 @@ class QueryIntent(StrEnum):
     BROAD_SEARCH = "broad_search"
 
 
+class DetailLevel(StrEnum):
+    INDEX = "index"
+    FACT = "fact"
+    EVIDENCE = "evidence"
+    HISTORY = "history"
+
+
+class BudgetProfile(StrEnum):
+    AUTO = "auto"
+    TINY = "tiny"
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE = "large"
+
+
+class TokenCounterKind(StrEnum):
+    EXACT = "exact"
+    ESTIMATED = "estimated"
+
+
+class MemoryOperationTokenAttribution(StrEnum):
+    EXACT_ZERO = "exact_zero"
+    EXACT = "exact"
+    ESTIMATED = "estimated"
+    UNAVAILABLE = "unavailable"
+
+
+class ExplainSection(StrEnum):
+    FACT = "fact"
+    EVIDENCE = "evidence"
+    FRESHNESS = "freshness"
+    RELATIONS = "relations"
+    HISTORY = "history"
+
+
 class EvidenceSpan(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -318,6 +353,13 @@ class ContextRequest(BaseModel):
     workspace: str | None = None
     task_scope: str | None = None
     budget: int = Field(default=6000, ge=500, le=50000)
+    budget_tokens: int | None = Field(default=None, ge=1, le=50000)
+    budget_profile: BudgetProfile = BudgetProfile.AUTO
+    tokenizer_id: str | None = Field(default=None, min_length=1, max_length=300)
+    hard_token_budget: bool = False
+    detail_level: DetailLevel = DetailLevel.FACT
+    previous_context_id: str | None = Field(default=None, min_length=1, max_length=64)
+    response_mode: Literal["auto", "full", "delta"] = "auto"
     include_historical: bool = False
     as_of_valid_time: datetime | None = None
     as_known_at: datetime | None = None
@@ -328,6 +370,94 @@ class ContextRequest(BaseModel):
         if not value.strip():
             raise ValueError("repository is required")
         return value.strip()
+
+    @model_validator(mode="after")
+    def validate_token_budget_choice(self) -> ContextRequest:
+        if self.budget_tokens is not None and self.budget_profile is not BudgetProfile.AUTO:
+            raise ValueError("budget_tokens and a non-auto budget_profile are mutually exclusive")
+        if self.detail_level in {DetailLevel.EVIDENCE, DetailLevel.HISTORY}:
+            raise ValueError(
+                "memory_context supports index/fact detail; use memory_explain for "
+                "evidence/history expansion"
+            )
+        return self
+
+
+class ContextUsage(BaseModel):
+    """Server-side context attribution; provider Usage remains authoritative end to end."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    counter_kind: TokenCounterKind
+    tokenizer_id: str
+    counter_version: str
+    full_context_tokens: int = Field(ge=0)
+    context_text_tokens: int = Field(ge=0)
+    payload_overhead_tokens: int = Field(ge=0)
+    delivered_payload_tokens: int = Field(ge=0)
+    delta_tokens: int = Field(default=0, ge=0)
+    evidence_expansion_tokens: int = Field(default=0, ge=0)
+    history_expansion_tokens: int = Field(default=0, ge=0)
+    legacy_equivalent_tokens: int = Field(default=0, ge=0)
+    selection_latency_ms: float = Field(default=0.0, ge=0)
+    render_latency_ms: float = Field(default=0.0, ge=0)
+    context_compilation_llm_input_tokens: int = Field(default=0, ge=0)
+    context_compilation_llm_output_tokens: int = Field(default=0, ge=0)
+    other_memory_operation_llm_input_tokens: int | None = Field(default=0, ge=0)
+    other_memory_operation_llm_output_tokens: int | None = Field(default=0, ge=0)
+    other_memory_operation_token_attribution: MemoryOperationTokenAttribution = Field(
+        default_factory=lambda: MemoryOperationTokenAttribution.EXACT_ZERO
+    )
+
+    @model_validator(mode="after")
+    def validate_other_memory_operation_attribution(self) -> ContextUsage:
+        values = (
+            self.other_memory_operation_llm_input_tokens,
+            self.other_memory_operation_llm_output_tokens,
+        )
+        if (
+            self.other_memory_operation_token_attribution
+            is MemoryOperationTokenAttribution.EXACT_ZERO
+            and values != (0, 0)
+        ):
+            raise ValueError("exact_zero other-memory attribution requires zero token values")
+        if self.other_memory_operation_token_attribution in {
+            MemoryOperationTokenAttribution.EXACT,
+            MemoryOperationTokenAttribution.ESTIMATED,
+        } and any(value is None for value in values):
+            raise ValueError("attributed other-memory operations require complete token values")
+        if (
+            self.other_memory_operation_token_attribution
+            is MemoryOperationTokenAttribution.UNAVAILABLE
+            and any(value is not None for value in values)
+        ):
+            raise ValueError("unavailable other-memory attribution cannot carry token values")
+        return self
+
+
+class MSCContextResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal["2.3"] = "2.3"
+    mode: Literal["full", "delta"]
+    context_id: str
+    requires_base_context_id: str | None = None
+    retrieval_run_id: str
+    truth_state: str
+    text: str
+    delta: dict[str, Any] | None = None
+    usage: ContextUsage
+    fallback_reason: str | None = None
+    error: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def validate_mode_shape(self) -> MSCContextResponse:
+        if self.mode == "full":
+            if self.requires_base_context_id is not None or self.delta is not None:
+                raise ValueError("full context cannot require a base or contain a delta summary")
+        elif self.requires_base_context_id is None or self.delta is None:
+            raise ValueError("delta context requires a base context and delta summary")
+        return self
 
 
 class MemoryView(BaseModel):

@@ -6,7 +6,7 @@ import re
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import Text, cast, func, or_, select
 from sqlalchemy.orm import Session
 
 from memoryos import __version__
@@ -14,6 +14,9 @@ from memoryos.claims.truth import TruthMaintenanceService
 from memoryos.config import MemoryOSSettings
 from memoryos.consolidation import ConsolidationService
 from memoryos.context import TaskAwareContextCompiler
+from memoryos.context.atoms import AtomBuilder, ContextAtom, exact_deduplicate
+from memoryos.context.renderers import PAYLOAD_ACCOUNTING_MAX_ROUNDS
+from memoryos.context.token_meter import TokenCounter
 from memoryos.db.models import (
     AuditEventRow,
     ClaimEvidenceRow,
@@ -23,6 +26,7 @@ from memoryos.db.models import (
     ConsolidationCandidateRow,
     MemoryHealthRow,
     MemoryRow,
+    MemorySourceRow,
     PossibleConflictRow,
     RelationRow,
     RetrievalRunRow,
@@ -36,6 +40,8 @@ from memoryos.domain.schemas import (
     ContextRequest,
     CreatedBy,
     CurrentTruthRequest,
+    DetailLevel,
+    ExplainSection,
     FeedbackCreate,
     MemoryCreate,
     MemoryStatus,
@@ -51,6 +57,8 @@ from memoryos.domain.schemas import (
 )
 from memoryos.errors import (
     ConflictDetectedError,
+    ContextChangedError,
+    InsufficientBudgetError,
     InvalidTransitionError,
     NotFoundError,
     ProviderError,
@@ -94,6 +102,7 @@ class MemoryService:
         retrieval_scoring_profile: ShadowRetrievalProfile | None = None,
         retrieval_rrf_channel_profile: RRFChannelShadowProfile | None = None,
         retrieval_routing_profile: RetrievalRoutingShadowProfile | None = None,
+        token_counter: TokenCounter | None = None,
     ) -> None:
         self.database = database
         self.settings = settings
@@ -160,7 +169,11 @@ class MemoryService:
             rrf_channel_profile=retrieval_rrf_channel_profile,
             routing_profile=retrieval_routing_profile,
         )
-        self.context_builder = TaskAwareContextCompiler(self.retrieval_v2)
+        self.context_builder = TaskAwareContextCompiler(
+            self.retrieval_v2,
+            settings,
+            token_counter,
+        )
         self.truth = TruthMaintenanceService(relationship_judge)
         self.anchors = SourceAnchorService(database)
         self.consolidation = ConsolidationService(database, consolidation_judge)
@@ -674,8 +687,20 @@ class MemoryService:
     def feedback(self, payload: FeedbackCreate) -> dict[str, Any]:
         return self.feedback_service.submit(payload)
 
-    def debug_context(self, request: ContextRequest) -> dict[str, Any]:
-        return self.context(request)
+    def debug_context(
+        self,
+        request: ContextRequest | None = None,
+        *,
+        retrieval_run_id: str | None = None,
+    ) -> dict[str, Any]:
+        if retrieval_run_id is not None:
+            return self.retrieval_run(retrieval_run_id)
+        if request is None:
+            raise ValueError("request or retrieval_run_id is required")
+        response = self.context(request)
+        if self.settings.context_compiler_mode == "legacy":
+            return response
+        return self.retrieval_run(str(response["retrieval_run_id"]))
 
     def claim_graph(self, request: CurrentTruthRequest) -> dict[str, Any]:
         with self.database.session() as session:
@@ -788,6 +813,10 @@ class MemoryService:
                 "selected_memory_ids": row.selected_memory_ids,
                 "candidate_features": row.candidate_features,
                 "context_manifest": row.context_manifest,
+                "context_usage": row.context_usage_json,
+                "context_policy_manifest": row.context_policy_manifest,
+                "context_diagnostics": row.context_diagnostics_json,
+                "context_shadow": row.context_shadow_json,
                 "config_hash": row.config_hash,
                 "created_at": row.created_at.isoformat(),
             }
@@ -913,7 +942,281 @@ class MemoryService:
                 rows = [row for row in rows if _normalized_key(row) == normalized]
             return [self._serialize_memory(row) for row in rows]
 
-    def explain(self, memory_id: str) -> dict[str, Any]:
+    def explain(
+        self,
+        memory_id: str,
+        *,
+        expected_atom_sha256: str | None = None,
+        sections: list[ExplainSection | str] | None = None,
+        budget_tokens: int | None = None,
+    ) -> dict[str, Any]:
+        legacy = self._legacy_explain(memory_id)
+        if expected_atom_sha256 is None and sections is None and budget_tokens is None:
+            return legacy
+
+        requested = (
+            sections
+            if sections is not None
+            else [
+                ExplainSection.FACT,
+                ExplainSection.EVIDENCE,
+                ExplainSection.FRESHNESS,
+            ]
+        )
+        if not requested:
+            raise ValueError("at least one explain section is required")
+        normalized_sections = tuple(ExplainSection(str(value)) for value in requested)
+        if len(set(normalized_sections)) != len(normalized_sections):
+            raise ValueError("explain sections must be unique")
+        counter = self.context_builder.token_counter
+        with self.database.session() as session:
+            memory = self._get(session, memory_id)
+            claims = list(session.scalars(select(ClaimRow).where(ClaimRow.memory_id == memory_id)))
+            evidence_count = int(
+                session.scalar(
+                    select(func.count())
+                    .select_from(ClaimEvidenceRow)
+                    .join(ClaimRow, ClaimRow.id == ClaimEvidenceRow.claim_id)
+                    .where(ClaimRow.memory_id == memory_id)
+                )
+                or 0
+            )
+            candidate = {
+                "memory": self._serialize_memory(memory),
+                "score": 1.0,
+                "truth_state": self.retrieval_v2._truth_state(claims),
+                "claim_ids": [claim.id for claim in claims],
+                "trace": {
+                    "freshness": self.retrieval_v2._freshness(claims),
+                    "evidence_count": evidence_count,
+                },
+            }
+        metadata = self.context_builder._metadata([candidate])[memory_id]
+        atoms = AtomBuilder(counter).build(
+            candidate,
+            metadata,
+            requested_detail=DetailLevel.FACT,
+        )
+        evidence_memory_ids: tuple[str, ...] = (memory_id,)
+        if expected_atom_sha256 is not None:
+            atoms, evidence_memory_ids = self._resolve_expected_context_atom(
+                memory_id,
+                expected_atom_sha256,
+                atoms,
+            )
+        atom_hashes = [atom.atom_sha256 for atom in atoms]
+        evidence_claim_ids = tuple(
+            sorted({claim_id for atom in atoms for claim_id in atom.claim_ids})
+        )
+
+        evidence = (
+            self._explain_evidence(
+                evidence_memory_ids,
+                legacy,
+                claim_ids=evidence_claim_ids,
+            )
+            if ExplainSection.EVIDENCE in normalized_sections
+            else []
+        )
+        section_payload: dict[str, Any] = {}
+        if ExplainSection.FACT in normalized_sections:
+            section_payload[ExplainSection.FACT.value] = [
+                {
+                    "memory_id": atom.memory_id,
+                    "memory_ids": list(atom.memory_ids),
+                    "atom_sha256": atom.atom_sha256,
+                    "fact": atom.fact_text,
+                    "truth_state": atom.truth_state.value,
+                    "freshness": atom.freshness.value,
+                    "valid_from": atom.valid_from.isoformat() if atom.valid_from else None,
+                    "valid_to": atom.valid_to.isoformat() if atom.valid_to else None,
+                }
+                for atom in atoms
+            ]
+        if ExplainSection.EVIDENCE in normalized_sections:
+            section_payload[ExplainSection.EVIDENCE.value] = evidence
+        if ExplainSection.FRESHNESS in normalized_sections:
+            section_payload[ExplainSection.FRESHNESS.value] = [
+                {
+                    "atom_sha256": atom.atom_sha256,
+                    "truth_state": atom.truth_state.value,
+                    "freshness": atom.freshness.value,
+                    "evidence_pointer_version": atom.evidence_pointer_version,
+                }
+                for atom in atoms
+            ]
+        if ExplainSection.RELATIONS in normalized_sections:
+            section_payload[ExplainSection.RELATIONS.value] = legacy["relations"]
+        if ExplainSection.HISTORY in normalized_sections:
+            section_payload[ExplainSection.HISTORY.value] = {
+                "memory_versions": self.history(memory_id=memory_id),
+                "audit": legacy["audit"],
+            }
+
+        payload: dict[str, Any] = {
+            "schema_version": "2.3",
+            "memory_id": memory_id,
+            "atom_sha256": expected_atom_sha256 or atom_hashes[0],
+            "atom_sha256s": atom_hashes,
+            "sections": section_payload,
+            "usage": {
+                "counter_kind": counter.kind.value,
+                "tokenizer_id": counter.tokenizer_id,
+                "counter_version": counter.counter_version,
+                "evidence_expansion_tokens": (
+                    counter.count_json(evidence)
+                    if ExplainSection.EVIDENCE in normalized_sections
+                    else 0
+                ),
+                "history_expansion_tokens": (
+                    counter.count_json(section_payload[ExplainSection.HISTORY.value])
+                    if ExplainSection.HISTORY in normalized_sections
+                    else 0
+                ),
+                "delivered_payload_tokens": 0,
+            },
+        }
+        for _ in range(PAYLOAD_ACCOUNTING_MAX_ROUNDS):
+            delivered_tokens = counter.count_json(payload)
+            if payload["usage"]["delivered_payload_tokens"] == delivered_tokens:
+                break
+            payload["usage"]["delivered_payload_tokens"] = delivered_tokens
+        else:
+            raise RuntimeError("evidence payload token accounting did not converge")
+        minimum_required_tokens = int(payload["usage"]["delivered_payload_tokens"])
+        if budget_tokens is not None and budget_tokens < minimum_required_tokens:
+            raise InsufficientBudgetError(
+                "the evidence budget cannot contain the complete requested sections",
+                details={
+                    "budget_tokens": budget_tokens,
+                    "minimum_required_tokens": minimum_required_tokens,
+                },
+            )
+        return payload
+
+    def _resolve_expected_context_atom(
+        self,
+        memory_id: str,
+        expected_atom_sha256: str,
+        direct_atoms: list[ContextAtom],
+    ) -> tuple[list[ContextAtom], tuple[str, ...]]:
+        direct_match = [atom for atom in direct_atoms if atom.atom_sha256 == expected_atom_sha256]
+        if direct_match:
+            return direct_match, (memory_id,)
+
+        # Exact deduplication can give the delivered FACT a hash that covers evidence
+        # from several memories.  The persisted manifest is only a lookup hint: all
+        # component atoms are rebuilt from current truth before the handle is accepted.
+        with self.database.session() as session:
+            runs = list(
+                session.scalars(
+                    select(RetrievalRunRow)
+                    .where(
+                        cast(RetrievalRunRow.context_diagnostics_json, Text).contains(
+                            expected_atom_sha256
+                        )
+                    )
+                    .order_by(RetrievalRunRow.created_at.desc())
+                )
+            )
+        component_ids: tuple[str, ...] | None = None
+        expected_detail = DetailLevel.FACT
+        expected_include_historical = False
+        for run in runs:
+            diagnostics = run.context_diagnostics_json or {}
+            selected = diagnostics.get("selected_atoms", [])
+            if not isinstance(selected, list):
+                continue
+            for value in selected:
+                if not isinstance(value, dict):
+                    continue
+                ids = tuple(str(item) for item in value.get("memory_ids", []))
+                if value.get("atom_sha256") == expected_atom_sha256 and memory_id in ids:
+                    component_ids = ids
+                    expected_detail = DetailLevel(
+                        str(value.get("detail_level", DetailLevel.FACT.value))
+                    )
+                    expected_include_historical = str(value.get("status", "")) == "historical"
+                    break
+            if component_ids is not None:
+                break
+
+        if component_ids:
+            candidates: list[dict[str, Any]] = []
+            with self.database.session() as session:
+                rows = list(
+                    session.scalars(select(MemoryRow).where(MemoryRow.id.in_(component_ids)))
+                )
+                by_id = {row.id: row for row in rows}
+                target = by_id.get(memory_id)
+                if target is not None and len(by_id) == len(set(component_ids)):
+                    same_scope = all(
+                        row.scope_type == target.scope_type and row.scope_key == target.scope_key
+                        for row in rows
+                    )
+                    if same_scope:
+                        for component_id in component_ids:
+                            row = by_id[component_id]
+                            claims = list(
+                                session.scalars(
+                                    select(ClaimRow).where(ClaimRow.memory_id == component_id)
+                                )
+                            )
+                            evidence_count = int(
+                                session.scalar(
+                                    select(func.count())
+                                    .select_from(ClaimEvidenceRow)
+                                    .join(ClaimRow, ClaimRow.id == ClaimEvidenceRow.claim_id)
+                                    .where(ClaimRow.memory_id == component_id)
+                                )
+                                or 0
+                            )
+                            candidates.append(
+                                {
+                                    "memory": self._serialize_memory(row),
+                                    "score": 1.0,
+                                    "truth_state": self.retrieval_v2._truth_state(claims),
+                                    "claim_ids": [claim.id for claim in claims],
+                                    "trace": {
+                                        "freshness": self.retrieval_v2._freshness(claims),
+                                        "evidence_count": evidence_count,
+                                    },
+                                }
+                            )
+            if candidates:
+                metadata = self.context_builder._metadata(candidates)
+                rebuilt = [
+                    atom
+                    for candidate in candidates
+                    for atom in AtomBuilder(self.context_builder.token_counter).build(
+                        candidate,
+                        metadata[str(candidate["memory"]["id"])],
+                        requested_detail=expected_detail,
+                        include_historical=expected_include_historical,
+                    )
+                ]
+                deduplicated, _ = exact_deduplicate(
+                    rebuilt,
+                    self.context_builder.token_counter,
+                )
+                matches = [
+                    atom
+                    for atom in deduplicated
+                    if atom.atom_sha256 == expected_atom_sha256 and memory_id in atom.memory_ids
+                ]
+                if matches:
+                    return matches, matches[0].memory_ids
+
+        raise ContextChangedError(
+            "the context atom changed; refresh memory_context before requesting evidence",
+            details={
+                "memory_id": memory_id,
+                "expected_atom_sha256": expected_atom_sha256,
+                "refresh_required": True,
+            },
+        )
+
+    def _legacy_explain(self, memory_id: str) -> dict[str, Any]:
         with self.database.session() as session:
             memory = self._get(session, memory_id)
             sources = [
@@ -972,6 +1275,123 @@ class MemoryService:
                     "and a complete audit trail."
                 ),
             }
+
+    def _explain_evidence(
+        self,
+        memory_ids: tuple[str, ...],
+        legacy: dict[str, Any],
+        *,
+        claim_ids: tuple[str, ...] = (),
+    ) -> list[dict[str, Any]]:
+        with self.database.session() as session:
+            evidence_query = (
+                select(ClaimEvidenceRow, SourceRow, SourceAnchorRow)
+                .join(ClaimRow, ClaimRow.id == ClaimEvidenceRow.claim_id)
+                .join(SourceRow, SourceRow.id == ClaimEvidenceRow.source_id)
+                .outerjoin(SourceAnchorRow, SourceAnchorRow.id == ClaimEvidenceRow.source_anchor_id)
+                .where(ClaimRow.memory_id.in_(memory_ids))
+                .order_by(SourceRow.captured_at.desc(), ClaimEvidenceRow.id.asc())
+            )
+            if claim_ids:
+                evidence_query = evidence_query.where(ClaimEvidenceRow.claim_id.in_(claim_ids))
+            rows = session.execute(evidence_query).all()
+            fallback_sources = session.execute(
+                select(MemorySourceRow.memory_id, SourceRow)
+                .join(SourceRow, SourceRow.id == MemorySourceRow.source_id)
+                .where(MemorySourceRow.memory_id.in_(memory_ids))
+                .order_by(SourceRow.captured_at.desc(), SourceRow.id.asc())
+            ).all()
+        if rows:
+            best_by_source: dict[str, tuple[Any, Any, Any]] = {}
+            for evidence, source, anchor in rows:
+                existing = best_by_source.get(source.id)
+                rank = (
+                    float(evidence.support_weight),
+                    _utc(source.captured_at),
+                    evidence.id,
+                )
+                if existing is None:
+                    best_by_source[source.id] = (evidence, source, anchor)
+                    continue
+                previous_evidence, previous_source, _ = existing
+                previous_rank = (
+                    float(previous_evidence.support_weight),
+                    _utc(previous_source.captured_at),
+                    previous_evidence.id,
+                )
+                if rank > previous_rank:
+                    best_by_source[source.id] = (evidence, source, anchor)
+            selected_rows = sorted(
+                best_by_source.values(),
+                key=lambda item: (
+                    -float(item[0].support_weight),
+                    -_utc(item[1].captured_at).timestamp(),
+                    item[1].id,
+                ),
+            )
+            return [
+                {
+                    "claim_id": evidence.claim_id,
+                    "source_id": source.id,
+                    "source_ref": source.source_ref,
+                    "captured_at": _utc(source.captured_at).isoformat(),
+                    "excerpt": evidence.evidence_excerpt,
+                    "excerpt_sha256": evidence.evidence_hash,
+                    "commit": anchor.commit_sha if anchor else None,
+                    "path": anchor.path if anchor else None,
+                    "line_start": anchor.line_start if anchor else None,
+                    "line_end": anchor.line_end if anchor else None,
+                    "anchor_freshness": anchor.freshness_state.value if anchor else None,
+                    "observed_commit": anchor.observed_head if anchor else None,
+                    "observed_path": anchor.observed_path if anchor else None,
+                    "observed_line_start": anchor.observed_line_start if anchor else None,
+                    "observed_line_end": anchor.observed_line_end if anchor else None,
+                    "observed_excerpt_sha256": (anchor.observed_excerpt_hash if anchor else None),
+                    "observed_at": (
+                        _utc(anchor.observed_at).isoformat()
+                        if anchor and anchor.observed_at
+                        else None
+                    ),
+                    "support_weight": evidence.support_weight,
+                }
+                for evidence, source, anchor in selected_rows
+            ]
+        if fallback_sources:
+            return [
+                {
+                    "claim_id": None,
+                    "memory_id": source_memory_id,
+                    "source_id": source.id,
+                    "source_ref": source.source_ref,
+                    "captured_at": _utc(source.captured_at).isoformat(),
+                    "excerpt": source.excerpt,
+                    "excerpt_sha256": source.content_hash,
+                    "commit": None,
+                    "path": None,
+                    "line_start": None,
+                    "line_end": None,
+                    "anchor_freshness": None,
+                    "support_weight": 1.0,
+                }
+                for source_memory_id, source in fallback_sources
+            ]
+        return [
+            {
+                "claim_id": None,
+                "source_id": source["id"],
+                "source_ref": source["source_ref"],
+                "captured_at": source["captured_at"],
+                "excerpt": source["excerpt"],
+                "excerpt_sha256": source["content_hash"],
+                "commit": None,
+                "path": None,
+                "line_start": None,
+                "line_end": None,
+                "anchor_freshness": None,
+                "support_weight": 1.0,
+            }
+            for source in legacy["sources"]
+        ]
 
     def timeline(self, *, limit: int = 100) -> list[dict[str, Any]]:
         with self.database.session() as session:

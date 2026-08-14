@@ -31,7 +31,7 @@ const claim = {
 function bodyFor(path: string) {
   if (path.startsWith('/api/status'))
     return {
-      version: '2.2.0',
+      version: '2.3.0',
       database: 'memoryos.db',
       schema_version: '0003_reality_intelligence_hardening',
       counts: { candidate: 0, active: 1, superseded: 0, expired: 0, forgotten: 0, rejected: 0 },

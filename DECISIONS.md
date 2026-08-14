@@ -186,3 +186,43 @@ They are implementation commitments, not future proposals.
     real-agent evidence, a complete agent/repeat matrix, positive paired success CI, no safety or
     worst repository/agent/recipe regression, and bounded complete latency/cost. Passing produces
     only an activation-review candidate and never changes production automatically.
+47. Optimize MemoryOS for minimum sufficient context under a task-success constraint, not for
+    retrieval count, compression ratio, or any single context-density score. Functional success,
+    provider usage, safety failures, attribution completeness, and worst-group behavior remain
+    separate release dimensions.
+48. Separate the production Context Response from diagnostic evidence. MSC production payloads
+    contain only the text and minimal state needed by the current agent turn; query plans, sections,
+    manifests, candidate features, retrieval traces, and legacy/MSC comparisons are persisted on the
+    exact RetrievalRun and read on demand by retrieval_run_id.
+49. Preserve ContextRequest.budget permanently as a legacy text-character budget. Token budgets use
+    budget_tokens or a versioned BudgetProfile, carry tokenizer/counter identity, and constrain the
+    complete MemoryOS production payload rather than silently changing an existing field's units.
+50. Do not call an LLM in the core context-compilation path. Context atoms, rendering, budgeting,
+    exact deduplication, and deltas are deterministic; any optional provider-backed memory operation
+    is separately attributed and cannot be reported as zero when provider Usage is unavailable.
+51. Treat ContextAtom as a compiled view, never as a source of truth. Memory, Claim, Source, immutable
+    Git anchor evidence, bitemporal truth, and freshness remain authoritative; snapshots and atom
+    manifests can be discarded and rebuilt.
+52. Treat every selected relevant constraint and contested component as an indivisible bundle.
+    Negation, thresholds, units, scope, exceptions, and both contested polarities cannot be truncated
+    or partially delivered. A hard budget that cannot contain the bundle returns its minimum safe
+    requirement instead of weakening the evidence.
+53. Require an explicit previous_context_id for Delta Context and validate scope, expiry, policy,
+    tokenizer, and integrity before diffing. Missing or invalid baselines, inefficient deltas, and
+    unsafe structural changes fail closed to a labeled Full rebase without exposing prior-scope text.
+54. Define ContextSnapshotRow as a disposable, scope-bounded cache. It is excluded from long-term
+    backup and cleared on restore; an old cursor then reports snapshot_unavailable and safely rebuilds
+    Full Context from primary evidence.
+55. Activate only deterministic exact deduplication. Equivalent canonical claim identities may merge
+    source references and evidence counts, while opposite polarity, contested sides, different valid
+    intervals, freshness states, or constraint/observation roles never merge. Semantic deduplication
+    remains behind the existing Shadow and evidence gates.
+56. Fix the MCP tool set at process startup with deterministic all/core/governance/debug profiles.
+    Dynamic discovery or deferred loading belongs to the client; a tool call cannot mutate the
+    current connection's tools/list, and a smaller server schema is not itself proof of fewer
+    provider input tokens.
+57. Keep legacy as the default compiler until preregistered real coding-agent evidence simultaneously
+    proves paired success noninferiority with adequate power, a significant reduction in actual
+    provider input tokens, zero constraint/contested/cross-scope regressions, complete attribution,
+    and no material worst-group regression. Dry runs, deterministic fixtures, estimated counters, or
+    static text comparisons can validate plumbing only and cannot authorize activation.

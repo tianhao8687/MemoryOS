@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
+
 from memoryos.evaluation.real_workload_agent import AgentEvidenceType, AgentRuntimeSpec
 from memoryos.evaluation.real_workload_models import ExperimentCondition, RealWorkloadManifest
 from memoryos.evaluation.real_workload_report import (
@@ -122,6 +124,71 @@ def test_dry_run_reports_paired_results_but_makes_no_effect_claim() -> None:
     assert comparison["paired_n"] == 2
     assert comparison["metrics"]["functional_success"]["difference"] == 1.0
     assert report["aggregates"]["memoryos"]["retrieval_runs"] == 2
+
+
+def test_report_keeps_every_memory_and_provider_token_account_separate() -> None:
+    manifest = _manifest(1)
+    records = _records(manifest)
+    memoryos_index = next(
+        index
+        for index, record in enumerate(records)
+        if record.condition is ExperimentCondition.MEMORYOS
+    )
+    records[memoryos_index] = records[memoryos_index].model_copy(
+        update={
+            "memory_context_text_tokens": 110,
+            "memory_delivery_payload_tokens": 150,
+            "memory_payload_overhead_tokens": 40,
+            "memory_evidence_tokens": 30,
+            "memory_history_tokens": 15,
+            "memory_delta_tokens": 70,
+            "memory_full_equivalent_tokens": 260,
+            "other_memory_operation_llm_input_tokens": 13,
+            "other_memory_operation_llm_output_tokens": 5,
+            "memory_tool_schema_tokens": 200,
+            "other_tool_schema_tokens": 300,
+            "cached_input_tokens": 25,
+            "token_attribution_kind": "estimated",
+        }
+    )
+
+    report = RealWorkloadReportBuilder().build(
+        manifest,
+        _runtime(),
+        records,
+        mode=RunMode.DRY_RUN,
+        run_id="dry-accounting",
+        started_at=datetime.now(UTC),
+    )
+
+    aggregate = report["aggregates"]["memoryos"]
+    assert aggregate["total_input_tokens"] == 100
+    assert aggregate["memory_context_text_tokens"] == 110
+    assert aggregate["memory_delivery_payload_tokens"] == 150
+    assert aggregate["memory_payload_overhead_tokens"] == 40
+    assert aggregate["memory_evidence_tokens"] == 30
+    assert aggregate["memory_history_tokens"] == 15
+    assert aggregate["memory_delta_tokens"] == 70
+    assert aggregate["memory_full_equivalent_tokens"] == 260
+    assert aggregate["context_compilation_llm_input_tokens"] == 0
+    assert aggregate["context_compilation_llm_output_tokens"] == 0
+    assert aggregate["other_memory_operation_llm_input_tokens"] == 13
+    assert aggregate["other_memory_operation_llm_output_tokens"] == 5
+    assert aggregate["memory_tool_schema_tokens"] == 200
+    assert aggregate["other_tool_schema_tokens"] == 300
+    assert aggregate["cached_input_tokens"] == 25
+    record = next(item for item in report["records"] if item["condition"] == "memoryos")
+    assert record["token_attribution_kind"] == "estimated"
+
+
+def test_report_rejects_unlabelled_token_attribution() -> None:
+    manifest = _manifest(1)
+    record = _records(manifest)[0]
+
+    with pytest.raises(ValueError, match="token_attribution_kind"):
+        ConditionRunRecord.model_validate(
+            {**record.model_dump(mode="json"), "token_attribution_kind": "approximate"}
+        )
 
 
 def test_report_writer_uses_stable_lf_bytes(tmp_path: Path) -> None:

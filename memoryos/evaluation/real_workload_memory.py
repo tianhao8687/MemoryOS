@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -121,6 +121,23 @@ class MemoryUsageEvidence:
     scoring_profile_sha256: str | None
     routing_profile_sha256: str | None
     errors: tuple[str, ...]
+    context_usages: tuple[dict[str, Any], ...] = ()
+    context_policy_manifests: tuple[dict[str, Any], ...] = ()
+    context_delta_evidence: tuple[dict[str, Any], ...] = ()
+    memory_context_text_tokens: int | None = None
+    memory_delivery_payload_tokens: int | None = None
+    memory_payload_overhead_tokens: int | None = None
+    memory_evidence_tokens: int | None = None
+    memory_history_tokens: int | None = None
+    memory_delta_tokens: int | None = None
+    memory_full_equivalent_tokens: int | None = None
+    context_compilation_llm_input_tokens: int = 0
+    context_compilation_llm_output_tokens: int = 0
+    other_memory_operation_llm_input_tokens: int | None = None
+    other_memory_operation_llm_output_tokens: int | None = None
+    token_attribution_kind: str = field(default_factory=lambda: "unavailable")
+    tokenizer_ids: tuple[str, ...] = ()
+    counter_kinds: tuple[str, ...] = ()
 
     def as_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -325,6 +342,9 @@ class MemoryRuntimeBuilder:
         candidate_features: list[dict[str, Any]] = []
         retrieval_config_hashes: set[str] = set()
         retrieval_routes: list[dict[str, Any]] = []
+        context_usages: list[dict[str, Any]] = []
+        context_policy_manifests: list[dict[str, Any]] = []
+        context_delta_evidence: list[dict[str, Any]] = []
         if runtime.condition is ExperimentCondition.MEMORYOS:
             if runtime.data_dir is None:
                 errors.append("MemoryOS runtime has no data directory")
@@ -342,6 +362,24 @@ class MemoryRuntimeBuilder:
                     }
                     for retrieval_index, run in enumerate(runs):
                         retrieval_config_hashes.add(run.config_hash)
+                        if run.context_usage_json:
+                            context_usages.append(dict(run.context_usage_json))
+                        if run.context_policy_manifest:
+                            context_policy_manifests.append(dict(run.context_policy_manifest))
+                        shadow_payload = run.context_shadow_json.get("payload")
+                        if isinstance(shadow_payload, dict):
+                            context_delta_evidence.append(
+                                {
+                                    "retrieval_index": retrieval_index,
+                                    "mode": shadow_payload.get("mode"),
+                                    "context_id": shadow_payload.get("context_id"),
+                                    "requires_base_context_id": shadow_payload.get(
+                                        "requires_base_context_id"
+                                    ),
+                                    "fallback_reason": shadow_payload.get("fallback_reason"),
+                                    "delta": shadow_payload.get("delta"),
+                                }
+                            )
                         retrieval_plan = run.scope_json.get("retrieval_plan")
                         routing = (
                             retrieval_plan.get("routing")
@@ -425,7 +463,69 @@ class MemoryRuntimeBuilder:
             scoring_profile_sha256=runtime.scoring_profile_sha256,
             routing_profile_sha256=runtime.routing_profile_sha256,
             errors=tuple(errors),
+            context_usages=tuple(context_usages),
+            context_policy_manifests=tuple(context_policy_manifests),
+            context_delta_evidence=tuple(context_delta_evidence),
+            memory_context_text_tokens=_sum_usage(context_usages, "context_text_tokens"),
+            memory_delivery_payload_tokens=_sum_usage(context_usages, "delivered_payload_tokens"),
+            memory_payload_overhead_tokens=_sum_usage(context_usages, "payload_overhead_tokens"),
+            memory_evidence_tokens=_sum_usage(context_usages, "evidence_expansion_tokens"),
+            memory_history_tokens=_sum_usage(context_usages, "history_expansion_tokens"),
+            memory_delta_tokens=_sum_usage(context_usages, "delta_tokens"),
+            memory_full_equivalent_tokens=_sum_usage(context_usages, "full_context_tokens"),
+            context_compilation_llm_input_tokens=int(
+                _sum_usage(context_usages, "context_compilation_llm_input_tokens") or 0
+            ),
+            context_compilation_llm_output_tokens=int(
+                _sum_usage(context_usages, "context_compilation_llm_output_tokens") or 0
+            ),
+            other_memory_operation_llm_input_tokens=_sum_usage(
+                context_usages, "other_memory_operation_llm_input_tokens"
+            ),
+            other_memory_operation_llm_output_tokens=_sum_usage(
+                context_usages, "other_memory_operation_llm_output_tokens"
+            ),
+            token_attribution_kind=_token_attribution_kind(context_usages),
+            tokenizer_ids=tuple(
+                sorted(
+                    {
+                        str(usage["tokenizer_id"])
+                        for usage in context_usages
+                        if isinstance(usage.get("tokenizer_id"), str)
+                    }
+                )
+            ),
+            counter_kinds=tuple(
+                sorted(
+                    {
+                        str(usage["counter_kind"])
+                        for usage in context_usages
+                        if isinstance(usage.get("counter_kind"), str)
+                    }
+                )
+            ),
         )
+
+
+def _sum_usage(records: list[dict[str, Any]], field: str) -> int | None:
+    if not records:
+        return None
+    total = 0
+    for record in records:
+        value = record.get(field)
+        if isinstance(value, bool) or not isinstance(value, int):
+            return None
+        total += value
+    return total
+
+
+def _token_attribution_kind(records: list[dict[str, Any]]) -> str:
+    if not records:
+        return "unavailable"
+    kinds = {record.get("counter_kind") for record in records}
+    if not kinds or not kinds <= {"exact", "estimated"}:
+        return "unavailable"
+    return "estimated" if "estimated" in kinds else "exact"
 
 
 def seed_memoryos(data_dir: Path, seeds: list[MemorySeedSpec]) -> dict[str, str]:

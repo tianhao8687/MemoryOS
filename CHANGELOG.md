@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+### V2.3 Minimum Sufficient Context
+
+- Added byte-compatible `legacy`, diagnostic-only `msc_shadow`, and thin-envelope `msc` context
+  compiler modes. The production default remains `legacy` until preregistered real-agent gates pass.
+- Preserved `ContextRequest.budget` as a character budget and added separate token budgets, frozen
+  384/768/1536/3072 profiles, deterministic AUTO planning, injectable exact counters, honest
+  estimated attribution, complete-payload accounting, and structured minimum-safe-budget errors.
+- Added deterministic INDEX/FACT Context Atoms whose hashes cover canonical fact state, polarity,
+  qualifiers, truth, freshness, validity, evidence-pointer version, and render policy. Relevant
+  constraints and contested components are atomic; only exact deduplication is active.
+- Extended `memory_explain` compatibly with expected atom hashes, selected sections, evidence budgets,
+  stale-handle rejection, claim-scoped evidence selection, and one-call reconstruction of evidence
+  for multi-source deduplicated facts. Historical Claims remain excluded unless history is explicit.
+- Added explicit `previous_context_id` deltas, disposable scope-bound snapshots, policy/tokenizer/TTL/
+  integrity validation, bounded cleanup, and labeled Full rebase. Snapshot caches are excluded from
+  backup and cleared on restore.
+- Added deterministic startup-only `all`, `core`, `governance`, and `debug` MCP profiles, plus stable
+  schema snapshots and estimates for every profile. `all` remains the 12-tool compatibility default.
+- Added migration `0005_context_efficiency`, RetrievalRun usage/policy/diagnostic/shadow persistence,
+  V2.2 compiler golden fixtures, adversarial/property/migration/MCP regressions, and a separate
+  Context Efficiency Study with complete paired accounting, per-success cost/ROI guards, the frozen
+  0.5/0.65/0.8/0.9 Delta-threshold matrix, balanced condition order, adversarial-coverage checks,
+  power, safety, transparency, and fail-closed worst-group gates.
+- Checked in a reproducible deterministic dry run with `effect_claim=none` and a `legacy` default
+  decision. It intentionally cannot substitute for real Provider Usage or confirmatory coding tasks.
+
 ### Added
 
 - A living development-problem retrospective covering product-scope decisions, adversarial fixes,

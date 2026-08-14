@@ -1,4 +1,4 @@
-"""Verify the packaged V2.2 release from a clean main checkout."""
+"""Verify the packaged V2.3 release from a clean main checkout."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+from memoryos.mcp_server.tool_registry import PROFILE_TOOLS, ToolProfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -45,12 +47,12 @@ def _sha256(path: Path) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run the V2.2 merged-main release smoke")
+    parser = argparse.ArgumentParser(description="Run the V2.3 merged-main release smoke")
     parser.add_argument("--distribution", type=Path, default=ROOT / "release" / "MemoryOS")
     parser.add_argument(
         "--output",
         type=Path,
-        default=ROOT / "docs" / "verification" / "v2.2" / "main-release-smoke.json",
+        default=ROOT / "docs" / "verification" / "v2.3" / "main-release-smoke.json",
     )
     args = parser.parse_args()
     branch = _git("branch", "--show-current")
@@ -86,16 +88,18 @@ def main() -> int:
 
     package_passed = bool(
         package.get("result") == "PASS"
-        and package.get("v1_to_v22_migration") is True
-        and package.get("schema_version") == "0004_anchor_observation_hardening"
+        and package.get("v1_to_v23_migration") is True
+        and package.get("schema_version") == "0005_context_efficiency"
         and package.get("coding_memory_bench_bundled") is True
         and package.get("sqlite_vec_bundled") is True
         and package.get("restart_persistence") is True
-        and package.get("first_health", {}).get("version") == "2.2.0"
+        and package.get("first_health", {}).get("version") == "2.3.0"
+        and package.get("mcp_profiles")
+        == {profile.value: list(PROFILE_TOOLS[profile]) for profile in ToolProfile}
     )
     result = "PASS" if branch == "main" and not dirty and package_passed else "FAIL"
     report = {
-        "schema": "memoryos-v2.2-main-release-smoke@1",
+        "schema": "memoryos-v2.3-main-release-smoke@1",
         "generated_at": datetime.now(UTC).isoformat(),
         "result": result,
         "branch": branch,

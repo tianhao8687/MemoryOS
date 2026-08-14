@@ -188,6 +188,7 @@ class AgentOutput(BaseModel):
 
     status: Literal["completed", "failed"]
     input_tokens: int | None = Field(default=None, ge=0)
+    cached_input_tokens: int | None = Field(default=None, ge=0)
     output_tokens: int | None = Field(default=None, ge=0)
     cost_usd: float | None = Field(default=None, ge=0)
     tool_calls: int | None = Field(default=None, ge=0)

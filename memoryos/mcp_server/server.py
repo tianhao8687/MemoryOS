@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from mcp.server.fastmcp import FastMCP
 
 from memoryos.config import MemoryOSSettings, settings_for
 from memoryos.db import Database
 from memoryos.domain.schemas import (
+    BudgetProfile,
     ConflictStrategy,
     ConsolidateRequest,
     ContextRequest,
     CreatedBy,
     CurrentTruthRequest,
+    DetailLevel,
     FeedbackCreate,
     FeedbackValue,
     MemoryCreate,
@@ -27,15 +29,20 @@ from memoryos.domain.schemas import (
 )
 from memoryos.engine import MemoryService
 from memoryos.errors import MemoryOSError
+from memoryos.mcp_server.tool_registry import ToolProfile, ToolRegistry
 from memoryos.security.logging import configure_logging
 
 
-def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
+def create_mcp_server(
+    settings: MemoryOSSettings,
+    tool_profile: ToolProfile | str | None = None,
+) -> FastMCP:
     configure_logging(settings)
     database = Database(settings)
     database.initialize()
     service = MemoryService(database, settings)
     mcp = FastMCP("MemoryOS", instructions="Local-first, source-backed coding-agent memory")
+    registry = ToolRegistry(mcp, tool_profile or settings.mcp_tool_profile)
 
     def result(call: Any) -> dict[str, Any]:
         try:
@@ -48,7 +55,7 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
                 "error": {"code": "VALIDATION_ERROR", "message": str(exc), "details": {}},
             }
 
-    @mcp.tool(name="memory_context")
+    @registry.tool(name="memory_context")
     def memory_context(
         task: str,
         repo: str,
@@ -56,6 +63,14 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
         workspace: str | None = None,
         task_scope: str | None = None,
         budget: int = 6000,
+        budget_tokens: int | None = None,
+        budget_profile: BudgetProfile = BudgetProfile.AUTO,
+        tokenizer_id: str | None = None,
+        hard_token_budget: bool = False,
+        detail_level: DetailLevel = DetailLevel.FACT,
+        previous_context_id: str | None = None,
+        response_mode: Literal["auto", "full", "delta"] = "auto",
+        include_historical: bool = False,
     ) -> dict[str, Any]:
         """Build the most relevant project-memory context for a coding task."""
         return result(
@@ -67,11 +82,19 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
                     workspace=workspace,
                     task_scope=task_scope,
                     budget=budget,
+                    budget_tokens=budget_tokens,
+                    budget_profile=budget_profile,
+                    tokenizer_id=tokenizer_id,
+                    hard_token_budget=hard_token_budget,
+                    detail_level=detail_level,
+                    previous_context_id=previous_context_id,
+                    response_mode=response_mode,
+                    include_historical=include_historical,
                 )
             )
         )
 
-    @mcp.tool(name="memory_search")
+    @registry.tool(name="memory_search")
     def memory_search(
         query: str,
         scope_type: ScopeType | None = None,
@@ -96,7 +119,7 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
             )
         )
 
-    @mcp.tool(name="memory_propose")
+    @registry.tool(name="memory_propose")
     def memory_propose(
         title: str,
         content: str,
@@ -139,7 +162,7 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
             )
         )
 
-    @mcp.tool(name="memory_confirm")
+    @registry.tool(name="memory_confirm")
     def memory_confirm(
         memory_id: str,
         strategy: ConflictStrategy | None = None,
@@ -150,22 +173,34 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
             lambda: service.confirm(memory_id, strategy=strategy, actor="mcp", rationale=rationale)
         )
 
-    @mcp.tool(name="memory_forget")
+    @registry.tool(name="memory_forget")
     def memory_forget(memory_id: str) -> dict[str, Any]:
         """Logically forget a memory while retaining its minimal audit history."""
         return result(lambda: service.forget(memory_id, actor="mcp"))
 
-    @mcp.tool(name="memory_history")
+    @registry.tool(name="memory_history")
     def memory_history(memory_id: str | None = None, key: str | None = None) -> dict[str, Any]:
         """Return the complete status and supersession timeline for a memory or semantic key."""
         return result(lambda: service.history(memory_id=memory_id, key=key))
 
-    @mcp.tool(name="memory_explain")
-    def memory_explain(memory_id: str) -> dict[str, Any]:
+    @registry.tool(name="memory_explain")
+    def memory_explain(
+        memory_id: str,
+        expected_atom_sha256: str | None = None,
+        sections: list[str] | None = None,
+        budget_tokens: int | None = None,
+    ) -> dict[str, Any]:
         """Explain provenance, content hash, scope, creator, status, and replacement links."""
-        return result(lambda: service.explain(memory_id))
+        return result(
+            lambda: service.explain(
+                memory_id,
+                expected_atom_sha256=expected_atom_sha256,
+                sections=sections,
+                budget_tokens=budget_tokens,
+            )
+        )
 
-    @mcp.tool(name="memory_current_truth")
+    @registry.tool(name="memory_current_truth")
     def memory_current_truth(
         subject: str | None = None,
         predicate: str | None = None,
@@ -192,7 +227,7 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
             )
         )
 
-    @mcp.tool(name="memory_feedback")
+    @registry.tool(name="memory_feedback")
     def memory_feedback(
         retrieval_run_id: str,
         memory_id: str,
@@ -213,7 +248,7 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
             )
         )
 
-    @mcp.tool(name="memory_consolidate")
+    @registry.tool(name="memory_consolidate")
     def memory_consolidate(
         scope_type: ScopeType,
         scope_key: str,
@@ -234,7 +269,7 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
             )
         )
 
-    @mcp.tool(name="memory_refresh")
+    @registry.tool(name="memory_refresh")
     def memory_refresh(
         memory_id: str,
         repository_path: str,
@@ -251,17 +286,29 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
             )
         )
 
-    @mcp.tool(name="memory_debug_context")
+    @registry.tool(name="memory_debug_context")
     def memory_debug_context(
-        task: str,
-        repo: str,
+        task: str | None = None,
+        repo: str | None = None,
         branch: str | None = None,
         workspace: str | None = None,
         task_scope: str | None = None,
         budget: int = 6000,
         include_historical: bool = False,
+        retrieval_run_id: str | None = None,
     ) -> dict[str, Any]:
         """Return query plan, RRF channels, filters, manifest, and final context selection."""
+        if retrieval_run_id is not None:
+            return result(lambda: service.debug_context(retrieval_run_id=retrieval_run_id))
+        if task is None or repo is None:
+            return {
+                "ok": False,
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "task and repo are required without retrieval_run_id",
+                    "details": {},
+                },
+            }
         return result(
             lambda: service.debug_context(
                 ContextRequest(
@@ -276,18 +323,27 @@ def create_mcp_server(settings: MemoryOSSettings) -> FastMCP:
             )
         )
 
+    registry.assert_complete()
     return mcp
 
 
-def run_mcp(settings: MemoryOSSettings) -> None:
-    create_mcp_server(settings).run(transport="stdio")
+def run_mcp(
+    settings: MemoryOSSettings,
+    tool_profile: ToolProfile | str | None = None,
+) -> None:
+    create_mcp_server(settings, tool_profile).run(transport="stdio")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", type=Path, default=None)
+    parser.add_argument(
+        "--tool-profile",
+        choices=[profile.value for profile in ToolProfile],
+        default=None,
+    )
     arguments = parser.parse_args()
-    run_mcp(settings_for(arguments.data_dir))
+    run_mcp(settings_for(arguments.data_dir), arguments.tool_profile)
 
 
 if __name__ == "__main__":

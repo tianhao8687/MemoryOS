@@ -1,4 +1,4 @@
-# MemoryOS V2.2 架构
+# MemoryOS V2.3 架构
 
 ## 原则
 
@@ -18,11 +18,13 @@ flowchart LR
     Service --> Truth["Claim / Entity / Current Truth"]
     Service --> Fresh["Source Anchor / Git Freshness"]
     Service --> Retrieval["Retrieval 2.0"]
+    Retrieval --> Compiler["Context Compiler legacy / MSC"]
     Service --> Consolidation["Consolidation / Feedback"]
     Service --> Health["Memory Health / Archive"]
     Truth --> DB["SQLite WAL + FTS5"]
     Fresh --> DB
     Retrieval --> DB
+    Compiler --> DB
     Consolidation --> DB
     Health --> DB
     Retrieval -. optional .-> Providers["Embedding / Reranker / Judges"]
@@ -48,7 +50,11 @@ flowchart LR
 
 `0004_anchor_observation_hardening` 将 Source Anchor 的不可变基线字段与最近一次观测字段分开，并增加 scope-first Claim/Entity 索引。旧 anchor 的 observation 由既有基线确定性回填。
 
-0001/0002 迁移是显式、不可变的 Alembic operation，不再引用运行时 `Base.metadata`。0003 对既有 claim 保守回填首个 version；0004 迁移可降级再重放，且不重复历史或覆盖基线证据。
+`0005_context_efficiency` 为 RetrievalRun 增加 context usage、policy、diagnostics 和 shadow JSON，
+并增加 `context_snapshots` 缓存表。Snapshot 不是真相源，不进长期备份；Restore 后清空，
+旧游标安全回退 Full Context。清理始终按 Scope 且有批次上限。
+
+0001/0002 迁移是显式、不可变的 Alembic operation，不再引用运行时 `Base.metadata`。0003 对既有 claim 保守回填首个 version；0004 和 0005 迁移均有 SQLite 升级/降级回归，且不重复历史或覆盖基线证据。
 
 现有 V1 memory 不会被迁移脚本凭空补成 accepted claim；首次正常操作可保守、lazy normalize。备份格式为 V2 且显式接受 V1 import。生产 smoke 以真实 `0001_initial` DB 启动 packaged executable，验证自动升级和旧数据保留。
 
@@ -102,7 +108,16 @@ Embedding 区分 query/document instruction。sqlite-vec 以 `<provider>/<model>
 
 ## Task-aware Context Compiler
 
-Compiler 先构造严格 scope chain，再按 intent 要求 decision/constraint/failure/preference/state coverage。候选 utility 综合 relevance、confidence、freshness、evidence、feedback 和字符成本。预算内选择最小证据集，manifest 解释 include/exclude；同一 contested group 只要一边入选，就强制纳入双方。
+Compiler 先构造严格 scope chain，再按 intent 要求 decision/constraint/failure/preference/state coverage。
+`legacy` 保留 V2.2 字符预算和响应形状。`msc_shadow` 仍交付 legacy，但同次召回编译并存储 MSC；
+`msc` 把检索候选确定性编译为 Context Atom，执行 exact dedup、Pinned/Contested bundle、
+Token Profile/AUTO 预算、显式 Delta 和瘦响应渲染。
+
+MSC 生产响应的 Token 预算覆盖完整序列化 payload，而不只是 text。Query plan、sections、manifest、
+candidate trace 和 legacy/MSC 对比只存 RetrievalRun，可按 `retrieval_run_id` 读取。Atom hash 覆盖规范事实、
+极性、限定词、Truth/Freshness、有效时间、证据指针和渲染策略；因此状态或证据变化会使
+Explain handle 和 Delta 基线失效。相关约束与 contested 两侧是不可拆的原子组，硬预算不足时报告
+minimum safe tokens，不静默丢弃。默认 compiler 在真实任务非劣/Token/安全门禁通过前保持 legacy。
 
 ## Consolidation、Health 与 Feedback
 
@@ -116,4 +131,8 @@ CandidateExtractor、ClaimExtractor、EmbeddingProvider、RelationshipJudge、Re
 
 ## 部署
 
-HTTP 强制 loopback。MCP 是 stdio 子进程。Windows onedir 包捆绑 migrations、Tree-sitter grammars、sqlite-vec、React dist、MemoryBench V2 和 CodingMemoryBench fixture regression report。V1 数据原地升级至 `0004_anchor_observation_hardening`；写入状态转换始终在事务中完成。
+HTTP 强制 loopback。MCP 是 stdio 子进程，工具集在启动时固定为 all/core/governance/debug 之一，
+`all` 保持 12 工具兼容默认。Windows onedir 包捆绑 migrations、Tree-sitter grammars、sqlite-vec、React dist、
+MemoryBench V2 和 CodingMemoryBench fixture regression report。V1 数据原地升级至
+`0005_context_efficiency`；写入状态转换始终在事务中完成。V2.3 二进制需在合并后干净 `main`
+上重建和复验，旧 V2.2 发行包不重标。

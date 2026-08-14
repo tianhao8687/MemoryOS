@@ -47,3 +47,15 @@ class ProviderError(MemoryOSError):
 
 class BackupError(MemoryOSError):
     code = "BACKUP_ERROR"
+
+
+class TokenizerUnavailableError(MemoryOSError):
+    code = "EXACT_TOKENIZER_REQUIRED"
+
+
+class InsufficientBudgetError(MemoryOSError):
+    code = "INSUFFICIENT_BUDGET"
+
+
+class ContextChangedError(MemoryOSError):
+    code = "CONTEXT_CHANGED"
