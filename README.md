@@ -5,6 +5,10 @@
 > [V2.3 最小充分上下文：瘦响应、Token 分账、Context Atom、Delta、证据门禁与当前限制](docs/MINIMUM_SUFFICIENT_CONTEXT.md)
 >
 > [V2.2 Hardening Report：H-001～H-008 修复、迁移、测试、基准与限制](HARDENING_REPORT.md)
+>
+> [DeepSeek Harness 实测总览：测试矩阵、失败根因、修复与证据边界](docs/DEEPSEEK_HARNESS_EVIDENCE.md)
+>
+> 独立 DSH 插件：[tianhao8687/dsh-memoryos](https://github.com/tianhao8687/dsh-memoryos)
 
 <!-- MEMORYOS:READINESS:START -->
 ### AI calibration readiness (自动生成)
@@ -28,6 +32,20 @@
 <!-- MEMORYOS:READINESS:END -->
 
 MemoryOS V2.3 是面向编码 Agent 的本地优先 Reality Intelligence 层。它在 V2.2 的不可变证据、双时态 Current Truth、Git-aware freshness、检索硬化和真实工作负载协议之上，新增可回退的 Minimum Sufficient Context 编译层。MCP、HTTP、CLI 和 React Workbench 继续共享同一 SQLite 事实源。
+
+## DeepSeek Harness 实测快照
+
+当前 `dsh-memoryos 0.1.18` 已拆分为独立的 DeepSeek Harness（DSH）Bundle。它不是“零成本提示词”：启用后会增加工具 Schema 和取回内容，价值必须由与 `no_memory` 同题、同模型、同预算的对照来判断。
+
+| 验证面 | 冻结结果 | 可以得出的结论 |
+|---|---:|---|
+| 插件全功能验收 | 14/14 隐藏验收通过；13/14 严格协议通过 | 安装、开关、Full、Progressive、Explain、Delta、计量、缓存与隔离链路可用 |
+| 中等编程任务 | 单题中 A/C 均通过且 C 少 16.20% 输入；另有 held-out 任务 A/B/C 均失败 | 有效率与定向信号，但尚无跨题成功率提升证据 |
+| 跨 Session 记忆 | 三案例严格门 2/3；12 个新会话的回忆/基线/错 scope 隔离均符合预期 | 写入、硬重启回忆和 scope 隔离成立；一个源写入门仍受跨语言词法评分影响 |
+| 记忆更新 | PASS：PostgreSQL 17 被 18 正确 supersede | 新 Current Truth 不会与旧版本同时作为当前事实返回 |
+| 上下文淘汰 A/B | PASS：无记忆回答“不知道”，MemoryOS 恢复 `Glacier-47` | 原始对话确已被挤出活动上下文后，长期记忆仍可恢复 |
+
+最后两项 live-r4 共 24 次 Provider 尝试、0 重试；输入 214,165、输出 3,743、推理 2,206 Token。三个写入会话分别记录 `write_tool_schema_tokens / memory_write_visible_tokens / provider_input_tokens`，总计 `1,794 / 7,779 / 103,687`。MemoryOS 两项是 `unicode-heuristic-v1` 组件估算，Provider 输入是供应商精确值。完整口径、事故记录和不可外推范围见[实测总览](docs/DEEPSEEK_HARNESS_EVIDENCE.md)。
 
 当前源码版本：`2.3.0`。MSC 的语义、配置、证据和限制见 [V2.3 最小充分上下文](docs/MINIMUM_SUFFICIENT_CONTEXT.md)。当前 confirmatory real-agent 证据不足，所以默认 compiler 仍是 `legacy`、`effect_claim=none`；没有自动激活 MSC 或 learned retrieval profile 的路径。合并后应在干净 `main` 上重建发行包并运行：
 

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import {
   canonicalJson,
   createMemoryOSClient,
+  isMemoryOSConflict,
   normalizeConfig,
 } from './core.js'
 
@@ -15,6 +16,7 @@ export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
   if (typeof defineTool !== 'function') throw new Error('DeepSeek Harness defineTool is unavailable')
   const client = createMemoryOSClient(config, dependencies)
   const actionStates = new Map()
+  const writeStates = new Map()
   const contextParameters = {
     ...(config.task === undefined
       ? { task: { type: 'string', required: true, description: 'Current task' } }
@@ -49,6 +51,142 @@ export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
       return canonicalJson({ ok: true, result: value })
     },
   }))
+
+  if (config.toolProfile === 'cross-session-write') {
+    ctx.tools.register(defineTool({
+      name: 'memory_propose',
+      description: [
+        'Propose source-backed project knowledge for future sessions only when the user has',
+        'established a durable decision, constraint, or rejected approach. Do not save temporary',
+        'environment details, unresolved choices, current task state, or facts recoverable from code.',
+        'Each proposal must contain exactly one independently updateable fact with one stable semantic',
+        'key. Split facts that can change independently into separate proposals. The proposal remains',
+        'inactive until memory_confirm is called.',
+      ].join(' '),
+      parameters: {
+        title: {
+          type: 'string',
+          required: true,
+          description: 'Short neutral title for the durable project knowledge',
+        },
+        content: {
+          type: 'string',
+          required: true,
+          description: 'One atomic fact only: a self-contained durable statement with its boundary and essential rationale',
+        },
+        category: {
+          type: 'string',
+          required: true,
+          enum: ['decision', 'constraint', 'failed_approach'],
+          description: 'Durable knowledge category',
+        },
+        source_excerpt: {
+          type: 'string',
+          required: true,
+          description: 'Exact user excerpt supporting only this atomic fact, without unrelated facts',
+        },
+        key: {
+          type: 'string',
+          required: true,
+          description: 'Stable dot-separated semantic key for this one fact. For an update, reuse the exact write_key shown by memory_context; independently changeable facts require different keys',
+        },
+      },
+      output: {
+        schema: { type: 'string' },
+        render: (_args, value) => [{ type: 'text', text: value }],
+      },
+      timeoutMs: config.timeoutMs,
+      isConcurrencySafe: () => false,
+      async execute(args, exec) {
+        const sessionId = executionSessionId(exec)
+        const state = sessionWriteState(writeStates, sessionId)
+        if (state.pendingConflict !== undefined) {
+          return renderProposalBlocked(state.pendingConflict)
+        }
+        const value = await client.propose(args, sessionId, exec.signal)
+        const memoryId = nonEmptyText(value?.id)
+        if (memoryId === undefined || value?.status !== 'candidate') {
+          throw new Error('MemoryOS returned an invalid candidate memory')
+        }
+        return [
+          `candidate_memory_id=${memoryId}`,
+          'status=candidate',
+          `atomic_fact_key=${args.key}`,
+          'Review the candidate against the user statement, then call memory_confirm with this exact id only if it is accurate.',
+        ].join('\n')
+      },
+    }))
+
+    ctx.tools.register(defineTool({
+      name: 'memory_confirm',
+      description: [
+        'Activate one accurate candidate returned by memory_propose. Never confirm a candidate that',
+        'turns temporary, unresolved, or repository-readable information into lasting project truth.',
+        'On a conflict, call memory_confirm again for the same candidate with one strategy and a',
+        'rationale. Do not create a replacement candidate to recover from a conflict.',
+      ].join(' '),
+      parameters: {
+        memory_id: {
+          type: 'string',
+          required: true,
+          description: 'Exact candidate_memory_id returned by memory_propose',
+        },
+        rationale: {
+          type: 'string',
+          description: 'Short reason the candidate is durable and accurate; explain the choice when strategy is set',
+        },
+        strategy: {
+          type: 'string',
+          enum: ['supersede', 'keep_both', 'reject'],
+          description: 'Conflict resolution for the same candidate: supersede only when it replaces old truth; keep_both when both durable facts can coexist; reject when this candidate is wrong, temporary, or redundant',
+        },
+      },
+      output: {
+        schema: { type: 'string' },
+        render: (_args, value) => [{ type: 'text', text: value }],
+      },
+      timeoutMs: config.timeoutMs,
+      isConcurrencySafe: () => false,
+      async execute(args, exec) {
+        const sessionId = executionSessionId(exec)
+        const state = sessionWriteState(writeStates, sessionId)
+        if (state.pendingConflict !== undefined) {
+          if (args.memory_id !== state.pendingConflict.candidateId) {
+            return renderConfirmationBlocked(state.pendingConflict)
+          }
+          if (args.strategy === undefined) return renderConfirmConflict(state.pendingConflict)
+        }
+        let value
+        try {
+          value = await client.confirm(args, exec.signal)
+        } catch (error) {
+          if (!isMemoryOSConflict(error)) throw error
+          const conflict = conflictState(error, args.memory_id)
+          state.pendingConflict = conflict
+          return renderConfirmConflict(conflict)
+        }
+        const memoryId = nonEmptyText(value?.id)
+        if (memoryId === undefined || !['active', 'rejected'].includes(value?.status)) {
+          throw new Error('MemoryOS did not resolve the candidate memory')
+        }
+        const conflictResolved = args.strategy !== undefined || state.pendingConflict !== undefined
+        state.pendingConflict = undefined
+        if (value.status === 'rejected') {
+          return [
+            `memory_id=${memoryId}`,
+            'status=rejected',
+            'memory_activated=false',
+            'conflict_resolved=true',
+          ].join('\n')
+        }
+        return [
+          `memory_id=${memoryId}`,
+          'status=active',
+          ...(conflictResolved ? ['conflict_resolved=true'] : []),
+        ].join('\n')
+      },
+    }))
+  }
 
   if (EXPLAIN_CONDITIONS.has(config.condition)) {
     ctx.tools.register(defineTool({
@@ -100,7 +238,54 @@ export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
 
   registerOfflineRecovery(ctx, config, actionStates, dependencies)
 
-  return Object.freeze({ client, config, actionStates })
+  return Object.freeze({ client, config, actionStates, writeStates })
+}
+
+function sessionWriteState(states, sessionId) {
+  const current = states.get(sessionId)
+  if (current !== undefined) return current
+  const state = { pendingConflict: undefined }
+  states.set(sessionId, state)
+  return state
+}
+
+function conflictState(error, fallbackCandidateId) {
+  const candidateId = nonEmptyText(error?.details?.candidate_id) ?? fallbackCandidateId
+  const conflictIds = Array.isArray(error?.details?.conflict_ids)
+    ? error.details.conflict_ids.map(nonEmptyText).filter(Boolean)
+    : []
+  return { candidateId, conflictIds }
+}
+
+function renderConfirmConflict(conflict) {
+  return [
+    `candidate_memory_id=${conflict.candidateId}`,
+    'status=conflict',
+    'memory_activated=false',
+    `conflict_memory_ids=${conflict.conflictIds.join(',') || 'unknown'}`,
+    'allowed_strategies=supersede|keep_both|reject',
+    'strategy_guidance=supersede only for explicit replacement; keep_both for coexisting durable facts; reject for an inaccurate, temporary, or redundant candidate',
+    'next_action=call memory_confirm again with the same candidate_memory_id, one strategy, and a rationale',
+    'do_not_call=memory_propose',
+  ].join('\n')
+}
+
+function renderProposalBlocked(conflict) {
+  return [
+    'proposal_blocked=pending_conflict',
+    `candidate_memory_id=${conflict.candidateId}`,
+    'next_action=resolve the pending candidate with memory_confirm before proposing another fact',
+    'allowed_strategies=supersede|keep_both|reject',
+  ].join('\n')
+}
+
+function renderConfirmationBlocked(conflict) {
+  return [
+    'confirmation_blocked=pending_conflict',
+    `candidate_memory_id=${conflict.candidateId}`,
+    'next_action=resolve this candidate first with memory_confirm and one strategy',
+    'allowed_strategies=supersede|keep_both|reject',
+  ].join('\n')
 }
 
 export function renderDeepSeekContext(value) {
@@ -185,12 +370,12 @@ export function renderDeepSeekActionContract(value) {
 
 function contextDescription(responseFormat) {
   if (responseFormat === 'deepseek-compact') {
-    return 'One-shot project context. Call once before broad search, then verify it in code.'
+    return 'One-shot project context. Call once for previously established project decisions or before broad search, then verify code-related facts in code.'
   }
   if (responseFormat === PROGRESSIVE_COMPACT) {
-    return 'Retrieve compact project memory before code inspection. One resolved record is expanded automatically; otherwise expand only needed evidence.'
+    return 'Retrieve compact project memory for previously established decisions or before code inspection. One resolved record is expanded automatically; otherwise expand only needed evidence.'
   }
-  return 'Retrieve task-relevant MemoryOS context before inspecting or editing code.'
+  return 'Retrieve task-relevant project memory before answering about previously established decisions, or before inspecting or editing code.'
 }
 
 function appendSectionLines(lines, label, items, select, rendered = new Set()) {
@@ -247,13 +432,13 @@ function renderStatus(item) {
 
 function compactProgressiveIndexText(value) {
   return value.trim().split('\n').map(line => {
-    const match = /^(\s*)[^;\n]+; state=([^/;\s]+)\/([^;\s]+); policy=[^;\n]+; evidence=\d+; details=memory_explain\s*$/u.exec(line)
+    const match = /^(\s*)[^;\n]+; state=([^/;\s]+)\/([^;\s]+); policy=[^;\n]+; evidence=\d+; (?:(write_key=[^;\n]+); )?details=memory_explain\s*$/u.exec(line)
     if (match === null) return line
-    const [, indentation, truth, freshness] = match
+    const [, indentation, truth, freshness, writeKey] = match
     const status = freshness === 'unknown' && truth !== 'unknown'
       ? truth
       : `${truth}/${freshness}`
-    return `${indentation}status=${status}; expand=memory_explain`
+    return `${indentation}status=${status}; ${writeKey === undefined ? '' : `${writeKey}; `}expand=memory_explain`
   }).join('\n')
 }
 

@@ -25,6 +25,9 @@ export const Config = Schema.object({
   provider: Schema.string(),
   model: Schema.string(),
   cacheNamespaceSha256: Schema.string().default('0'.repeat(64)),
+  evaluationHistoryCharLimit: Schema.number(),
+  evaluationEvictionOutputFile: Schema.string(),
+  evaluationSentinel: Schema.string(),
   pricing: Schema.union([
     Schema.object({
       cacheMissInputUsdPerMillion: Schema.number().required(),
@@ -41,6 +44,7 @@ export function apply(ctx, config) {
   return registerMemoryOSUsage(ctx, config, {
     appendFile,
     appendAttempt(path, value) { appendFileSync(path, value, 'utf8') },
+    appendEviction(path, value) { appendFileSync(path, value, 'utf8') },
     readUsageGuard(path) {
       let payload
       try {

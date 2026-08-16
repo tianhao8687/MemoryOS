@@ -566,6 +566,38 @@ diff --git a/.codex/instructions.md b/.codex/instructions.md
 
 
 @pytest.mark.v23
+def test_workspace_search_has_a_bounded_python_fallback_without_ripgrep(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = _workspace(tmp_path / "workspace")
+    (workspace / "src" / "second.py").write_text(
+        "def subtract(left, right):\n    return left - right\n",
+        encoding="utf-8",
+    )
+    (workspace / ".codex").mkdir()
+    (workspace / ".codex" / "instructions.md").write_text(
+        "return hidden\n",
+        encoding="utf-8",
+    )
+    real_which = shutil.which
+    monkeypatch.setattr(
+        shutil,
+        "which",
+        lambda executable: None if executable == "rg" else real_which(executable),
+    )
+    tools = RestrictedWorkspaceTools(workspace, ())
+
+    result = tools.execute("search_files", {"query": r"return\s+left", "max_results": 1})
+
+    assert result["ok"] is True
+    assert result["result"] == {
+        "matches": ["src/calculator.py:2:    return left - right"],
+        "truncated": True,
+    }
+
+
+@pytest.mark.v23
 def test_workspace_read_is_unnumbered_and_patch_failure_is_actionable(tmp_path: Path) -> None:
     workspace = _workspace(tmp_path / "workspace")
     tools = RestrictedWorkspaceTools(workspace, ())

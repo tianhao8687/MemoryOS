@@ -12,7 +12,7 @@ from memoryos.context.token_meter import TokenCounter, canonical_json
 from memoryos.domain.schemas import DetailLevel, FreshnessState, TruthState
 from memoryos.retrieval.context import _section
 
-ATOM_RENDER_POLICY_VERSION = "context-atom-v1"
+ATOM_RENDER_POLICY_VERSION = "context-atom-v2-write-key"
 CURRENT_STRUCTURED_STATUSES = {"accepted", "contested", "stale"}
 HISTORICAL_STRUCTURED_STATUS = "historical"
 MINIMUM_ATOM_UTILITY = 1e-6
@@ -33,6 +33,8 @@ class ContextAtom(BaseModel):
     memory_id: str
     memory_ids: tuple[str, ...]
     claim_ids: tuple[str, ...]
+    memory_key: str
+    memory_content: str
     canonical_key: str
     bundle_key: str
     atom_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -140,6 +142,7 @@ class AtomBuilder:
             "truth_state": candidate["truth_state"],
             "freshness": candidate["trace"]["freshness"],
             "constraint_text": _normalize_text(str(memory["content"])) if is_constraint else None,
+            "confirmed_memory": _normalize_text(str(memory["content"])),
         }
         canonical_key = _digest(identity)
         bundle_key = _digest(
@@ -264,6 +267,8 @@ class AtomBuilder:
         pointer_version = _digest(pointers)
         truth_state = TruthState(str(candidate["truth_state"]))
         freshness = FreshnessState(str(candidate["trace"]["freshness"]))
+        memory_key = _memory_write_key(memory)
+        memory_content = str(memory["content"]).strip()
         atom_hash = _digest(
             {
                 "fact": _normalize_text(fact_text),
@@ -281,6 +286,8 @@ class AtomBuilder:
                 "valid_to": valid_to,
                 "evidence_pointer_version": pointer_version,
                 "render_policy_version": ATOM_RENDER_POLICY_VERSION,
+                "memory_key": memory_key,
+                "memory_content": _normalize_text(memory_content),
                 "detail_level": detail_level.value,
             }
         )
@@ -299,6 +306,8 @@ class AtomBuilder:
         rendered = _render_atom_line(
             memory_id=memory_id,
             atom_sha256=atom_hash,
+            memory_key=memory_key,
+            memory_content=memory_content,
             fact_text=fact_text,
             truth_state=truth_state,
             freshness=freshness,
@@ -311,6 +320,8 @@ class AtomBuilder:
             memory_id=memory_id,
             memory_ids=(memory_id,),
             claim_ids=claim_ids,
+            memory_key=memory_key,
+            memory_content=memory_content,
             canonical_key=canonical_key,
             bundle_key=bundle_key,
             atom_sha256=atom_hash,
@@ -374,11 +385,15 @@ def exact_deduplicate(
                 "valid_to": primary.valid_to,
                 "evidence_pointer_version": pointer_version,
                 "render_policy_version": ATOM_RENDER_POLICY_VERSION,
+                "memory_key": primary.memory_key,
+                "memory_content": _normalize_text(primary.memory_content),
             }
         )
         rendered = _render_atom_line(
             memory_id=primary.memory_id,
             atom_sha256=atom_hash,
+            memory_key=primary.memory_key,
+            memory_content=primary.memory_content,
             fact_text=primary.fact_text,
             truth_state=primary.truth_state,
             freshness=primary.freshness,
@@ -433,6 +448,8 @@ def _render_atom_line(
     *,
     memory_id: str,
     atom_sha256: str,
+    memory_key: str,
+    memory_content: str,
     fact_text: str,
     truth_state: TruthState,
     freshness: FreshnessState,
@@ -456,16 +473,29 @@ def _render_atom_line(
         if status in {HISTORICAL_STRUCTURED_STATUS, "superseded", "expired"}
         else ""
     )
+    confirmed_memory = (
+        ""
+        if detail_level is DetailLevel.INDEX
+        or _normalize_text(memory_content).casefold() in _normalize_text(fact_text).casefold()
+        else f"\n  confirmed_memory={canonical_json(memory_content)}"
+    )
     return (
-        f"- [{memory_id} @ {atom_sha256}] {fact_text}\n"
+        f"- [{memory_id} @ {atom_sha256}] {fact_text}"
+        f"{confirmed_memory}\n"
         f"  {fact_label}; state={truth_state.value}/{freshness.value}; "
-        f"policy={policy.value}; evidence={evidence_count}; details=memory_explain"
+        f"policy={policy.value}; evidence={evidence_count}; "
+        f"write_key={canonical_json(memory_key)}; details=memory_explain"
         f"{status_label}{verification}"
     )
 
 
 def _normalize_text(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
+
+
+def _memory_write_key(memory: dict[str, Any]) -> str:
+    value = str(memory.get("key") or "").strip()
+    return value or f"memory.{memory['id']}"
 
 
 def _digest(value: Any) -> str:

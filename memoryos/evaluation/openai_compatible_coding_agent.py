@@ -45,6 +45,7 @@ _FORBIDDEN_TEST_EXECUTABLES = {
 _MAX_TOOL_OUTPUT_BYTES = 256 * 1024
 _MAX_PATCH_BYTES = 2 * 1024 * 1024
 _MAX_EXACT_EDIT_BYTES = 256 * 1024
+_MAX_SEARCH_FILE_BYTES = 2 * 1024 * 1024
 _MAX_IDENTICAL_FAILED_TOOL_CALLS = 3
 _MAX_REPEATED_NO_PROGRESS_TOOL_CALLS = 3
 _MAX_REQUIRED_TEST_REMINDERS = 2
@@ -355,7 +356,7 @@ class RestrictedWorkspaceTools:
         root = self._resolve(relative, allow_directory=True)
         executable = shutil.which("rg")
         if executable is None:
-            raise OSError("ripgrep is required for bounded workspace search")
+            return self._search_without_ripgrep(root, query, limit)
         command = [executable, "--line-number", "--no-heading", "--color", "never", "--", query]
         command.append(str(root))
         result = subprocess.run(  # noqa: S603 - direct argv and frozen workspace root
@@ -374,6 +375,54 @@ class RestrictedWorkspaceTools:
         for line in result.stdout.splitlines()[:limit]:
             matches.append(_relativize_search_line(line, self.workspace))
         return {"matches": matches, "truncated": len(result.stdout.splitlines()) > limit}
+
+    def _search_without_ripgrep(
+        self,
+        root: Path,
+        query: str,
+        limit: int,
+    ) -> dict[str, Any]:
+        """Provide a deterministic, bounded fallback when ``rg`` is unavailable."""
+        try:
+            pattern = re.compile(query)
+        except re.error as exc:
+            raise ValueError("search query is not a valid regular expression") from exc
+
+        matches: list[str] = []
+        for current_root, directories, files in os.walk(root, followlinks=False):
+            current = Path(current_root)
+            directories[:] = sorted(
+                directory
+                for directory in directories
+                if not directory.startswith(".")
+                and directory.casefold() not in _FORBIDDEN_WORKSPACE_PATH_PARTS
+                and not (current / directory).is_symlink()
+            )
+            for filename in sorted(files):
+                if filename.startswith("."):
+                    continue
+                path = current / filename
+                try:
+                    if (
+                        path.is_symlink()
+                        or not path.is_file()
+                        or path.stat().st_size > _MAX_SEARCH_FILE_BYTES
+                    ):
+                        continue
+                    payload = path.read_bytes()
+                except OSError:
+                    continue
+                if b"\x00" in payload:
+                    continue
+                text = payload.decode("utf-8", errors="replace")
+                relative_path = path.relative_to(self.workspace).as_posix()
+                for line_number, line in enumerate(text.splitlines(), start=1):
+                    if pattern.search(line) is None:
+                        continue
+                    matches.append(f"{relative_path}:{line_number}:{line}")
+                    if len(matches) > limit:
+                        return {"matches": matches[:limit], "truncated": True}
+        return {"matches": matches, "truncated": False}
 
     def _read(self, arguments: dict[str, Any]) -> dict[str, Any]:
         relative = _required_string(arguments, "path", max_length=1000)

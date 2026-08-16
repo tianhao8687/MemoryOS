@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import numpy as np
-from sqlalchemy import func, or_, select, text
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.orm import Session, noload
 
 from memoryos.db.models import AnnIndexStateRow, EmbeddingRow, MemoryHealthRow, MemoryRow
@@ -19,6 +19,9 @@ from memoryos.retrieval.ann import OptionalSqliteAnnIndex
 from memoryos.retrieval.vector import ExactVectorIndex
 
 TOKEN_RE = re.compile(r"[\w.]+", re.UNICODE)
+CJK_RUN_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+")
+CJK_FALLBACK_TERM_LIMIT = 96
+CJK_FALLBACK_ROW_LIMIT = 4_000
 
 
 def _fts_query(query: str) -> str:
@@ -29,6 +32,55 @@ def _fts_query(query: str) -> str:
 def _strict_fts_query(query: str) -> str:
     tokens = TOKEN_RE.findall(query.lower())
     return " AND ".join(f'"{token.replace(chr(34), chr(34) * 2)}"' for token in tokens[:24])
+
+
+def _cjk_ngram_sets(value: str, *, size: int = 2) -> list[set[str]]:
+    return [
+        {run[index : index + size] for index in range(len(run) - size + 1)}
+        for run in CJK_RUN_RE.findall(value.casefold())
+        if len(run) >= size
+    ]
+
+
+def _cjk_query_terms(value: str, *, limit: int = CJK_FALLBACK_TERM_LIMIT) -> list[str]:
+    """Return bounded, clause-balanced CJK terms for an indexed LIKE fallback."""
+
+    per_run: list[list[str]] = []
+    for run in CJK_RUN_RE.findall(value.casefold()):
+        terms: list[str] = []
+        for size in (3, 2):
+            terms.extend(run[index : index + size] for index in range(len(run) - size + 1))
+        if terms:
+            per_run.append(list(dict.fromkeys(terms)))
+    selected: list[str] = []
+    seen: set[str] = set()
+    offset = 0
+    while len(selected) < limit and any(offset < len(terms) for terms in per_run):
+        for terms in per_run:
+            if offset >= len(terms):
+                continue
+            term = terms[offset]
+            if term not in seen:
+                seen.add(term)
+                selected.append(term)
+                if len(selected) == limit:
+                    break
+        offset += 1
+    return selected
+
+
+def _cjk_similarity(query: str, document: str) -> float:
+    """Best clause-to-clause Dice overlap for languages without FTS word breaks."""
+
+    query_runs = _cjk_ngram_sets(query)
+    document_runs = _cjk_ngram_sets(document)
+    if not query_runs or not document_runs:
+        return 0.0
+    return max(
+        (2.0 * len(query_grams & document_grams)) / (len(query_grams) + len(document_grams))
+        for query_grams in query_runs
+        for document_grams in document_runs
+    )
 
 
 def _scope_weight(scope_type: str) -> float:
@@ -227,6 +279,20 @@ class RetrievalEngine:
                     str(row.memory_id): 1.0 / (1.0 + abs(float(row.rank))) for row in fts_rows
                 }
 
+                cjk_lexical = self._cjk_fallback(
+                    session,
+                    request,
+                    allowed_scopes=allowed_scopes,
+                    valid_moment=valid_moment,
+                    limit=candidate_limit,
+                )
+                if cjk_lexical:
+                    had_fts_results = bool(fts_ids)
+                    fts_ids = list(dict.fromkeys([*fts_ids, *cjk_lexical]))
+                    for memory_id, score in cjk_lexical.items():
+                        lexical[memory_id] = max(lexical.get(memory_id, 0.0), score)
+                    mode = "fts5-cjk-hybrid" if had_fts_results else "fts5-cjk-fallback"
+
             provider_failed = False
             if self.embedding_provider is not None and request.query.strip():
                 try:
@@ -314,7 +380,7 @@ class RetrievalEngine:
             # snapshot, rather than leaking the wall-clock date into an otherwise fixed replay.
             now = _utc(valid_moment)
 
-            def score(row: MemoryRow) -> float:
+            def row_score(row: MemoryRow) -> float:
                 age_days = max(0.0, (now - _utc(row.created_at)).total_seconds() / 86400)
                 recency = math.exp(-age_days / 90)
                 lexical_score = lexical.get(row.id, 0.35 if not query else 0.0)
@@ -328,19 +394,109 @@ class RetrievalEngine:
                     + row.confidence * 0.08
                 )
 
-            ranked = sorted(valid_rows, key=score, reverse=True)
+            ranked = sorted(valid_rows, key=row_score, reverse=True)
             total = len(ranked)
             page = ranked[request.offset : request.offset + request.limit]
             items = [
                 {
                     "memory": self._serialize(row),
-                    "score": round(score(row), 6),
+                    "score": round(row_score(row), 6),
                     "lexical_score": round(lexical.get(row.id, 0.0), 6),
                     "semantic_score": round(semantic.get(row.id, 0.0), 6),
                 }
                 for row in page
             ]
             return {"items": items, "total": total, "mode": mode}
+
+    def _cjk_fallback(
+        self,
+        session: Session,
+        request: SearchRequest,
+        *,
+        allowed_scopes: set[tuple[str, str | None]] | None,
+        valid_moment: datetime,
+        limit: int,
+    ) -> dict[str, float]:
+        terms = _cjk_query_terms(request.query)
+        if not terms or allowed_scopes == set():
+            return {}
+        searchable = or_(
+            *[
+                predicate
+                for term in terms
+                for predicate in (
+                    MemoryRow.title.contains(term, autoescape=True),
+                    MemoryRow.content.contains(term, autoescape=True),
+                    MemoryRow.key.contains(term, autoescape=True),
+                )
+            ]
+        )
+        statement = select(MemoryRow).options(noload(MemoryRow.sources)).where(searchable)
+        if request.scope_type is not None:
+            statement = statement.where(MemoryRow.scope_type == request.scope_type)
+        if request.scope_key is not None:
+            statement = statement.where(MemoryRow.scope_key == request.scope_key)
+        if request.memory_type is not None:
+            statement = statement.where(MemoryRow.memory_type == request.memory_type)
+        if request.status is not None:
+            statement = statement.where(MemoryRow.status == request.status)
+        elif not request.include_history:
+            statement = statement.outerjoin(
+                MemoryHealthRow, MemoryHealthRow.memory_id == MemoryRow.id
+            ).where(
+                MemoryRow.status == MemoryStatus.ACTIVE,
+                or_(
+                    MemoryHealthRow.memory_id.is_(None),
+                    MemoryHealthRow.temperature != MemoryTemperature.ARCHIVED,
+                ),
+            )
+        if allowed_scopes is not None:
+            scope_predicates = [
+                MemoryRow.scope_type == scope_type
+                if scope_key is None
+                else and_(
+                    MemoryRow.scope_type == scope_type,
+                    MemoryRow.scope_key == scope_key,
+                )
+                for scope_type, scope_key in allowed_scopes
+            ]
+            statement = statement.where(or_(*scope_predicates))
+        rows = list(
+            session.scalars(
+                statement.order_by(
+                    MemoryRow.importance.desc(),
+                    MemoryRow.confidence.desc(),
+                    MemoryRow.updated_at.desc(),
+                ).limit(max(CJK_FALLBACK_ROW_LIMIT, limit * 4))
+            )
+        )
+        valid_rows = [
+            row
+            for row in rows
+            if (row.valid_from is None or _utc(row.valid_from) <= _utc(valid_moment))
+            and (row.valid_to is None or _utc(valid_moment) < _utc(row.valid_to))
+            and (
+                row.ttl_seconds is None
+                or _utc(row.created_at) + timedelta(seconds=row.ttl_seconds) > _utc(valid_moment)
+            )
+            and (request.as_known_at is None or _utc(row.created_at) <= _utc(request.as_known_at))
+        ]
+        scored = {
+            row.id: _cjk_similarity(
+                request.query,
+                "\n".join(
+                    value
+                    for value in (row.title, row.content, row.subject, row.key, row.category)
+                    if value
+                ),
+            )
+            for row in valid_rows
+        }
+        ranked = sorted(
+            ((identity, score) for identity, score in scored.items() if score > 0.0),
+            key=lambda item: (-item[1], item[0]),
+        )[:limit]
+        return dict(ranked)
 
     def _semantic_search(
         self,

@@ -1,0 +1,382 @@
+{
+  "schema_version": "1.0",
+  "benchmark_id": "cross-session-memory-v1",
+  "language": "zh-CN",
+  "source_prompt_forbidden_terms": [
+    "记住",
+    "帮我记住",
+    "remember",
+    "memory",
+    "MemoryOS",
+    "memory_propose",
+    "memory_confirm",
+    "长期记忆",
+    "保存这个决定"
+  ],
+  "execution_shape": {
+    "case_count": 3,
+    "source_sessions": 3,
+    "retrieval_sessions_per_case": 3,
+    "total_real_agent_sessions": 12,
+    "source_cases_may_run_in_parallel": true,
+    "retrieval_arms_may_run_in_parallel_after_each_case_restart": true,
+    "persistent_store_per_case": true
+  },
+  "cases": [
+    {
+      "case_id": "project-decision-001",
+      "memory_class": "project_decision",
+      "repository_scope": "fixture://cross-session/project-decision-001",
+      "wrong_repository_scope": "fixture://cross-session/unrelated-project-001",
+      "fixture": {
+        "fixture_id": "cross-session-database-service",
+        "purpose": "A small service with Alembic structure, a SQLite unit-test fixture, and legacy MySQL compatibility files.",
+        "allowed_repository_evidence": [
+          "Alembic migration files and entrypoint",
+          "SQLite test fixture",
+          "legacy MySQL compatibility code"
+        ],
+        "forbidden_repository_evidence": [
+          "PostgreSQL 17 as a chosen project database",
+          "a decision to stop maintaining MySQL compatibility",
+          "a v3 removal boundary for the old compatibility layer",
+          "a decided connection-pool size"
+        ]
+      },
+      "session_a": {
+        "conversation_rounds": 6,
+        "turns": [
+          {
+            "turn": 1,
+            "user": "我们准备整理这个服务的数据层。先看一下现在项目里的数据库相关目录和迁移结构，暂时不要修改文件，先告诉我目前大概是什么状态。",
+            "information_kind": "temporary_working_context"
+          },
+          {
+            "turn": 2,
+            "user": "我看过之前的几个方案了，这个仓库后续数据库统一使用 PostgreSQL 17，迁移继续使用 Alembic。",
+            "information_kind": "durable_project_decision"
+          },
+          {
+            "turn": 3,
+            "user": "目前测试环境里还有一个 SQLite 文件，不过那个只是单元测试 fixture，别因为看到它就把 SQLite 当成正式数据库方案。另外我今天本地 Python 是 3.12，这个不需要作为项目约束。",
+            "information_kind": "distractors"
+          },
+          {
+            "turn": 4,
+            "user": "另外先不用碰连接池参数，我还没决定是 10 还是 20，数据库连接池这部分以后再定。还有一个已经确定的边界：MySQL 兼容层不再继续维护，不过旧迁移兼容代码先保留到 v3 再删除。",
+            "information_kind": "mixed_unresolved_and_durable_project_decision"
+          },
+          {
+            "turn": 5,
+            "user": "你再确认一下现在 migration 入口在哪，顺便看一下旧 MySQL compatibility 代码主要集中在哪几个文件。还是不要修改。",
+            "information_kind": "repository_readable_task_context"
+          },
+          {
+            "turn": 6,
+            "user": "好，今天先到这里。给我简单总结一下下一步可以从什么地方开始。",
+            "information_kind": "ephemeral_task_wrap_up"
+          }
+        ],
+        "required_confirmed_facts": [
+          {
+            "fact_id": "database-version",
+            "assertion": "The repository database decision is PostgreSQL 17.",
+            "required_terms": ["PostgreSQL", "17"]
+          },
+          {
+            "fact_id": "migration-tool",
+            "assertion": "Database migrations continue to use Alembic.",
+            "required_terms": ["Alembic"]
+          },
+          {
+            "fact_id": "mysql-maintenance",
+            "assertion": "The MySQL compatibility layer is no longer maintained.",
+            "required_terms": ["MySQL", "不再", "维护"]
+          },
+          {
+            "fact_id": "compatibility-removal-boundary",
+            "assertion": "Old migration compatibility code remains until v3 and is removed then.",
+            "required_terms": ["v3", "兼容"]
+          }
+        ],
+        "forbidden_confirmed_truths": [
+          {
+            "assertion": "SQLite is the production database.",
+            "forbidden_terms": ["SQLite", "生产数据库"]
+          },
+          {
+            "assertion": "Python 3.12 is a permanent project constraint.",
+            "forbidden_terms": ["Python 3.12", "项目约束"]
+          },
+          {
+            "assertion": "The connection-pool size is 10.",
+            "forbidden_terms": ["连接池", "10", "确定"]
+          },
+          {
+            "assertion": "The connection-pool size is 20.",
+            "forbidden_terms": ["连接池", "20", "确定"]
+          }
+        ],
+        "confirmed_memory_count": {
+          "minimum": 1
+        }
+      },
+      "session_b": {
+        "prompt": "我们继续处理数据库改造。请只根据之前已经确定的项目决策告诉我：数据库版本、迁移工具、MySQL 兼容策略以及旧兼容层保留到什么时候。如果你没有之前的历史依据，请明确说不知道，不要猜测。",
+        "same_prompt_for_all_arms": true,
+        "no_memory": {
+          "history_only_facts": ["PostgreSQL 17", "旧兼容层保留到 v3"],
+          "must_abstain_on_history_only_facts": true
+        },
+        "same_scope": {
+          "must_call": ["memory_context"],
+          "must_recover_fact_ids": [
+            "database-version",
+            "migration-tool",
+            "mysql-maintenance",
+            "compatibility-removal-boundary"
+          ]
+        },
+        "wrong_scope": {
+          "must_not_return_target_memory": true,
+          "leakage_canaries": ["PostgreSQL 17", "保留到 v3"],
+          "must_not_recover_any_leakage_canary": true
+        }
+      }
+    },
+    {
+      "case_id": "request-tracing-constraint-001",
+      "memory_class": "constraint",
+      "repository_scope": "fixture://cross-session/request-tracing-001",
+      "wrong_repository_scope": "fixture://cross-session/unrelated-project-002",
+      "fixture": {
+        "fixture_id": "cross-session-request-service",
+        "purpose": "A small request middleware service with generic tracing hooks and tests, without the final compatibility policy.",
+        "allowed_repository_evidence": [
+          "generic request middleware",
+          "a traceparent parsing helper used by one test",
+          "an unfinished tracing integration point"
+        ],
+        "forbidden_repository_evidence": [
+          "X-Request-ID as the decided canonical header",
+          "the v3 compatibility boundary",
+          "legacy-client dependency as the reason for the decision"
+        ]
+      },
+      "session_a": {
+        "conversation_rounds": 6,
+        "turns": [
+          {
+            "turn": 1,
+            "user": "我们准备整理请求追踪这一层。先检查一下 middleware、请求标识相关工具和现有测试，暂时不要改文件，告诉我现在有哪些入口。",
+            "information_kind": "temporary_working_context"
+          },
+          {
+            "turn": 2,
+            "user": "这个仓库的请求标识头继续使用 X-Request-ID。",
+            "information_kind": "durable_project_constraint"
+          },
+          {
+            "turn": 3,
+            "user": "今天有一个测试刚好用了 traceparent，另一个开发分支也试过 OpenTelemetry，不过这些都不改变刚才的兼容边界。我本地服务现在跑在 8081，这也只是今天的环境。",
+            "information_kind": "distractors"
+          },
+          {
+            "turn": 4,
+            "user": "日志最终是 JSON 还是纯文本我还没决定，字段名也先不要定，先不要把任何一种格式当成正式规范。请求追踪这里还有一个已经确定的兼容边界：在 v3 之前不能只依赖 traceparent，因为仍有旧客户端依赖 X-Request-ID。",
+            "information_kind": "mixed_unresolved_and_durable_project_constraint"
+          },
+          {
+            "turn": 5,
+            "user": "再帮我确认请求标识现在从哪里进入 middleware，哪些测试覆盖了向下游传递。仍然只做检查，不修改。",
+            "information_kind": "repository_readable_task_context"
+          },
+          {
+            "turn": 6,
+            "user": "今天先停在这里。简要列一下后续整理请求追踪时最先应该检查的地方。",
+            "information_kind": "ephemeral_task_wrap_up"
+          }
+        ],
+        "required_confirmed_facts": [
+          {
+            "fact_id": "canonical-request-header",
+            "assertion": "The request id header remains X-Request-ID.",
+            "required_terms": ["X-Request-ID"]
+          },
+          {
+            "fact_id": "pre-v3-boundary",
+            "assertion": "Before v3 the service must not rely only on traceparent.",
+            "required_terms": ["v3", "traceparent", "不能", "只"]
+          },
+          {
+            "fact_id": "legacy-client-reason",
+            "assertion": "The compatibility boundary exists because legacy clients still depend on X-Request-ID.",
+            "required_terms": ["旧客户端", "依赖", "X-Request-ID"]
+          }
+        ],
+        "forbidden_confirmed_truths": [
+          {
+            "assertion": "traceparent is the only required header now.",
+            "forbidden_terms": ["只", "traceparent", "当前规范"]
+          },
+          {
+            "assertion": "OpenTelemetry is an adopted project standard.",
+            "forbidden_terms": ["OpenTelemetry", "正式", "采用"]
+          },
+          {
+            "assertion": "Port 8081 is a permanent service constraint.",
+            "forbidden_terms": ["8081", "永久", "约束"]
+          },
+          {
+            "assertion": "The final log format is JSON or plain text.",
+            "forbidden_terms": ["日志格式", "已经确定"]
+          }
+        ],
+        "confirmed_memory_count": {
+          "minimum": 1
+        }
+      },
+      "session_b": {
+        "prompt": "继续处理请求追踪。我们之前已经确定的 Header 策略、v3 之前的兼容边界以及原因分别是什么？没有历史依据就说不知道，不要猜。",
+        "same_prompt_for_all_arms": true,
+        "no_memory": {
+          "history_only_facts": ["v3 之前不能只依赖 traceparent", "旧客户端仍依赖 X-Request-ID"],
+          "must_abstain_on_history_only_facts": true
+        },
+        "same_scope": {
+          "must_call": ["memory_context"],
+          "must_recover_fact_ids": [
+            "canonical-request-header",
+            "pre-v3-boundary",
+            "legacy-client-reason"
+          ]
+        },
+        "wrong_scope": {
+          "must_not_return_target_memory": true,
+          "leakage_canaries": ["v3 之前不能只依赖 traceparent", "旧客户端仍依赖 X-Request-ID"],
+          "must_not_recover_any_leakage_canary": true
+        }
+      }
+    },
+    {
+      "case_id": "payment-retry-failed-approach-001",
+      "memory_class": "failed_approach",
+      "repository_scope": "fixture://cross-session/payment-retry-001",
+      "wrong_repository_scope": "fixture://cross-session/unrelated-project-003",
+      "fixture": {
+        "fixture_id": "cross-session-payment-service",
+        "purpose": "A small payment service with a mock provider and unfinished failure handling, without the historical retry decision.",
+        "allowed_repository_evidence": [
+          "mock payment provider",
+          "payment failure callback",
+          "placeholder webhook route",
+          "a generic timeout setting"
+        ],
+        "forbidden_repository_evidence": [
+          "a record that direct automatic retry was tried and rejected",
+          "duplicate-charge risk as the historical rejection reason",
+          "idempotency key as the decided retry prerequisite"
+        ]
+      },
+      "session_a": {
+        "conversation_rounds": 6,
+        "turns": [
+          {
+            "turn": 1,
+            "user": "我们准备重新看一下支付失败后的处理。先检查支付 provider、失败回调和重试相关代码，暂时不要修改，告诉我当前结构。",
+            "information_kind": "temporary_working_context"
+          },
+          {
+            "turn": 2,
+            "user": "支付失败后直接自动重试这个方案以前已经试过并否决了，原因是存在重复扣款风险。",
+            "information_kind": "durable_failed_approach"
+          },
+          {
+            "turn": 3,
+            "user": "当前测试用的是 mock payment provider，今天的测试金额是 19.99 美元。这两个都只是测试条件，不是长期策略。",
+            "information_kind": "distractors"
+          },
+          {
+            "turn": 4,
+            "user": "Webhook endpoint 最终叫什么还没定，timeout 现在临时是 15 秒，也先不要把它当成最终配置。重试这块有一个已经确定的前置条件：必须先建立并验证 idempotency key，然后才允许重试。",
+            "information_kind": "mixed_unresolved_and_durable_retry_constraint"
+          },
+          {
+            "turn": 5,
+            "user": "再确认一下失败回调从哪里进入，以及目前哪里还缺少幂等处理。只检查，不修改代码。",
+            "information_kind": "repository_readable_task_context"
+          },
+          {
+            "turn": 6,
+            "user": "今天先结束。简单总结一下下次继续检查支付失败流程时可以从哪里开始。",
+            "information_kind": "ephemeral_task_wrap_up"
+          }
+        ],
+        "required_confirmed_facts": [
+          {
+            "fact_id": "rejected-direct-retry",
+            "assertion": "Direct automatic retry after payment failure was tried and rejected.",
+            "required_terms": ["直接", "自动重试", "试过", "否决"]
+          },
+          {
+            "fact_id": "duplicate-charge-reason",
+            "assertion": "The approach was rejected because it risks duplicate charges.",
+            "required_terms": ["重复扣款", "风险"]
+          },
+          {
+            "fact_id": "idempotency-prerequisite",
+            "assertion": "An idempotency key must be established and verified before retry.",
+            "required_terms": ["idempotency key", "先", "重试"]
+          }
+        ],
+        "forbidden_confirmed_truths": [
+          {
+            "assertion": "The mock provider is the production provider.",
+            "forbidden_terms": ["mock", "正式", "provider"]
+          },
+          {
+            "assertion": "$19.99 is a durable payment rule.",
+            "forbidden_terms": ["19.99", "固定", "规则"]
+          },
+          {
+            "assertion": "The webhook endpoint name is final.",
+            "forbidden_terms": ["Webhook", "最终名称", "已经确定"]
+          },
+          {
+            "assertion": "The timeout is permanently 15 seconds.",
+            "forbidden_terms": ["15 秒", "永久", "配置"]
+          }
+        ],
+        "confirmed_memory_count": {
+          "minimum": 1
+        }
+      },
+      "session_b": {
+        "prompt": "继续处理支付失败重试。之前已经试过什么方案，为什么不能继续用，以及现在要求的重试前置条件是什么？没有历史依据就明确说不知道。",
+        "same_prompt_for_all_arms": true,
+        "no_memory": {
+          "history_only_facts": ["直接自动重试以前已经试过并否决", "拒绝原因是重复扣款风险"],
+          "must_abstain_on_history_only_facts": true
+        },
+        "same_scope": {
+          "must_call": ["memory_context"],
+          "must_recover_fact_ids": [
+            "rejected-direct-retry",
+            "duplicate-charge-reason",
+            "idempotency-prerequisite"
+          ]
+        },
+        "wrong_scope": {
+          "must_not_return_target_memory": true,
+          "leakage_canaries": ["以前已经试过并否决", "重复扣款风险"],
+          "must_not_recover_any_leakage_canary": true
+        }
+      }
+    }
+  ],
+  "scoring_notes": {
+    "confirmed_memory_count": "Record the count for observability, but only minimum=1 is a pass gate.",
+    "no_memory": "History-only facts must be explicitly unavailable/unknown rather than guessed.",
+    "wrong_scope": "Any leakage canary recovered in the wrong repository scope fails the case."
+  }
+}

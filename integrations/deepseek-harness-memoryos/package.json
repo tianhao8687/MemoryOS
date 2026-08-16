@@ -1,6 +1,6 @@
 {
   "name": "dsh-memoryos",
-  "version": "0.1.12",
+  "version": "0.1.18",
   "description": "MemoryOS context and usage tools for DeepSeek Harness",
   "type": "module",
   "main": "index.js",

@@ -3,7 +3,7 @@
 Thin, installable DeepSeek Harness bundle with two independent Cordis components:
 
 - `memoryos-usage` records exact successful-response usage and a separate pre-dispatch provider-attempt ledger for both baseline and MemoryOS runs. Retries therefore consume the Harness request ceiling even when no usage object is returned. An optional controller-owned `MEMORYOS_USAGE_GUARD_FILE` is checked synchronously before attempt accounting and provider dispatch. It contributes no prompt text or tool schema.
-- `memoryos-tools` exposes `memory_context` and, for progressive/delta conditions, `memory_explain`. It is mounted only when `MEMORYOS_ENABLED=1`.
+- `memoryos-tools` exposes `memory_context` and, for progressive/delta conditions, `memory_explain`. It is mounted only when `MEMORYOS_ENABLED=1`. Its default `read-only` tool profile is unchanged.
 
 The split gives the `no_memory` baseline zero MemoryOS tool-schema tokens while preserving the same usage collector in both arms.
 It targets Harness `0.1.0-rc.5` at commit
@@ -52,6 +52,27 @@ The example configuration contains no provider or MemoryOS secret. The plugin
 reads the local MemoryOS token only from the configured environment variable or
 token file. SQLite, migrations, retrieval, Truth, and compilation remain in the
 MemoryOS service; this bundle does not duplicate them.
+
+The evaluation-only cross-session source profile is enabled explicitly with
+`MEMORYOS_TOOL_PROFILE=cross-session-write`. It adds only `memory_propose` and
+`memory_confirm`, fixes every proposal to the configured repository scope, and
+requires conversation evidence. The default remains `read-only`; existing
+baseline, context-only, progressive, and delta launches gain no write schemas.
+
+Each proposal in the write profile must use a stable semantic key and contain
+one independently updateable fact. If confirmation reports a conflict, the
+plugin keeps that candidate pending, exposes the supported `supersede`,
+`keep_both`, and `reject` strategies, and blocks replacement proposals until
+the same candidate is resolved. Structured MemoryOS error codes and conflict
+ids remain visible to the Agent instead of being reduced to a bare HTTP status.
+
+Provider-attempt evidence also records an estimated write-token attribution for
+the final DeepSeek-visible request. `write_tool_schema_tokens` counts one copy
+of the `memory_propose` and `memory_confirm` schemas in that request;
+`memory_write_visible_tokens` adds write-tool results already replayed on the
+visible conversation surface. The counter is explicitly identified as
+`unicode-heuristic-v1`; exact provider input remains sourced only from provider
+usage.
 
 For the bounded DeepSeek coding profile, use `msc_context_only` with:
 

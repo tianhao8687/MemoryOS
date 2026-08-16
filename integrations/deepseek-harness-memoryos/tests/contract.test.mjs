@@ -5,6 +5,7 @@ import {
   assertHarnessUsageCompatibility,
   deepSeekVisibleRequest,
   harnessRequestEvidence,
+  memoryWriteTokenAccounting,
 } from '../lib/core.js'
 import {
   registerMemoryOSPlugin,
@@ -94,6 +95,70 @@ test('request evidence hashes only the provider-visible DeepSeek payload', () =>
 
   warm.messages[0].content[0].text = 'changed task'
   assert.notEqual(harnessRequestEvidence(request).sha256, harnessRequestEvidence(warm).sha256)
+})
+
+test('write-token accounting prices only model-visible write schemas and replayed results', () => {
+  const request = {
+    model: 'deepseek-v4-flash',
+    tools: [
+      {
+        name: 'memory_propose',
+        description: 'Propose one fact',
+        parameters: { type: 'object', properties: { key: { type: 'string' } } },
+      },
+      {
+        name: 'memory_confirm',
+        description: 'Confirm one fact',
+        parameters: { type: 'object', properties: { memory_id: { type: 'string' } } },
+      },
+      { name: 'bash', description: 'Run a command', parameters: { type: 'object' } },
+    ],
+    messages: [
+      {
+        role: 'assistant',
+        content: [
+          { type: 'tool-call', id: 'write-call', name: 'memory_propose', arguments: '{}' },
+          { type: 'tool-call', id: 'bash-call', name: 'bash', arguments: '{}' },
+        ],
+      },
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'tool-result',
+            toolCallId: 'write-call',
+            content: [{ type: 'text', text: 'candidate_memory_id=memory-1' }],
+          },
+          {
+            type: 'tool-result',
+            toolCallId: 'bash-call',
+            content: [{ type: 'text', text: 'workspace output is excluded' }],
+          },
+        ],
+      },
+    ],
+  }
+  const accounting = memoryWriteTokenAccounting(request)
+  assert.equal(accounting.tokenizer_id, 'unicode-heuristic-v1')
+  assert.equal(accounting.tokenizer_kind, 'estimated')
+  assert.ok(accounting.write_tool_schema_tokens > 0)
+  assert.ok(accounting.memory_write_result_tokens > 0)
+  assert.equal(
+    accounting.memory_write_visible_tokens,
+    accounting.write_tool_schema_tokens + accounting.memory_write_result_tokens,
+  )
+
+  const unrelated = structuredClone(request)
+  unrelated.tools[2].description = 'x'.repeat(10_000)
+  unrelated.messages[1].content[1].content[0].text = 'x'.repeat(10_000)
+  assert.deepEqual(memoryWriteTokenAccounting(unrelated), accounting)
+
+  const largerMemoryResult = structuredClone(request)
+  largerMemoryResult.messages[1].content[0].content[0].text += 'x'.repeat(100)
+  assert.ok(
+    memoryWriteTokenAccounting(largerMemoryResult).memory_write_result_tokens
+      > accounting.memory_write_result_tokens,
+  )
 })
 
 test('fixture Harness calls MSC tools, carries delta state, and writes exact usage', async () => {
@@ -232,6 +297,14 @@ test('fixture Harness calls MSC tools, carries delta state, and writes exact usa
   assert.equal(attempt.step_index, 0)
   assert.equal(attempt.attempt_index, 1)
   assert.equal(attempt.request_sha256, usage[0].request_sha256)
+  assert.deepEqual(attempt.memory_write_token_accounting, {
+    tokenizer_id: 'unicode-heuristic-v1',
+    tokenizer_kind: 'estimated',
+    counter_version: '1.0.0',
+    write_tool_schema_tokens: 0,
+    memory_write_result_tokens: 0,
+    memory_write_visible_tokens: 0,
+  })
 })
 
 test('provider attempt ledger counts retries before a successful usage record', async () => {
@@ -301,6 +374,63 @@ test('controller usage guard stops before provider dispatch and attempt accounti
 
   assert.equal(delegated, 0)
   assert.equal(attempts.length, 0)
+})
+
+test('controlled evaluation window evicts whole old turns and records sentinel visibility', async () => {
+  const harness = fixtureHarness()
+  const evictions = []
+  const sentinel = 'Glacier-47'
+  registerMemoryOSUsage(harness, {
+    condition: 'no_memory',
+    runId: 'eviction-run',
+    taskId: 'eviction-task',
+    cachePhase: 'cold',
+    cacheNamespaceSha256: 'f'.repeat(64),
+    evaluationHistoryCharLimit: 1_024,
+    evaluationEvictionOutputFile: '/virtual/context-evictions.jsonl',
+    evaluationSentinel: sentinel,
+  }, {
+    appendEviction: (_path, value) => { evictions.push(JSON.parse(value)) },
+  })
+
+  const messages = [
+    { role: 'user', content: [{ type: 'text', text: `${sentinel} ${'a'.repeat(650)}` }] },
+    { role: 'assistant', content: [{ type: 'text', text: 'b'.repeat(650) }] },
+    { role: 'user', content: [{ type: 'text', text: 'c'.repeat(320) }] },
+    { role: 'assistant', content: [{ type: 'text', text: 'd'.repeat(320) }] },
+  ]
+  const events = messages.map((message, seq) => ({
+    seq,
+    type: message.role === 'user' ? 'user/message' : 'assistant/message',
+  }))
+  const appended = []
+  const session = {
+    id: 'eviction-session',
+    events,
+    surface: { nodes: [0, 1, 2, 3] },
+    deriveMessages: () => messages,
+    append(type, data, intent) {
+      appended.push({ type, data, intent })
+      return { seq: 4, type, data, ...intent }
+    },
+  }
+  const delegated = await harness.emit(
+    'agent/pre-step',
+    { agent: { session }, step: 1 },
+    async () => 'delegated',
+  )
+
+  assert.equal(delegated, 'delegated')
+  assert.equal(appended.length, 1)
+  assert.equal(appended[0].type, 'user/message')
+  assert.deepEqual(appended[0].intent.surfaceOp, { op: 'replace', start: 0, end: 1 })
+  assert.deepEqual(appended[0].intent.sourceEventSeqs, [0, 1])
+  assert.match(appended[0].data.content[0].text, /not present in the active model context/u)
+  assert.equal(evictions.length, 1)
+  assert.equal(evictions[0].shadowed_contains_sentinel, true)
+  assert.equal(evictions[0].retained_contains_sentinel, false)
+  assert.equal(evictions[0].shadowed_message_count, 2)
+  assert.equal(evictions[0].retained_message_count, 2)
 })
 
 test('DeepSeek compact mode exposes one argument-free context call and text only', async () => {
@@ -705,4 +835,358 @@ test('full-context conditions do not expose the progressive explain tool', () =>
   })
 
   assert.deepEqual([...harness.registered.keys()], ['memory_context'])
+})
+
+test('cross-session-write is explicit, repository-bound, and candidate-confirmed', async () => {
+  const memoryId = '2af9cd62-7f77-4f3b-bcaf-fc2cdde3343f'
+  const requests = []
+  const fetchImpl = async (url, options) => {
+    requests.push({ url, method: options.method, body: JSON.parse(options.body) })
+    if (url.endsWith('/api/memories')) {
+      return response({
+        ok: true,
+        memory: { id: memoryId, status: 'candidate', title: 'Database decision' },
+      })
+    }
+    if (url.endsWith(`/api/memories/${memoryId}/confirm`)) {
+      return response({ ok: true, memory: { id: memoryId, status: 'active' } })
+    }
+    return response({ error: 'not found' }, 404)
+  }
+  const harness = fixtureHarness(fetchImpl)
+  registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'ordinary project discussion',
+    repository: 'fixture://bound-repository',
+    toolProfile: 'cross-session-write',
+  }, {
+    defineTool: value => value,
+    fetchImpl,
+    environment: {},
+  })
+
+  assert.deepEqual(
+    [...harness.registered.keys()],
+    ['memory_context', 'memory_propose', 'memory_confirm'],
+  )
+  const exec = {
+    agent: {
+      id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6',
+      session: { id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6' },
+    },
+    signal: new AbortController().signal,
+  }
+  const proposed = await harness.registered.get('memory_propose').execute({
+    title: 'Database decision',
+    content: 'The repository uses PostgreSQL.',
+    category: 'decision',
+    source_excerpt: '这个仓库后续数据库统一使用 PostgreSQL。',
+    key: 'database.engine',
+  }, exec)
+  assert.match(proposed, new RegExp(`candidate_memory_id=${memoryId}`, 'u'))
+  assert.equal(requests[0].body.scope_type, 'repository')
+  assert.equal(requests[0].body.scope_key, 'fixture://bound-repository')
+  assert.equal(requests[0].body.created_by, 'agent')
+  assert.equal(requests[0].body.memory_type, 'project')
+  assert.equal(requests[0].body.source.source_type, 'conversation')
+  assert.equal(
+    requests[0].body.source.source_ref,
+    'deepseek-harness:session-804f9116-1a60-4ff6-90c3-216bdd8cefc6',
+  )
+
+  const confirmed = await harness.registered.get('memory_confirm').execute({
+    memory_id: memoryId,
+    rationale: 'The user stated a lasting repository decision.',
+  }, exec)
+  assert.equal(confirmed, `memory_id=${memoryId}\nstatus=active`)
+  assert.equal(requests[1].body.rationale, 'The user stated a lasting repository decision.')
+  assert.match(requests[1].url, new RegExp(`/api/memories/${memoryId}/confirm$`, 'u'))
+})
+
+test('cross-session write schemas require atomic keys and expose conflict strategies', () => {
+  const harness = fixtureHarness()
+  registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'ordinary project discussion',
+    repository: 'fixture://bound-repository',
+    toolProfile: 'cross-session-write',
+  }, {
+    defineTool: value => value,
+    fetchImpl: async () => response({}),
+    environment: {},
+  })
+
+  const propose = harness.registered.get('memory_propose')
+  const confirm = harness.registered.get('memory_confirm')
+  assert.equal(propose.parameters.key.required, true)
+  assert.match(propose.description, /exactly one independently updateable fact/iu)
+  assert.match(propose.parameters.content.description, /one atomic fact/iu)
+  assert.match(propose.parameters.key.description, /reuse the exact write_key/iu)
+  assert.deepEqual(confirm.parameters.strategy.enum, ['supersede', 'keep_both', 'reject'])
+  assert.match(confirm.parameters.strategy.description, /same candidate/iu)
+  assert.match(confirm.description, /Do not create a replacement candidate/iu)
+})
+
+test('confirm conflict is actionable and blocks candidate churn until resolution', async () => {
+  const candidateId = '2af9cd62-7f77-4f3b-bcaf-fc2cdde3343f'
+  const conflictId = 'bb630c2a-97d4-45bc-81aa-f4638ce5a624'
+  const requests = []
+  let proposalCount = 0
+  const fetchImpl = async (url, options) => {
+    const body = JSON.parse(options.body)
+    requests.push({ url, body })
+    if (url.endsWith('/api/memories')) {
+      proposalCount += 1
+      return response({
+        ok: true,
+        memory: {
+          id: proposalCount === 1
+            ? candidateId
+            : 'a6b61374-4f8c-4f5f-9779-875bda9e12bc',
+          status: 'candidate',
+        },
+      })
+    }
+    if (url.endsWith(`/api/memories/${candidateId}/confirm`) && body.strategy === undefined) {
+      return response({
+        ok: false,
+        error: {
+          code: 'CONFLICT_DETECTED',
+          message: 'candidate conflicts with active memory; choose a resolution strategy',
+          details: { candidate_id: candidateId, conflict_ids: [conflictId] },
+        },
+      }, 409)
+    }
+    if (url.endsWith(`/api/memories/${candidateId}/confirm`) && body.strategy === 'keep_both') {
+      return response({ ok: true, memory: { id: candidateId, status: 'active' } })
+    }
+    return response({ error: 'not found' }, 404)
+  }
+  const harness = fixtureHarness(fetchImpl)
+  registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'ordinary project discussion',
+    repository: 'fixture://bound-repository',
+    toolProfile: 'cross-session-write',
+  }, {
+    defineTool: value => value,
+    fetchImpl,
+    environment: {},
+  })
+  const exec = {
+    agent: {
+      id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6',
+      session: { id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6' },
+    },
+    signal: new AbortController().signal,
+  }
+  const proposal = {
+    title: 'One durable fact',
+    content: 'The compatibility boundary remains supported.',
+    category: 'constraint',
+    source_excerpt: '兼容边界继续保留。',
+    key: 'compatibility.boundary',
+  }
+
+  await harness.registered.get('memory_propose').execute(proposal, exec)
+  const conflict = await harness.registered.get('memory_confirm').execute({
+    memory_id: candidateId,
+  }, exec)
+  assert.match(conflict, /status=conflict/u)
+  assert.match(conflict, new RegExp(`candidate_memory_id=${candidateId}`, 'u'))
+  assert.match(conflict, new RegExp(`conflict_memory_ids=${conflictId}`, 'u'))
+  assert.match(conflict, /allowed_strategies=supersede\|keep_both\|reject/u)
+  assert.match(conflict, /do_not_call=memory_propose/u)
+
+  const requestCountAfterConflict = requests.length
+  const repeated = await harness.registered.get('memory_confirm').execute({
+    memory_id: candidateId,
+  }, exec)
+  assert.equal(repeated, conflict)
+  assert.equal(requests.length, requestCountAfterConflict)
+
+  const blocked = await harness.registered.get('memory_propose').execute({
+    ...proposal,
+    title: 'Rephrased duplicate',
+    content: 'Keep supporting the same compatibility boundary.',
+  }, exec)
+  assert.match(blocked, /proposal_blocked=pending_conflict/u)
+  assert.match(blocked, new RegExp(`candidate_memory_id=${candidateId}`, 'u'))
+  assert.equal(requests.length, requestCountAfterConflict)
+
+  const resolved = await harness.registered.get('memory_confirm').execute({
+    memory_id: candidateId,
+    strategy: 'keep_both',
+    rationale: 'Both durable facts can coexist.',
+  }, exec)
+  assert.equal(resolved, `memory_id=${candidateId}\nstatus=active\nconflict_resolved=true`)
+  assert.equal(requests.at(-1).body.strategy, 'keep_both')
+
+  await harness.registered.get('memory_propose').execute({
+    ...proposal,
+    title: 'A different atomic fact',
+    content: 'A separate independently updateable constraint.',
+    key: 'compatibility.separate-constraint',
+  }, exec)
+  assert.equal(proposalCount, 2)
+})
+
+test('nested Harness bridge conflict remains actionable to the model', async () => {
+  const candidateId = '2af9cd62-7f77-4f3b-bcaf-fc2cdde3343f'
+  const conflictId = 'bb630c2a-97d4-45bc-81aa-f4638ce5a624'
+  const direct = {
+    ok: false,
+    error: {
+      code: 'CONFLICT_DETECTED',
+      message: 'candidate conflicts with active memory; choose a resolution strategy',
+      details: { candidate_id: candidateId, conflict_ids: [conflictId] },
+    },
+  }
+  let calls = 0
+  const fetchImpl = async (url) => {
+    calls += 1
+    if (url.endsWith('/api/memories')) {
+      return response({ ok: true, memory: { id: candidateId, status: 'candidate' } })
+    }
+    return response({
+      error: 'RuntimeError',
+      message: JSON.stringify({
+        code: 'RuntimeError',
+        message: `MemoryOS HTTP 409: ${JSON.stringify(direct)}`,
+      }),
+    }, 400)
+  }
+  const harness = fixtureHarness(fetchImpl)
+  registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'ordinary project discussion',
+    repository: 'fixture://bound-repository',
+    toolProfile: 'cross-session-write',
+  }, {
+    defineTool: value => value,
+    fetchImpl,
+    environment: {},
+  })
+  const exec = {
+    agent: {
+      id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6',
+      session: { id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6' },
+    },
+    signal: new AbortController().signal,
+  }
+  await harness.registered.get('memory_propose').execute({
+    title: 'Atomic fact',
+    content: 'One independently updateable fact.',
+    category: 'decision',
+    source_excerpt: '一个持久事实。',
+    key: 'project.atomic-fact',
+  }, exec)
+  const conflict = await harness.registered.get('memory_confirm').execute({
+    memory_id: candidateId,
+  }, exec)
+
+  assert.equal(calls, 2)
+  assert.match(conflict, /status=conflict/u)
+  assert.match(conflict, new RegExp(`conflict_memory_ids=${conflictId}`, 'u'))
+})
+
+test('reject resolves a pending conflict without activating the candidate', async () => {
+  const candidateId = '2af9cd62-7f77-4f3b-bcaf-fc2cdde3343f'
+  let confirmCalls = 0
+  const fetchImpl = async (url, options) => {
+    if (url.endsWith('/api/memories')) {
+      return response({ ok: true, memory: { id: candidateId, status: 'candidate' } })
+    }
+    const body = JSON.parse(options.body)
+    confirmCalls += 1
+    if (body.strategy === undefined) {
+      return response({
+        ok: false,
+        error: {
+          code: 'CONFLICT_DETECTED',
+          message: 'candidate conflicts with active memory',
+          details: { candidate_id: candidateId, conflict_ids: ['existing-memory'] },
+        },
+      }, 409)
+    }
+    assert.equal(body.strategy, 'reject')
+    return response({ ok: true, memory: { id: candidateId, status: 'rejected' } })
+  }
+  const harness = fixtureHarness(fetchImpl)
+  registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'ordinary project discussion',
+    repository: 'fixture://bound-repository',
+    toolProfile: 'cross-session-write',
+  }, {
+    defineTool: value => value,
+    fetchImpl,
+    environment: {},
+  })
+  const exec = {
+    agent: {
+      id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6',
+      session: { id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6' },
+    },
+    signal: new AbortController().signal,
+  }
+  await harness.registered.get('memory_propose').execute({
+    title: 'Atomic fact',
+    content: 'One independently updateable fact.',
+    category: 'decision',
+    source_excerpt: '一个持久事实。',
+    key: 'project.atomic-fact',
+  }, exec)
+  await harness.registered.get('memory_confirm').execute({ memory_id: candidateId }, exec)
+  const rejected = await harness.registered.get('memory_confirm').execute({
+    memory_id: candidateId,
+    strategy: 'reject',
+    rationale: 'The candidate duplicates existing durable truth.',
+  }, exec)
+
+  assert.equal(rejected, [
+    `memory_id=${candidateId}`,
+    'status=rejected',
+    'memory_activated=false',
+    'conflict_resolved=true',
+  ].join('\n'))
+  assert.equal(confirmCalls, 2)
+})
+
+test('non-conflict MemoryOS errors preserve their stable code and message', async () => {
+  const harness = fixtureHarness()
+  registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'ordinary project discussion',
+    repository: 'fixture://bound-repository',
+  }, {
+    defineTool: value => value,
+    fetchImpl: async () => response({
+      ok: false,
+      error: {
+        code: 'AUTH_REQUIRED',
+        message: 'a valid local bearer token is required',
+        details: {},
+      },
+    }, 401),
+    environment: {},
+  })
+  const exec = {
+    agent: {
+      id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6',
+      session: { id: 'session-804f9116-1a60-4ff6-90c3-216bdd8cefc6' },
+    },
+    signal: new AbortController().signal,
+  }
+
+  await assert.rejects(
+    harness.registered.get('memory_context').execute({}, exec),
+    /MemoryOS AUTH_REQUIRED \(HTTP 401\): a valid local bearer token is required/u,
+  )
 })

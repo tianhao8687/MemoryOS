@@ -93,14 +93,18 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
 
   const previousEnabled = process.env.MEMORYOS_ENABLED
   const previousCondition = process.env.MEMORYOS_CONDITION
+  const previousToolProfile = process.env.MEMORYOS_TOOL_PROFILE
+  const previousRepository = process.env.MEMORYOS_REPOSITORY
   const previousResumeSessionId = process.env.MEMORYOS_RESUME_SESSION_ID
   let baseline
   let treatment
+  let writer
   let resumed
   try {
     delete process.env.MEMORYOS_RESUME_SESSION_ID
     process.env.MEMORYOS_ENABLED = '0'
     process.env.MEMORYOS_CONDITION = 'msc_progressive'
+    process.env.MEMORYOS_TOOL_PROFILE = 'read-only'
     baseline = await boot()
     const baselineEntries = [...baseline.loader.entries()]
     const baselineTools = baselineEntries.find(entry => entry.options.id === 'memoryos-tools')
@@ -118,6 +122,7 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
 
     process.env.MEMORYOS_ENABLED = '1'
     process.env.MEMORYOS_CONDITION = 'msc_progressive'
+    process.env.MEMORYOS_TOOL_PROFILE = 'read-only'
     treatment = await boot()
     const entries = [...treatment.loader.entries()]
     const toolsEntry = entries.find(entry => entry.options.id === 'memoryos-tools')
@@ -140,8 +145,42 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
     assert.ok(treatment.tools.get('memory_context'))
     assert.ok(treatment.tools.get('memory_explain'))
 
+    await treatment.fiber.dispose()
+    treatment = undefined
+    process.env.MEMORYOS_ENABLED = '1'
+    process.env.MEMORYOS_CONDITION = 'msc_context_only'
+    process.env.MEMORYOS_TOOL_PROFILE = 'cross-session-write'
+    process.env.MEMORYOS_REPOSITORY = 'fixture://loader-write-profile'
+    writer = await boot()
+    const writerSchemas = writer.tools.schemas()
+    assert.deepEqual(
+      writerSchemas.map(schema => schema.name).sort(),
+      ['memory_confirm', 'memory_context', 'memory_propose'],
+    )
+    const proposeSchema = writerSchemas.find(schema => schema.name === 'memory_propose')
+    assert.ok(proposeSchema)
+    assert.match(proposeSchema.description, /exactly one independently updateable fact/u)
+    assert.deepEqual(
+      [...proposeSchema.parameters.required].sort(),
+      ['category', 'content', 'key', 'source_excerpt', 'title'],
+    )
+    assert.match(
+      proposeSchema.parameters.properties.key.description,
+      /Stable dot-separated semantic key/u,
+    )
+    const confirmSchema = writerSchemas.find(schema => schema.name === 'memory_confirm')
+    assert.ok(confirmSchema)
+    assert.deepEqual(
+      confirmSchema.parameters.properties.strategy.enum,
+      ['supersede', 'keep_both', 'reject'],
+    )
+    assert.match(confirmSchema.description, /same candidate/u)
+    await writer.fiber.dispose()
+    writer = undefined
+
     process.env.MEMORYOS_ENABLED = '0'
     process.env.MEMORYOS_CONDITION = 'msc_progressive'
+    process.env.MEMORYOS_TOOL_PROFILE = 'read-only'
     process.env.MEMORYOS_RESUME_SESSION_ID = 'session-00000000-0000-4000-8000-000000000000'
     resumed = await boot()
     const resumedEntries = [...resumed.loader.entries()]
@@ -152,9 +191,12 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
   } finally {
     await baseline?.fiber.dispose()
     await treatment?.fiber.dispose()
+    await writer?.fiber.dispose()
     await resumed?.fiber.dispose()
     restoreEnvironment('MEMORYOS_ENABLED', previousEnabled)
     restoreEnvironment('MEMORYOS_CONDITION', previousCondition)
+    restoreEnvironment('MEMORYOS_TOOL_PROFILE', previousToolProfile)
+    restoreEnvironment('MEMORYOS_REPOSITORY', previousRepository)
     restoreEnvironment('MEMORYOS_RESUME_SESSION_ID', previousResumeSessionId)
     await rm(root, { recursive: true, force: true })
   }

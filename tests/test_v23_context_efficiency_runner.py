@@ -679,6 +679,11 @@ def test_harness_settings_freeze_model_preset_and_reasoning(tmp_path: Path) -> N
         "  reasoningEffort: max\n"
         "llm-deepseek:\n"
         "  maxTokens: 256000\n"
+        "  models:\n"
+        "    - id: deepseek-v4-flash\n"
+        "      name: deepseek-v4-flash\n"
+        "      contextWindow: 1000000\n"
+        "      maxTokens: 256000\n"
         "  retryPolicy:\n"
         "    mode: normal\n"
         "    maxRetries: 1\n"
@@ -917,6 +922,79 @@ def test_harness_explain_accepts_the_displayed_memory_handle() -> None:
             f"{memory_id} @ {atom_sha256}",
             "expected_atom_sha256=" + "0" * 64,
         )
+
+
+@pytest.mark.v23
+def test_harness_bridge_write_profile_is_explicit_and_repository_bound() -> None:
+    memory_id = "2af9cd62-7f77-4f3b-bcaf-fc2cdde3343f"
+
+    class Backend:
+        policy = ConditionPolicy.for_condition(ContextEfficiencyCondition.MSC_CONTEXT_ONLY)
+        task = "ordinary discussion"
+        repository = "fixture://write-boundary"
+        budget_tokens = 512
+
+        def execute(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+            if name == "memory_propose":
+                return {
+                    "ok": True,
+                    "result": {"id": memory_id, "status": "candidate", **arguments},
+                }
+            if name == "memory_confirm":
+                return {"ok": True, "result": {"id": memory_id, "status": "active"}}
+            raise AssertionError(name)
+
+    bridge = MemoryOSHTTPBridge(
+        Backend(),
+        run_id="write-profile-preflight",
+        task_id="write-profile",
+        condition=ContextEfficiencyCondition.MSC_CONTEXT_ONLY.value,
+        cache_phase=CachePhase.COLD,
+        allow_writes=True,
+    )
+    proposal = {
+        "scope_type": "repository",
+        "scope_key": "fixture://write-boundary",
+        "memory_type": "project",
+        "category": "decision",
+        "key": "project.durable-decision",
+        "title": "Durable decision",
+        "content": "A durable project decision.",
+        "created_by": "agent",
+        "source": {
+            "source_type": "conversation",
+            "source_ref": "deepseek-harness:session-804f9116-1a60-4ff6-90c3-216bdd8cefc6",
+            "excerpt": "A durable project decision.",
+        },
+    }
+    with bridge:
+        request = Request(  # noqa: S310 - loopback-only authenticated bridge
+            bridge.base_url + "/api/memories",
+            data=json.dumps(proposal).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {bridge.token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urlopen(request, timeout=5) as response:  # noqa: S310
+            candidate = json.load(response)
+        request = Request(  # noqa: S310 - loopback-only authenticated bridge
+            bridge.base_url + f"/api/memories/{memory_id}/confirm",
+            data=b"{}",
+            headers={
+                "Authorization": f"Bearer {bridge.token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urlopen(request, timeout=5) as response:  # noqa: S310
+            active = json.load(response)
+
+    assert candidate["status"] == "candidate"
+    assert active == {"id": memory_id, "status": "active"}
+    assert [event.tool for event in bridge.events] == ["memory_propose", "memory_confirm"]
+    assert all(event.ok for event in bridge.events)
 
 
 @pytest.mark.v23

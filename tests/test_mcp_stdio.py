@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -95,3 +96,89 @@ async def test_real_stdio_cross_client_persistence(tmp_path: Path) -> None:
         assert response.json()["total"] == 1
         assert client.get(f"/api/memories/{memory_id}/explain").status_code == 200
         assert token
+
+
+@pytest.mark.asyncio
+@pytest.mark.acceptance
+async def test_real_stdio_cross_session_restart_and_scope_isolation(
+    tmp_path: Path,
+) -> None:
+    """A fresh process can retrieve confirmed memory without transcript replay.
+
+    This proves the MemoryOS core persistence boundary. It deliberately does not
+    claim that an Agent integration captures conversation automatically; that
+    requires a separate integration-level write path and live-session test.
+    """
+
+    data_dir = tmp_path / "cross-session-data"
+    repository = f"cross-session-repo-{uuid4().hex}"
+    wrong_repository = f"wrong-repo-{uuid4().hex}"
+    marker = f"LTM-{uuid4().hex}"
+    parameters = StdioServerParameters(
+        command=sys.executable,
+        args=["-m", "memoryos.mcp_server.server", "--data-dir", str(data_dir)],
+    )
+
+    # Session A writes and confirms the fact, then the MCP server process exits.
+    async with (
+        stdio_client(parameters) as (read_stream, write_stream),
+        ClientSession(read_stream, write_stream) as session_a,
+    ):
+        await session_a.initialize()
+        proposed = _payload(
+            await session_a.call_tool(
+                "memory_propose",
+                arguments={
+                    "title": "Project Atlas deployment release phrase",
+                    "content": (
+                        f"For Project Atlas deployments, the required release phrase is {marker}."
+                    ),
+                    "scope_type": "repository",
+                    "scope_key": repository,
+                    "memory_type": "project",
+                    "category": "decision",
+                    "key": "deployment.release_phrase",
+                    "source_type": "conversation",
+                    "source_ref": f"session-a:{uuid4()}",
+                    "source_excerpt": (
+                        f"Remember the required Project Atlas deployment release phrase {marker}."
+                    ),
+                },
+            )
+        )
+        memory_id = proposed["result"]["id"]
+        confirmed = _payload(
+            await session_a.call_tool(
+                "memory_confirm",
+                arguments={"memory_id": memory_id},
+            )
+        )
+        assert confirmed["result"]["status"] == "active"
+
+    # Session B starts a new MCP server and client with no Session A messages.
+    async with (
+        stdio_client(parameters) as (read_stream, write_stream),
+        ClientSession(read_stream, write_stream) as session_b,
+    ):
+        await session_b.initialize()
+        recalled = _payload(
+            await session_b.call_tool(
+                "memory_context",
+                arguments={
+                    "task": "What release phrase must Project Atlas deployments use?",
+                    "repo": repository,
+                },
+            )
+        )
+        assert marker in recalled["result"]["text"]
+
+        isolated = _payload(
+            await session_b.call_tool(
+                "memory_context",
+                arguments={
+                    "task": "What release phrase must Project Atlas deployments use?",
+                    "repo": wrong_repository,
+                },
+            )
+        )
+        assert marker not in isolated["result"]["text"]

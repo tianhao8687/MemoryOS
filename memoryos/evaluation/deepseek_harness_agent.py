@@ -29,7 +29,7 @@ from memoryos.evaluation.provider_usage import CachePhase, PricingSnapshot, Prov
 
 HARNESS_VERSION = "0.1.0-rc.5"
 HARNESS_COMMIT = "47f943859bef60e4160492346772ded9b24f765a"
-MEMORYOS_PLUGIN_VERSION = "0.1.12"
+MEMORYOS_PLUGIN_VERSION = "0.1.18"
 
 _ENV_NAME = re.compile(r"^[A-Z_][A-Z0-9_]{0,127}$")
 _IMAGE_NAME = re.compile(r"^[a-z0-9][a-z0-9._:/-]*@sha256:[0-9a-f]{64}$", re.IGNORECASE)
@@ -303,12 +303,14 @@ class MemoryOSHTTPBridge:
         task_id: str,
         condition: str,
         cache_phase: CachePhase,
+        allow_writes: bool = False,
     ) -> None:
         self.backend = backend
         self.run_id = run_id
         self.task_id = task_id
         self.condition = condition
         self.cache_phase = cache_phase
+        self.allow_writes = allow_writes
         self.token = secrets.token_urlsafe(32)
         self._server = _BridgeServer(self)
         self._thread = threading.Thread(
@@ -355,6 +357,26 @@ class MemoryOSHTTPBridge:
                 arguments = self._read_json(handler)
                 self._validate_context(arguments)
                 result = self._execute_context(arguments)
+            elif method == "POST" and parsed.path == "/api/memories" and self.allow_writes:
+                tool = "memory_propose"
+                arguments = self._read_json(handler)
+                self._validate_proposal(arguments)
+                result = self._execute_write(tool, arguments)
+            elif (
+                method == "POST"
+                and parsed.path.startswith("/api/memories/")
+                and parsed.path.endswith("/confirm")
+                and self.allow_writes
+            ):
+                tool = "memory_confirm"
+                memory_id = unquote(parsed.path[len("/api/memories/") : -len("/confirm")]).strip(
+                    "/"
+                )
+                if not memory_id:
+                    raise ValueError("memory id is required")
+                arguments = self._read_json(handler)
+                arguments = {"memory_id": memory_id, **arguments}
+                result = self._execute_write(tool, arguments)
             elif (
                 method == "GET"
                 and parsed.path.startswith("/api/memories/")
@@ -427,6 +449,25 @@ class MemoryOSHTTPBridge:
                 + ", ".join(mismatch_fields)
             )
 
+    def _validate_proposal(self, arguments: Mapping[str, Any]) -> None:
+        if arguments.get("scope_type") != "repository":
+            raise ValueError("cross-session proposals must use repository scope")
+        if arguments.get("scope_key") != self.backend.repository:
+            raise ValueError("cross-session proposal scope diverged from the frozen repository")
+        if arguments.get("created_by") != "agent":
+            raise ValueError("cross-session proposals must be attributed to the agent")
+        key = arguments.get("key")
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError("cross-session proposals require one stable atomic fact key")
+        source = arguments.get("source")
+        if not isinstance(source, Mapping) or source.get("source_type") != "conversation":
+            raise ValueError("cross-session proposals require conversation evidence")
+        source_ref = source.get("source_ref")
+        if not isinstance(source_ref, str) or not source_ref.startswith(
+            "deepseek-harness:session-"
+        ):
+            raise ValueError("cross-session proposals require the current Harness session source")
+
     def _execute_context(self, arguments: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
             wrapper = self.backend.execute("memory_context", arguments)
@@ -475,6 +516,16 @@ class MemoryOSHTTPBridge:
         result = wrapper.get("result")
         if not isinstance(result, dict):
             raise RuntimeError("MemoryOS returned an invalid explanation")
+        return cast(dict[str, Any], result)
+
+    def _execute_write(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            wrapper = self.backend.execute(name, arguments)
+        if not wrapper.get("ok"):
+            raise RuntimeError(canonical_json(wrapper.get("error")))
+        result = wrapper.get("result")
+        if not isinstance(result, dict):
+            raise RuntimeError(f"MemoryOS returned an invalid {name} result")
         return cast(dict[str, Any], result)
 
     def _record(
@@ -554,13 +605,16 @@ class DeepSeekHarnessCodingAgent:
         budget_tokens: int,
         resume_session_id: str | None = None,
         prompt_override: str | None = None,
+        memory_tool_profile: Literal["read-only", "cross-session-write"] = "read-only",
         usage_guard_file: Path | None = None,
+        evaluation_history_char_limit: int | None = None,
+        evaluation_sentinel: str | None = None,
         enforce_budget: bool = True,
     ) -> CodingAgentResult:
-        if (resume_session_id is None) != (prompt_override is None):
+        if resume_session_id is not None and prompt_override is None:
             return _failed(
                 "harness_resume_configuration_error",
-                "resume_session_id and prompt_override must be provided together",
+                "resume_session_id requires prompt_override",
             )
         if resume_session_id is not None and not _HARNESS_SESSION_ID.fullmatch(resume_session_id):
             return _failed(
@@ -571,6 +625,25 @@ class DeepSeekHarnessCodingAgent:
             return _failed(
                 "harness_resume_configuration_error",
                 "prompt_override cannot be blank",
+            )
+        if memory_tool_profile == "cross-session-write" and memory_tools is None:
+            return _failed(
+                "harness_write_profile_configuration_error",
+                "cross-session-write requires a MemoryOS backend",
+            )
+        if evaluation_history_char_limit is not None and not (
+            1_024 <= evaluation_history_char_limit <= 10_000_000
+        ):
+            return _failed(
+                "harness_evaluation_window_configuration_error",
+                "evaluation_history_char_limit must be between 1024 and 10000000",
+            )
+        if evaluation_sentinel is not None and (
+            not evaluation_sentinel or len(evaluation_sentinel) > 10_000
+        ):
+            return _failed(
+                "harness_evaluation_window_configuration_error",
+                "evaluation_sentinel must contain between 1 and 10000 characters",
             )
         executable = self._resolve_executable()
         if executable is None:
@@ -776,7 +849,15 @@ class DeepSeekHarnessCodingAgent:
                     cache_phase=cache_phase,
                     cache_namespace=cache_namespace,
                     budget_tokens=budget_tokens,
+                    tool_profile=memory_tool_profile,
                     usage_guard_file=resolved_usage_guard,
+                    evaluation_history_char_limit=evaluation_history_char_limit,
+                    evaluation_eviction_output_file=(
+                        state / "controlled-context-evictions.jsonl"
+                        if evaluation_history_char_limit is not None
+                        else None
+                    ),
+                    evaluation_sentinel=evaluation_sentinel,
                 )
             )
             completed = self._command(
@@ -794,6 +875,7 @@ class DeepSeekHarnessCodingAgent:
                 task_id=task_id,
                 condition=condition,
                 cache_phase=cache_phase,
+                allow_writes=memory_tool_profile == "cross-session-write",
             ) as bridge:
                 environment.update(
                     _plugin_environment(
@@ -809,7 +891,15 @@ class DeepSeekHarnessCodingAgent:
                         cache_phase=cache_phase,
                         cache_namespace=cache_namespace,
                         budget_tokens=budget_tokens,
+                        tool_profile=memory_tool_profile,
                         usage_guard_file=resolved_usage_guard,
+                        evaluation_history_char_limit=evaluation_history_char_limit,
+                        evaluation_eviction_output_file=(
+                            state / "controlled-context-evictions.jsonl"
+                            if evaluation_history_char_limit is not None
+                            else None
+                        ),
+                        evaluation_sentinel=evaluation_sentinel,
                     )
                 )
                 completed = self._command(
@@ -1362,6 +1452,11 @@ def _freeze_harness_settings(dsh_home: Path, runtime: DeepSeekHarnessRuntime) ->
         f"  reasoningEffort: {runtime.reasoning_effort}\n"
         "llm-deepseek:\n"
         f"  maxTokens: {runtime.max_output_tokens}\n"
+        "  models:\n"
+        f"    - id: {runtime.model}\n"
+        f"      name: {runtime.model}\n"
+        f"      contextWindow: {runtime.context_length}\n"
+        f"      maxTokens: {runtime.max_output_tokens}\n"
         "  retryPolicy:\n"
         "    mode: normal\n"
         f"    maxRetries: {runtime.provider_retry_limit}\n"
@@ -1520,7 +1615,11 @@ def _plugin_environment(
     cache_phase: CachePhase,
     cache_namespace: str,
     budget_tokens: int,
+    tool_profile: Literal["read-only", "cross-session-write"] = "read-only",
     usage_guard_file: Path | None = None,
+    evaluation_history_char_limit: int | None = None,
+    evaluation_eviction_output_file: Path | None = None,
+    evaluation_sentinel: str | None = None,
 ) -> dict[str, str]:
     price = runtime.pricing.find(runtime.provider, runtime.model)
     if price is None:  # pragma: no cover - runtime validation guarantees the row
@@ -1547,6 +1646,12 @@ def _plugin_environment(
     }
     if usage_guard_file is not None:
         environment["MEMORYOS_USAGE_GUARD_FILE"] = str(usage_guard_file)
+    if evaluation_history_char_limit is not None:
+        environment["MEMORYOS_EVAL_HISTORY_CHAR_LIMIT"] = str(evaluation_history_char_limit)
+    if evaluation_eviction_output_file is not None:
+        environment["MEMORYOS_EVAL_EVICTION_OUTPUT_FILE"] = str(evaluation_eviction_output_file)
+    if evaluation_sentinel is not None:
+        environment["MEMORYOS_EVAL_SENTINEL"] = evaluation_sentinel
     if bridge is not None:
         deepseek_compact = runtime.agent_preset in _DEEPSEEK_COMPACT_PRESETS
         progressive_compact = condition == "msc_progressive" and not deepseek_compact
@@ -1567,6 +1672,7 @@ def _plugin_environment(
                     else "json"
                 ),
                 "MEMORYOS_MAX_CONTEXT_CALLS": "1" if deepseek_compact else "0",
+                "MEMORYOS_TOOL_PROFILE": tool_profile,
             }
         )
     return environment

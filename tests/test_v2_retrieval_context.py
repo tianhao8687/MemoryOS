@@ -278,3 +278,41 @@ def test_narrowing_branch_scope_never_leaks_sibling_branch_memory(
 
     assert {repository["id"], main["id"]}.issubset(included)
     assert sibling["id"] not in visible
+
+
+@pytest.mark.v2
+def test_cjk_ngram_fallback_recalls_an_infix_decision_without_embeddings(
+    service: MemoryService, make_memory: Any
+) -> None:
+    target = service.propose(
+        make_memory(
+            title="当前发布列车正式代号 Glacier-47",
+            content="本仓库当前发布列车的正式代号确定为 Glacier-47, 后续发布说明统一使用该代号。",
+            key="release-train.codename",
+        ),
+        actor="test",
+    )
+    sibling = service.propose(
+        make_memory(
+            title="当前发布列车正式代号 Sibling-99",
+            content="另一个仓库当前发布列车的正式代号为 Sibling-99。",
+            scope_key="repo-b",
+            key="release-train.codename",
+        ),
+        actor="test",
+    )
+
+    result = service.context(
+        ContextRequest(
+            task="只回答当前发布列车代号是什么; 如果没有依据就回答不知道。",
+            repository="repo-a",
+        )
+    )
+    visible = {item["memory_id"] for item in result["manifest"]}
+    included = {item["memory_id"] for item in result["manifest"] if item["included"]}
+
+    assert target["id"] in included
+    assert sibling["id"] not in visible
+    assert "Glacier-47" in result["text"]
+    assert result["retrieval_mode"].startswith("rrf-")
+    assert result["query_plan"]["routing"]["channel_execution"][0]["candidate_count"] >= 1

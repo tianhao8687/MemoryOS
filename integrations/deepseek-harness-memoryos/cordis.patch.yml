@@ -13,6 +13,9 @@
         model: !!js process.env.MEMORYOS_MODEL
         cacheNamespaceSha256: !!js process.env.MEMORYOS_CACHE_NAMESPACE_SHA256 || '0000000000000000000000000000000000000000000000000000000000000000'
         pricingJson: !!js process.env.MEMORYOS_PRICING_JSON
+        evaluationHistoryCharLimit: !!js Number(process.env.MEMORYOS_EVAL_HISTORY_CHAR_LIMIT || 0)
+        evaluationEvictionOutputFile: !!js process.env.MEMORYOS_EVAL_EVICTION_OUTPUT_FILE
+        evaluationSentinel: !!js process.env.MEMORYOS_EVAL_SENTINEL
     - id: memoryos-tools
       name: dsh-memoryos
       disabled: !!js process.env.MEMORYOS_ENABLED !== '1'
@@ -22,6 +25,7 @@
         budgetTokens: !!js Number(process.env.MEMORYOS_BUDGET_TOKENS || 6000)
         maxContextCalls: !!js Number(process.env.MEMORYOS_MAX_CONTEXT_CALLS || 0)
         responseFormat: !!js process.env.MEMORYOS_RESPONSE_FORMAT || 'json'
+        toolProfile: !!js process.env.MEMORYOS_TOOL_PROFILE || 'read-only'
         timeoutMs: !!js Number(process.env.MEMORYOS_TIMEOUT_MS || 30000)
         repository: !!js process.env.MEMORYOS_REPOSITORY
         task: !!js process.env.MEMORYOS_TASK

@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0",
+  "benchmark_id": "long-term-memory-followup-v1",
+  "campaign_id": "long-term-followup-v1-20260816T233339Z",
+  "status": "pass",
+  "cases_sha256": "600a35b0a1b6f8ddd7ded31c95ee1e245975cdde2708bd777264931c24dc739b",
+  "plugin_version": "0.1.18",
+  "model": "deepseek-v4-flash",
+  "provider_retries": 0,
+  "tests": {
+    "memory_update": {
+      "passed": true,
+      "old_truth": "PostgreSQL 17",
+      "old_status": "superseded",
+      "new_truth": "PostgreSQL 18",
+      "new_status": "active",
+      "fresh_session_answer": "PostgreSQL 18"
+    },
+    "context_eviction": {
+      "passed": true,
+      "sentinel": "Glacier-47",
+      "original_decision_evicted_from_active_history": true,
+      "no_memory_answer": "不知道",
+      "memoryos_recovered_sentinel": true
+    }
+  },
+  "write_token_accounting": {
+    "counter": "unicode-heuristic-v1",
+    "component_source": "estimated",
+    "provider_input_source": "provider_exact",
+    "per_write_session": {
+      "memory_update_session_a": {
+        "write_tool_schema_tokens": 598,
+        "memory_write_visible_tokens": 2593,
+        "provider_input_tokens": 34061
+      },
+      "memory_update_session_b": {
+        "write_tool_schema_tokens": 598,
+        "memory_write_visible_tokens": 2593,
+        "provider_input_tokens": 35287
+      },
+      "context_eviction_memoryos_session_a": {
+        "write_tool_schema_tokens": 598,
+        "memory_write_visible_tokens": 2593,
+        "provider_input_tokens": 34339
+      }
+    },
+    "totals": {
+      "write_tool_schema_tokens": 1794,
+      "memory_write_visible_tokens": 7779,
+      "provider_input_tokens": 103687
+    }
+  },
+  "observability": {
+    "provider_attempts": 24,
+    "completed_responses": 24,
+    "input_tokens": 214165,
+    "output_tokens": 3743,
+    "reasoning_tokens": 2206,
+    "cost_usd": "0.00270427920000000015",
+    "complete_ledger": true
+  },
+  "claim_boundary": "Mechanism-level two-test pass; not a general coding success-rate claim."
+}

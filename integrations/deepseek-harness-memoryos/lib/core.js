@@ -6,6 +6,25 @@ export const HARNESS_COMPATIBILITY = Object.freeze({
   commit: '47f943859bef60e4160492346772ded9b24f765a',
 })
 
+const CONFLICT_STRATEGIES = new Set(['supersede', 'keep_both', 'reject'])
+const WRITE_MEMORY_TOOLS = new Set(['memory_propose', 'memory_confirm'])
+const UTF8_BYTES_PER_ESTIMATED_TOKEN = 4
+
+export class MemoryOSRequestError extends Error {
+  constructor(status, payload) {
+    const normalized = normalizeMemoryOSError(status, payload)
+    super(`MemoryOS ${normalized.code} (HTTP ${status}): ${normalized.message}`)
+    this.name = 'MemoryOSRequestError'
+    this.status = status
+    this.code = normalized.code
+    this.details = normalized.details
+  }
+}
+
+export function isMemoryOSConflict(error) {
+  return error instanceof MemoryOSRequestError && error.code === 'CONFLICT_DETECTED'
+}
+
 const CONDITION_POLICY = Object.freeze({
   legacy_full: Object.freeze({ detailLevel: 'fact', initialMode: 'full', laterMode: 'full' }),
   msc_full: Object.freeze({ detailLevel: 'fact', initialMode: 'full', laterMode: 'full' }),
@@ -67,6 +86,7 @@ export function normalizeConfig(config) {
   const budgetTokens = Number(config.budgetTokens ?? 6_000)
   const maxContextCalls = Number(config.maxContextCalls ?? 0)
   const responseFormat = String(config.responseFormat ?? 'json')
+  const toolProfile = String(config.toolProfile ?? 'read-only')
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 300_000) {
     throw new Error('timeoutMs must be an integer between 1 and 300000')
   }
@@ -84,12 +104,19 @@ export function normalizeConfig(config) {
   if (responseFormat === 'deepseek-progressive-compact' && condition !== 'msc_progressive') {
     throw new Error('deepseek-progressive-compact requires msc_progressive')
   }
+  if (!['read-only', 'cross-session-write'].includes(toolProfile)) {
+    throw new Error('toolProfile must be read-only or cross-session-write')
+  }
+  if (toolProfile === 'cross-session-write' && !config.repository) {
+    throw new Error('cross-session-write requires a fixed repository scope')
+  }
   return Object.freeze({
     baseUrl,
     condition,
     budgetTokens,
     maxContextCalls,
     responseFormat,
+    toolProfile,
     timeoutMs,
     repository: config.repository ? String(config.repository) : undefined,
     task: config.task ? String(config.task) : undefined,
@@ -103,6 +130,16 @@ export function normalizeUsageConfig(config) {
   if (!USAGE_CONDITIONS.has(condition)) {
     throw new Error(`unsupported MemoryOS usage condition: ${condition}`)
   }
+  const evaluationHistoryCharLimit = config.evaluationHistoryCharLimit === undefined
+    || Number(config.evaluationHistoryCharLimit) === 0
+    ? undefined
+    : Number(config.evaluationHistoryCharLimit)
+  if (evaluationHistoryCharLimit !== undefined
+    && (!Number.isSafeInteger(evaluationHistoryCharLimit)
+      || evaluationHistoryCharLimit < 1_024
+      || evaluationHistoryCharLimit > 10_000_000)) {
+    throw new Error('evaluationHistoryCharLimit must be an integer between 1024 and 10000000')
+  }
   return Object.freeze({
     condition,
     usageOutputFile: config.usageOutputFile ? String(config.usageOutputFile) : undefined,
@@ -115,6 +152,13 @@ export function normalizeUsageConfig(config) {
     model: config.model ? String(config.model) : undefined,
     cacheNamespaceSha256: String(config.cacheNamespaceSha256 ?? '0'.repeat(64)),
     pricing: normalizePricing(parsePricing(config.pricing, config.pricingJson)),
+    evaluationHistoryCharLimit,
+    evaluationEvictionOutputFile: config.evaluationEvictionOutputFile
+      ? String(config.evaluationEvictionOutputFile)
+      : undefined,
+    evaluationSentinel: config.evaluationSentinel
+      ? String(config.evaluationSentinel)
+      : undefined,
   })
 }
 
@@ -181,9 +225,14 @@ export function createMemoryOSClient(config, dependencies = {}) {
       try {
         payload = JSON.parse(text)
       } catch {
+        if (!response.ok) {
+          throw new MemoryOSRequestError(response.status, {
+            message: 'MemoryOS returned a non-JSON error response',
+          })
+        }
         throw new Error(`MemoryOS returned non-JSON HTTP ${response.status}`)
       }
-      if (!response.ok) throw new Error(`MemoryOS returned HTTP ${response.status}`)
+      if (!response.ok) throw new MemoryOSRequestError(response.status, payload)
       return payload
     } finally {
       clearTimeout(timeout)
@@ -243,7 +292,130 @@ export function createMemoryOSClient(config, dependencies = {}) {
     return sanitizeValue(raw)
   }
 
-  return Object.freeze({ context, explain, states })
+  async function propose(args, sessionId, signal) {
+    if (config.toolProfile !== 'cross-session-write') {
+      throw new Error('memory_propose is disabled by the read-only tool profile')
+    }
+    if (!config.repository) {
+      throw new Error('cross-session-write requires a fixed repository scope')
+    }
+    const key = requiredText(args.key, 'memory_propose key')
+    const body = {
+      scope_type: 'repository',
+      scope_key: config.repository,
+      memory_type: 'project',
+      category: args.category,
+      title: args.title,
+      content: args.content,
+      key,
+      confidence: args.confidence ?? 0.9,
+      importance: args.importance ?? 0.8,
+      created_by: 'agent',
+      source: {
+        source_type: 'conversation',
+        source_ref: `deepseek-harness:${sessionId}`,
+        excerpt: args.source_excerpt,
+      },
+    }
+    const raw = await request(
+      '/api/memories',
+      { method: 'POST', body: JSON.stringify(body) },
+      signal,
+    )
+    return sanitizeValue(raw?.memory ?? raw)
+  }
+
+  async function confirm(args, signal) {
+    if (config.toolProfile !== 'cross-session-write') {
+      throw new Error('memory_confirm is disabled by the read-only tool profile')
+    }
+    if (args.strategy !== undefined && !CONFLICT_STRATEGIES.has(args.strategy)) {
+      throw new Error('memory_confirm strategy must be supersede, keep_both, or reject')
+    }
+    const body = {
+      ...(args.strategy === undefined ? {} : { strategy: args.strategy }),
+      ...(args.rationale === undefined ? {} : { rationale: args.rationale }),
+    }
+    const raw = await request(
+      `/api/memories/${encodeURIComponent(args.memory_id)}/confirm`,
+      { method: 'POST', body: JSON.stringify(body) },
+      signal,
+    )
+    return sanitizeValue(raw?.memory ?? raw)
+  }
+
+  return Object.freeze({ context, explain, propose, confirm, states })
+}
+
+function normalizeMemoryOSError(status, payload) {
+  const extracted = extractMemoryOSError(payload)
+  const code = cleanErrorText(extracted?.code) ?? `HTTP_${status}`
+  const message = cleanErrorText(extracted?.message) ?? 'MemoryOS request failed'
+  const details = extracted?.details && typeof extracted.details === 'object'
+    && !Array.isArray(extracted.details)
+    ? sanitizeValue(extracted.details)
+    : {}
+  return { code, message, details }
+}
+
+function extractMemoryOSError(value, depth = 0) {
+  if (depth > 5 || value === null || value === undefined) return undefined
+  if (typeof value === 'string') {
+    const parsed = embeddedJson(value)
+    return parsed === undefined ? undefined : extractMemoryOSError(parsed, depth + 1)
+  }
+  if (typeof value !== 'object' || Array.isArray(value)) return undefined
+
+  if (value.error && typeof value.error === 'object' && !Array.isArray(value.error)) {
+    const nested = extractMemoryOSError(value.error, depth + 1)
+    if (nested !== undefined) return nested
+  }
+
+  const nestedMessage = typeof value.message === 'string'
+    ? extractMemoryOSError(value.message, depth + 1)
+    : undefined
+  if (nestedMessage?.code === 'CONFLICT_DETECTED') return nestedMessage
+
+  const code = cleanErrorText(value.code)
+    ?? (typeof value.error === 'string' ? cleanErrorText(value.error) : undefined)
+  const message = cleanErrorText(value.message)
+  if (code !== undefined || message !== undefined) {
+    if (nestedMessage !== undefined && (code === undefined || code === 'RuntimeError')) {
+      return nestedMessage
+    }
+    return {
+      code,
+      message,
+      details: value.details,
+    }
+  }
+  return nestedMessage
+}
+
+function embeddedJson(value) {
+  const text = value.trim()
+  for (const candidate of [text, text.slice(text.indexOf('{'))]) {
+    if (!candidate.startsWith('{')) continue
+    try {
+      return JSON.parse(candidate)
+    } catch {
+      continue
+    }
+  }
+  return undefined
+}
+
+function cleanErrorText(value) {
+  if (typeof value !== 'string') return undefined
+  const text = value.replace(/\s+/gu, ' ').trim()
+  return text.length === 0 ? undefined : text.slice(0, 1000)
+}
+
+function requiredText(value, name) {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error(`${name} must be a non-empty string`)
+  }
+  return value.trim()
 }
 
 export function stableContextId(raw) {
@@ -356,6 +528,33 @@ export function harnessRequestEvidence(options) {
 }
 
 /**
+ * Estimate only the write-related MemoryOS content visible in one provider request.
+ *
+ * DeepSeek reports exact whole-request input usage but no component breakdown. This
+ * attribution therefore uses MemoryOS' frozen unicode-heuristic-v1 counter while
+ * preserving the exact provider total separately. Tool schemas are counted from the
+ * final DeepSeek wire projection; tool results are counted only when their call id
+ * belongs to memory_propose or memory_confirm on the current visible surface.
+ */
+export function memoryWriteTokenAccounting(options) {
+  const projection = deepSeekVisibleRequest(options)
+  const schemas = (projection.tools ?? []).filter(tool => (
+    WRITE_MEMORY_TOOLS.has(tool?.function?.name)
+  ))
+  const results = visibleWriteMemoryResults(options.messages ?? [])
+  const writeToolSchemaTokens = schemas.length === 0 ? 0 : estimatedJsonTokens(schemas)
+  const memoryWriteResultTokens = results.length === 0 ? 0 : estimatedJsonTokens(results)
+  return Object.freeze({
+    tokenizer_id: 'unicode-heuristic-v1',
+    tokenizer_kind: 'estimated',
+    counter_version: '1.0.0',
+    write_tool_schema_tokens: writeToolSchemaTokens,
+    memory_write_result_tokens: memoryWriteResultTokens,
+    memory_write_visible_tokens: writeToolSchemaTokens + memoryWriteResultTokens,
+  })
+}
+
+/**
  * Project Harness request objects onto the JSON fields visible to DeepSeek.
  *
  * Harness messages carry random durable ids and UI/source metadata.  The
@@ -440,6 +639,26 @@ function deepSeekVisibleMessages(messages) {
   return visible
 }
 
+function visibleWriteMemoryResults(messages) {
+  const writeCallIds = new Set()
+  const visible = []
+  for (const message of messages) {
+    for (const block of message.content ?? []) {
+      if (block.type === 'tool-call' && WRITE_MEMORY_TOOLS.has(block.name)) {
+        writeCallIds.add(block.id)
+        continue
+      }
+      if (block.type !== 'tool-result' || !writeCallIds.has(block.toolCallId)) continue
+      visible.push({
+        role: 'tool',
+        tool_call_id: block.toolCallId,
+        content: flattenVisibleText(block.content) || '(no output)',
+      })
+    }
+  }
+  return visible
+}
+
 function flattenVisibleText(blocks = []) {
   return blocks
     .filter(block => block.type === 'text')
@@ -453,6 +672,11 @@ function deepSeekVisibleReasoning(effort) {
     return { thinking: { type: 'enabled' }, reasoning_effort: effort }
   }
   return {}
+}
+
+function estimatedJsonTokens(value) {
+  const bytes = new TextEncoder().encode(canonicalJson(value)).byteLength
+  return bytes === 0 ? 0 : Math.ceil(bytes / UTF8_BYTES_PER_ESTIMATED_TOKEN)
 }
 
 function calculateCost(pricing, input, hit, miss, output) {

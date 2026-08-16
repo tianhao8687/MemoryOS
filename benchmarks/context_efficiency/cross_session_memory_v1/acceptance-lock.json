@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-17T05:08:59.3105778+08:00",
+  "purpose": "Evaluation-only proof that DeepSeek Harness source sessions autonomously select and commit durable project knowledge from ordinary development conversations and fresh sessions retrieve it only in the correct repository scope after hard restart.",
+  "claim_levels": {
+    "core_persistence": "confirmed memory survives a new MCP client and service process",
+    "integration_retrieval": "a fresh DeepSeek session retrieves confirmed same-scope memory through the plugin",
+    "agent_long_term_memory": "the source DeepSeek session itself proposed and confirmed the memory later retrieved by a fresh session"
+  },
+  "source_session": {
+    "fresh_harness_session": true,
+    "case_count": 3,
+    "conversation_rounds_per_case": 6,
+    "case_classes": [
+      "project_decision",
+      "constraint",
+      "failed_approach"
+    ],
+    "prompt_mentions_memory_or_memory_tool_calls": false,
+    "memory_call_must_be_model_initiated": true,
+    "mixed_turn_durable_fact_selection_required": true,
+    "required_model_visible_tools": [
+      "memory_propose",
+      "memory_confirm"
+    ],
+    "controller_preseed_forbidden": true,
+    "confirmed_memory_count_minimum": 1,
+    "confirmed_memory_count_maximum": null,
+    "confirmed_active_status_required": true,
+    "session_must_terminate_before_retrieval": true
+  },
+  "restart_boundary": {
+    "memoryos_service_restart": true,
+    "persistent_data_directory_preserved": true,
+    "source_harness_home_not_mounted": true,
+    "source_workspace_not_mounted": true,
+    "source_transcript_replay": false
+  },
+  "retrieval_arms": {
+    "A": {
+      "condition": "no_memory",
+      "scope": "same_repository"
+    },
+    "B": {
+      "condition": "msc_context_only",
+      "scope": "same_repository"
+    },
+    "C": {
+      "condition": "msc_context_only",
+      "scope": "different_repository"
+    }
+  },
+  "isolation": {
+    "fresh_session_id_per_arm": true,
+    "fresh_harness_home_per_arm": true,
+    "fresh_workspace_per_arm": true,
+    "cold_unique_provider_cache_namespace_per_arm": true,
+    "same_retrieval_prompt_model_and_parameters": true,
+    "target_facts_forbidden_from_retrieval_prompts": true,
+    "complete_target_answers_forbidden_from_retrieval_files_env_ids_and_paths": true,
+    "provider_retries": 0,
+    "automatic_repetitions": 0
+  },
+  "runtime": {
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "high",
+    "max_output_tokens_per_response": 8192,
+    "provider_retry_limit": 0
+  },
+  "success_gate": {
+    "source_memory_tool_trace_complete": true,
+    "source_memory_status": "active",
+    "service_restart_observed": true,
+    "B_all_required_facts_recalled": true,
+    "B_memory_context_calls": 1,
+    "A_history_only_fact_abstentions_required": true,
+    "A_complete_target_answers": 0,
+    "C_target_memory_returns": 0,
+    "C_leakage_canary_returns": 0,
+    "C_complete_target_answers": 0,
+    "complete_provider_usage_ledger": true,
+    "complete_memory_tool_trace": true
+  },
+  "replication": {
+    "pilot_cases": 3,
+    "cases_required_for_positive_product_claim": 3,
+    "all_treatment_cases_must_pass": true,
+    "total_wrong_scope_memory_leaks_allowed": 0,
+    "parallel_source_sessions": 3,
+    "parallel_retrieval_sessions": 9
+  },
+  "preflight": {
+    "provider_requests": 0,
+    "core_cross_session_restart_test": "passed",
+    "core_wrong_scope_isolation": "passed",
+    "deepseek_plugin_contract_tests": "15 passed; installed-profile Loader/HMR passed separately",
+    "deepseek_plugin_write_tools_present": true,
+    "deepseek_plugin_version": "0.1.13",
+    "read_only_default_unchanged": true,
+    "installed_profile_loader_hmr": "passed",
+    "strict_live_run_allowed": true,
+    "blocker": null
+  }
+}

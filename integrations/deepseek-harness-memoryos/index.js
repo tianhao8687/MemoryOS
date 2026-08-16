@@ -23,6 +23,10 @@ export const Config = Schema.object({
     'deepseek-compact',
     'deepseek-progressive-compact',
   ]).default('json'),
+  toolProfile: Schema.union([
+    'read-only',
+    'cross-session-write',
+  ]).default('read-only'),
   timeoutMs: Schema.number().default(30000),
   repository: Schema.string(),
   task: Schema.string(),
