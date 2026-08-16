@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-17T03:01:03.0609443+08:00",
+  "purpose": "Success-first calibration of generic MemoryOS plugin 0.1.10 behavior before any held-out A/B/C effect test.",
+  "run_id": "medium-success-calibration-v1-live-r1",
+  "interpretation": {
+    "design": "single optimized msc_progressive calibration arm",
+    "can_estimate_plugin_effect": false,
+    "excluded_from_later_success_rate_claims": true,
+    "automatic_repetitions": 0,
+    "provider_retries": 0
+  },
+  "task": {
+    "task_id": "pytest-pr-6197",
+    "repository_id": "pytest-dev-pytest",
+    "base_commit": "e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+    "solution_commit": "19a15a94eeb403631f847fab5fe5073bc56e8bcc",
+    "difficulty": "medium",
+    "source": "SWE-bench Verified public replay",
+    "prompt_mentions_memoryos": false,
+    "memory_seed_ids": [
+      "pytest-package-collection-must-stay-lazy"
+    ]
+  },
+  "condition": "msc_progressive",
+  "execution": {
+    "cache_phases": [
+      "cold"
+    ],
+    "budget_tokens": 1200,
+    "linux_isolation": true,
+    "agent_tool_network": "none",
+    "hidden_scoring_outside_agent_root": true,
+    "source_overlay_read_only": true,
+    "prompt_override": false
+  },
+  "runtime": {
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "harness_version": "0.1.0-rc.5",
+    "plugin_version": "0.1.10",
+    "agent_preset": "standard-offline",
+    "reasoning_effort": "high",
+    "max_output_tokens_per_response": 8192,
+    "provider_retry_limit": 0,
+    "no_patch_request_limit": 18,
+    "no_patch_input_token_limit": 400000,
+    "no_patch_output_token_limit": 32000,
+    "patch_request_limit": 24,
+    "patch_input_token_limit": 600000,
+    "patch_output_token_limit": 48000,
+    "hard_request_limit": 24,
+    "hard_input_token_limit": 600000,
+    "hard_output_token_limit": 48000,
+    "run_timeout_seconds": 1800
+  },
+  "success_gate": {
+    "nonempty_patch": true,
+    "focused_public_tests_pass": true,
+    "isolated_hidden_test_pass": true,
+    "agent_network_attempt_succeeds": false,
+    "complete_provider_usage_ledger": true,
+    "complete_memory_tool_trace": true
+  },
+  "plugin_scope": {
+    "single_resolved_record_auto_expansion": true,
+    "action_ready_contract": true,
+    "one_time_offline_or_missing_dependency_recovery": true,
+    "fixed_inspection_or_edit_step": false,
+    "task_specific_names_or_rules": false,
+    "model_specific_task_content": false
+  },
+  "zero_api_preflight": {
+    "deepseek_provider_requests": 0,
+    "plugin_contract_tests": "14 passed; installed Harness Loader/HMR test 1 passed",
+    "python_controller_tests": "54 passed",
+    "runtime_schema_valid": true,
+    "memory_index_record_count": 1,
+    "memory_index_truth_state": "resolved",
+    "memory_context_payload_tokens": 285,
+    "memory_explain_payload_tokens": 548,
+    "base_hidden_test_exit_code": 1,
+    "reference_hidden_test_exit_code": 0,
+    "base_public_smoke": "1 passed",
+    "reference_public_focused": "3 passed"
+  },
+  "evidence_lock": {
+    "manifest_file_sha256": "59a608e896cac10c569b16accd14e40e7ea39e6314b278d8fc6773a08d18127c",
+    "manifest_canonical_sha256": "64bc1abf5b4a74209566245ab7a920f25ae066a2451fff50ca6593e491aa22d4",
+    "hidden_patch_sha256": "367e426e8954070c2f7829dc2ff525da965d5cf87d5e0578a3b42fbb6b7153f8",
+    "runtime_file_sha256": "51a5fc9f03e97a92ca2ebc02c12a521eea2eee8b77045ed2df80bcffb05e55a8",
+    "runtime_canonical_sha256": "c16170ddf2d938e0091cdaf91441b23df58d08b287820fea62458b0ec3c4b150",
+    "entrypoint_sha256": "9189955e0ba0760b2da687642ad73523ac643917bd3b0e66c862b6f0adcbacb1",
+    "runner_sha256": "890f376946c2d137aadd5fded52d8184bfd6e49c032c61d64b2f213b18f7a6c2",
+    "agent_adapter_sha256": "1822d0b810b50e2dd5dfa280e5fa7a2f86cec68ac16d849bcf745806661ddee8",
+    "memory_runtime_sha256": "4185ab39c7c09b65025d89174f2bff7f86f01aa11ab65c74f518b493a4be5281",
+    "workspace_manager_sha256": "1fa62aee097179e335c824f0c3b09ba9e6d58261608a881962a65ca3289c2deb",
+    "hidden_scorer_sha256": "1e20796c4bc8ff609c5c364ee29afe18aa713c4ac7e13bd2fefe4d686c9b85c7",
+    "plugin_renderer_sha256": "bb72d29d64f7560a906bfb8f20cc6f7c6b109e534da935b608493811af7cd6e1",
+    "plugin_core_sha256": "bef807b19231ae0342bb3d799dc3b2b0a04d1466bf63a87b504eb4c105d3e106",
+    "plugin_usage_sha256": "19e2fdb6958206b97caadf884dd031f1c74cd97ebc01643b0f6c6f5eed630ab9",
+    "plugin_package_json_sha256": "579dc482848db9b872bf50d9e8264903730382b2fe2713540e44d79c8b2ca100",
+    "plugin_overlay_sha256": "ce0bdc2f0b23b784830470948582ad1c943e436c4142353fa72dc7db313182be",
+    "image_dockerfile_sha256": "d3153a9d7ea12811594467c3a74d7329688bd06eb7affcd3b5323cbee4d8ff3c",
+    "image_shell_sha256": "99a4d1cf582a3aff758079ce00bbbb6ac601a73062997e404d62db27e7340d47",
+    "image_sitecustomize_sha256": "8401bdaaa67e0a1a43e169b9d84b15c19baf0fd20d7d889def9feba3b1a12c1f",
+    "execution_image": "memoryos-deepseek-pytest6197-calibration@sha256:762485f25daea32b4cc02156bb2a318d83e3d6bc4ce597b87403520c79708d55",
+    "base_execution_image": "memoryos-deepseek-lab@sha256:32359ca8e79047f42582daf6153af39a4a7c2e60e0a88fa6529d5a0bb6beff2d"
+  }
+}

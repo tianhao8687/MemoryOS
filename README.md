@@ -45,8 +45,9 @@ V2.1 的历史验收映射和不可变机器报告继续保留在 [docs/ACCEPTAN
 - Pinned Constraint 和 Contested Bundle 原子安全下限；精确去重只合并完全等价事实并保留所有证据，语义去重仍是 Shadow-only。
 - 兼容扩展 `memory_explain` 的 expected hash/sections/Token 预算，以及会在变更时失效的一次证据展开。
 - 显式 `previous_context_id` Delta、Scope/Policy/Tokenizer/TTL/完整性校验、低效 Delta 的 Full Rebase 和不进长期备份的可丢弃 Snapshot 缓存。
-- 启动时固定的 `all/core/governance/debug` MCP Profile，工具顺序与 Schema hash 确定；服务端 Schema 减少不被冒充为 Provider Token 节省。
+- 启动时固定的 `all/core/context/governance/debug` MCP Profile，工具顺序与 Schema hash 确定；`context` 仅暴露 `memory_context`，用于降低只读 Agent 每轮重复发送的工具 Schema；服务端 Schema 减少不被冒充为 Provider Token 节省。
 - 独立 Context Efficiency Study 分开 Provider input/output、缓存、成本、延迟、记忆交付/证据/历史/Delta、Schema、安全和最差组，并固定 0.5/0.65/0.8/0.9 Delta 阈值敏感性；dry run 可复现但不授权默认激活。
+- [Context Efficiency 实执行器](benchmarks/context_efficiency/README.md) 可用同一入口运行五个冻结条件、本地 Qwen OpenAI-compatible Agent 或 DeepSeek Harness、cold/warm 配对、真实代码修改/测试与逐请求 usage；fixture 只验证执行契约，不作为模型收益证据。
 
 - 保留 V1 的五级 scope、六类 memory、candidate-first 生命周期、来源、审计、TTL、逻辑忘却、备份和 7 个 MCP 工具。
 - 从 evidence span 生成标准化 Claim；实体别名只在同 scope/type 内解析，可审计合并与 redirect。
@@ -95,7 +96,7 @@ Tree-sitter language pack 是 V2 core dependency。若要启用可选 SQLite ANN
 .\release\MemoryOS\MemoryOS.exe --data-dir .\memoryos-data serve
 ```
 
-发行形式为 PyInstaller `onedir`，必须保留整个 `release\MemoryOS` 目录。V2.3 生产 smoke 会从真实 `0001_initial` 数据库启动，验证自动迁移到 `0005_context_efficiency`、旧数据与不可变 anchor 基线保留、all/core/governance/debug 四个确定性 MCP Profile、HTTP/UI/CLI、fixture benchmark 资源、sqlite-vec runtime 和重启持久化。当前已有的 V2.2 包是历史证据；合并后的 clean-main V2.3 包复验完成前不声称新二进制已发布。
+发行形式为 PyInstaller `onedir`，必须保留整个 `release\MemoryOS` 目录。V2.3 生产 smoke 会从真实 `0001_initial` 数据库启动，验证自动迁移到 `0005_context_efficiency`、旧数据与不可变 anchor 基线保留、all/core/context/governance/debug 五个确定性 MCP Profile、HTTP/UI/CLI、fixture benchmark 资源、sqlite-vec runtime 和重启持久化。当前已有的 V2.2 包是历史证据；合并后的 clean-main V2.3 包复验完成前不声称新二进制已发布。
 
 ## CLI 示例
 

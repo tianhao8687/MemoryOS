@@ -1,0 +1,308 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-16T11:59:10Z",
+  "report_id": "memoryos-v2.3-full-plugin-acceptance-v1",
+  "verdict": {
+    "overall": "conditional_pass",
+    "full_feature_execution": "pass",
+    "primary_hidden_validation": "pass_14_of_14",
+    "strict_condition_protocol": "pass_13_of_14",
+    "safety_isolation": "pass",
+    "loader_hmr": "pass",
+    "provider_request_stability": "pass_after_fix",
+    "task_success_uplift": "not_demonstrated",
+    "reason": "Every plugin capability was exercised successfully at least once, but msc_delta/cold completed the artifact after only one context call and therefore failed its two-call protocol gate."
+  },
+  "scope": {
+    "task_id": "operations-release-decision",
+    "task_type": "non_code_release_decision_artifact",
+    "task_summary": "Read repository policy and current metrics, then create a validated release-plan JSON artifact.",
+    "model": "deepseek-v4-flash",
+    "harness": "0.1.0-rc.5@47f943859bef60e4160492346772ded9b24f765a",
+    "plugin_version": "0.1.6",
+    "execution_image": "memoryos-deepseek-lab@sha256:32359ca8e79047f42582daf6153af39a4a7c2e60e0a88fa6529d5a0bb6beff2d",
+    "task_prompt_names_memoryos": false,
+    "task_prompt_names_plugin_tools": false,
+    "same_model_runtime_and_start_state_within_pairs": true,
+    "primary_system_prompt_byte_identical_across_disposable_workspaces": false,
+    "primary_system_prompt_difference": "The initial full campaign still rendered each condition's absolute disposable workspace path in the headless global persona.",
+    "post_fix_first_request_ab_components": "system, messages, and generation are identical; only the expected tool component differs.",
+    "stale_memory_canary": "STALE-CANARY-25-PCT",
+    "cross_project_canary": "CROSS-PROJECT-SHIP-100"
+  },
+  "primary_acceptance": {
+    "campaigns": [
+      "core-live-r1",
+      "compact"
+    ],
+    "run_count": 14,
+    "hidden_test_success_count": 14,
+    "condition_protocol_success_count": 13,
+    "provider_attempts": 97,
+    "completed_provider_requests": 97,
+    "provider_exact_usage_records": 97,
+    "retries": 0,
+    "input_tokens": 949383,
+    "cache_miss_input_tokens": 144519,
+    "cache_hit_input_tokens": 804864,
+    "output_tokens": 24354,
+    "cost_usd": 0.0293053992,
+    "stale_memory_uses": 0,
+    "cross_project_leaks": 0,
+    "request_cap_hits": 0,
+    "provider_requests_per_run_range": [
+      5,
+      8
+    ]
+  },
+  "feature_matrix": [
+    {
+      "feature": "baseline_without_memory_tools",
+      "status": "pass",
+      "evidence": "no_memory exposed no memory tool and recorded zero memory calls in every baseline run."
+    },
+    {
+      "feature": "legacy_full_context",
+      "status": "pass",
+      "evidence": "legacy_full completed cold and warm with one context call in each phase."
+    },
+    {
+      "feature": "msc_full_context",
+      "status": "pass",
+      "evidence": "msc_full completed cold and warm with one context call in each phase."
+    },
+    {
+      "feature": "progressive_disclosure_and_explain",
+      "status": "pass",
+      "evidence": "msc_progressive/cold used context plus memory_explain; warm used context only, demonstrating selective expansion."
+    },
+    {
+      "feature": "delta_context",
+      "status": "conditional",
+      "evidence": "msc_delta/warm and both msc_delta_core phases produced delta hits; msc_delta/cold skipped the required second call."
+    },
+    {
+      "feature": "compact_context_only",
+      "status": "pass",
+      "evidence": "msc_context_only completed the non-code artifact with one argument-free memory_context call."
+    },
+    {
+      "feature": "stale_and_cross_project_safety",
+      "status": "pass",
+      "evidence": "All primary runs reported stale_memory_uses=0 and cross_project_leaks=0 despite both canaries being present."
+    },
+    {
+      "feature": "exact_usage_cost_and_cache_split",
+      "status": "pass",
+      "evidence": "Every completed provider request has provider_exact input, cache-miss, cache-hit, output, latency, request hash, and cost evidence."
+    },
+    {
+      "feature": "loader_install_toggle_and_hmr",
+      "status": "pass",
+      "evidence": "The plugin installed into a fresh Harness home; real Loader HMR disabled and re-enabled memory schemas while leaving usage collection mounted."
+    },
+    {
+      "feature": "cold_warm_provider_visible_request_stability",
+      "status": "pass_after_fix",
+      "evidence": "The final four-request supplement matched cold/warm first-request hash, bytes, and system/messages/tools/generation component hashes for baseline and treatment."
+    }
+  ],
+  "ab_results": [
+    {
+      "condition": "legacy_full",
+      "phase": "cold",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": 13939,
+      "input_token_delta_percent": 22.01,
+      "provider_request_delta": 0,
+      "latency_delta_seconds": 2.361,
+      "cost_delta_usd": 0.0004626776
+    },
+    {
+      "condition": "legacy_full",
+      "phase": "warm",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": 11112,
+      "input_token_delta_percent": 16.79,
+      "provider_request_delta": 0,
+      "latency_delta_seconds": 1.408,
+      "cost_delta_usd": 0.0003181248
+    },
+    {
+      "condition": "msc_full",
+      "phase": "cold",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": 3627,
+      "input_token_delta_percent": 5.73,
+      "provider_request_delta": 0,
+      "latency_delta_seconds": 4.357,
+      "cost_delta_usd": 0.0002079
+    },
+    {
+      "condition": "msc_full",
+      "phase": "warm",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": -531,
+      "input_token_delta_percent": -0.8,
+      "provider_request_delta": 0,
+      "latency_delta_seconds": -0.311,
+      "cost_delta_usd": -0.0000508536,
+      "note": "One paired sample; do not interpret the small negative delta as a proven efficiency gain."
+    },
+    {
+      "condition": "msc_progressive",
+      "phase": "cold",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": 6583,
+      "input_token_delta_percent": 10.4,
+      "provider_request_delta": 0,
+      "latency_delta_seconds": 7.051,
+      "cost_delta_usd": 0.0003707928
+    },
+    {
+      "condition": "msc_progressive",
+      "phase": "warm",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": 130,
+      "input_token_delta_percent": 0.2,
+      "provider_request_delta": 0,
+      "latency_delta_seconds": 1.424,
+      "cost_delta_usd": 0.0000039984
+    },
+    {
+      "condition": "msc_delta",
+      "phase": "cold",
+      "hidden_test_success": true,
+      "condition_protocol_success": false,
+      "input_token_delta_vs_no_memory": 2728,
+      "input_token_delta_percent": 4.31,
+      "provider_request_delta": 0,
+      "latency_delta_seconds": 2.381,
+      "cost_delta_usd": 0.0001009344
+    },
+    {
+      "condition": "msc_delta",
+      "phase": "warm",
+      "hidden_test_success": true,
+      "condition_protocol_success": true,
+      "input_token_delta_vs_no_memory": 13052,
+      "input_token_delta_percent": 19.72,
+      "provider_request_delta": 1,
+      "latency_delta_seconds": 3.561,
+      "cost_delta_usd": 0.0002296448
+    },
+    {
+      "condition": "msc_delta_core",
+      "phase": "cold",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": 16820,
+      "input_token_delta_percent": 26.56,
+      "provider_request_delta": 1,
+      "latency_delta_seconds": 7.769,
+      "cost_delta_usd": 0.0003833984
+    },
+    {
+      "condition": "msc_delta_core",
+      "phase": "warm",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": 2364,
+      "input_token_delta_percent": 3.57,
+      "provider_request_delta": 0,
+      "latency_delta_seconds": 3.116,
+      "cost_delta_usd": 0.000158536
+    },
+    {
+      "condition": "msc_context_only",
+      "phase": "cold",
+      "hidden_test_success": true,
+      "input_token_delta_vs_no_memory": 11455,
+      "input_token_delta_percent": 25.16,
+      "provider_request_delta": 1,
+      "latency_delta_seconds": 5.09,
+      "cost_delta_usd": 0.0002555672,
+      "note": "The final request-shape probe measured only +43 input tokens (+0.55%) before tool use; most full-task overhead came from the extra model round after retrieving memory."
+    }
+  ],
+  "ab_interpretation": {
+    "task_success_comparison": "Both baseline and every treatment produced a hidden-validator-passing artifact.",
+    "causal_precision_of_primary_cost_deltas": "directional_only",
+    "limitation": "The primary full campaign preceded the global-persona path fix, so its literal system prompt contained condition-specific disposable paths. The final fixed probe proves all non-tool first-request components are now identical, but it intentionally stopped after one completed response per run.",
+    "required_follow_up_only_if_claiming_effectiveness": "Run a new multi-task completion study under plugin 0.1.6. It is not required to accept the feature surfaces themselves."
+  },
+  "cache_prefix_supplement": {
+    "run_id": "full-plugin-cache-prefix-v4",
+    "measurement_only_runs": 4,
+    "provider_attempts": 8,
+    "completed_provider_requests": 4,
+    "provider_exact_usage_records": 4,
+    "retries": 0,
+    "input_tokens": 31218,
+    "cache_miss_input_tokens": 242,
+    "cache_hit_input_tokens": 30976,
+    "output_tokens": 695,
+    "cost_usd": 0.0003152128,
+    "no_memory": {
+      "cold_warm_first_request_sha256": "c7c1d7fc6416a746b179a814be96bc9e2236188abe9e5a5fd401162bf1210a98",
+      "request_bytes": 33476,
+      "cold_warm_hash_equal": true,
+      "cold_warm_bytes_equal": true,
+      "cold_warm_components_equal": true,
+      "memory_calls_per_phase": 0
+    },
+    "msc_context_only": {
+      "cold_warm_first_request_sha256": "b0c2d9b42a020c5984a8a7a0c295d9049891d38d280007c13a9f76255f385c7a",
+      "request_bytes": 33677,
+      "cold_warm_hash_equal": true,
+      "cold_warm_bytes_equal": true,
+      "cold_warm_components_equal": true,
+      "memory_calls_per_phase": 1
+    },
+    "ab_first_request_component_equality": {
+      "system": true,
+      "messages": true,
+      "generation": true,
+      "tools": false,
+      "tools_difference_expected": true,
+      "tool_component_bytes_baseline": 27063,
+      "tool_component_bytes_treatment": 27264
+    },
+    "provider_cache_cold_warm_contrast_interpretable": false,
+    "cache_contrast_limitation": "Both nominal cold and warm first requests were already mostly cache hits because earlier identical diagnostic prompts populated the provider's content-addressed cache. Request stability and exact cache accounting pass, but this supplement cannot estimate a cold-to-warm hit-rate uplift."
+  },
+  "request_and_cost_audit": {
+    "primary_completed_provider_requests": 97,
+    "invalid_cache_v2_completed_provider_requests": 24,
+    "final_cache_v4_completed_provider_requests": 4,
+    "zero_request_probes_and_failures": [
+      "initial_bad_mount",
+      "cache_prefix_v1_guard_failure",
+      "offline_request_shape_probes",
+      "cache_prefix_v3_pre_dispatch_probe"
+    ],
+    "total_completed_provider_requests_in_acceptance_artifacts": 125,
+    "total_input_tokens_in_acceptance_artifacts": 1202747,
+    "total_output_tokens_in_acceptance_artifacts": 30418,
+    "total_cost_usd_in_acceptance_artifacts": 0.037023476
+  },
+  "coupling_assessment": {
+    "task_specific_tuning": false,
+    "model_specific_ab_confound": false,
+    "explanation": "The task and validator are non-code and plugin-neutral. The DeepSeek-optimized Harness preset is model-specific, but it is frozen identically for A and B, so it cannot explain the treatment difference.",
+    "intentional_adapter_coupling": "The plugin is explicitly pinned to DeepSeek Harness 0.1.0-rc.5, and the provider-visible request projection mirrors that pinned DeepSeek adapter wire contract. A Harness upgrade requires compatibility revalidation."
+  },
+  "verification": {
+    "python_tests": "33 passed",
+    "node_plugin_tests": "8 passed",
+    "real_loader_hmr_tests": "1 passed within the 8 Node tests",
+    "ruff": "passed",
+    "hidden_validators": "14 of 14 primary runs passed",
+    "warning": "One unrelated Pydantic IncompleteFieldDefinitionWarning remains in the test environment."
+  },
+  "recommendation": {
+    "release_position": "Accept plugin 0.1.6 as an opt-in conditional functional release, not as proof of task-success improvement.",
+    "default_general_mode": "msc_full",
+    "progressive_mode": "Use when explain-on-demand is valuable.",
+    "delta_mode": "Prefer msc_delta_core when a second call must be enforced; do not rely on free-form msc_delta adherence yet.",
+    "easy_self_contained_tasks": "Leave the plugin off unless memory is expected to contain necessary information."
+  }
+}

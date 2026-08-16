@@ -13,6 +13,7 @@ from memoryos.context.token_meter import TokenCounter, canonical_json
 class ToolProfile(StrEnum):
     ALL = "all"
     CORE = "core"
+    CONTEXT = "context"
     GOVERNANCE = "governance"
     DEBUG = "debug"
 
@@ -39,6 +40,7 @@ CORE_TOOLS = (
     "memory_explain",
     "memory_current_truth",
 )
+CONTEXT_TOOLS = ("memory_context",)
 GOVERNANCE_TOOLS = (
     "memory_forget",
     "memory_feedback",
@@ -52,6 +54,7 @@ DEBUG_TOOLS = (
 PROFILE_TOOLS = {
     ToolProfile.ALL: ALL_TOOLS,
     ToolProfile.CORE: CORE_TOOLS,
+    ToolProfile.CONTEXT: CONTEXT_TOOLS,
     ToolProfile.GOVERNANCE: GOVERNANCE_TOOLS,
     ToolProfile.DEBUG: DEBUG_TOOLS,
 }
@@ -130,6 +133,7 @@ async def server_schema_snapshot(
 
 __all__ = [
     "ALL_TOOLS",
+    "CONTEXT_TOOLS",
     "CORE_TOOLS",
     "DEBUG_TOOLS",
     "GOVERNANCE_TOOLS",

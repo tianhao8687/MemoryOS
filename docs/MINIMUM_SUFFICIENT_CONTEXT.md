@@ -174,7 +174,7 @@ Migration `0005_context_efficiency` 为 RetrievalRun 增加 usage/policy/diagnos
 
 Golden 包含 resolved、contested、suspect、stale、Constraint 和 Source-Grounded 基线，并分开记录
 legacy text/sections/manifest/debug/完整 payload 的规范序列化尺寸。Dry run 固定数据集、策略、
-`tokenizer_id/counter_kind/counter_version` 组合，以及 all/core/governance/debug 四个
+`tokenizer_id/counter_kind/counter_version` 组合，以及 all/core/context/governance/debug 五个
 Schema Snapshot 的 SHA-256。
 
 ## Context Efficiency Study 与发布门禁

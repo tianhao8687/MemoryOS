@@ -1,0 +1,41 @@
+#!/bin/bash
+set -euo pipefail
+
+log=/tmp/memoryos-task-bootstrap.log
+
+# Support legacy setuptools-scm checkouts that declare write_to directly in
+# setup.py rather than pyproject.toml. This only creates ignored version and
+# egg-info metadata; target implementation code is not changed.
+if [[ -f setup.py && ! -f src/_pytest/_version.py ]] \
+    && grep -Fq 'use_scm_version' setup.py; then
+  if ! env SETUPTOOLS_SCM_PRETEND_VERSION=5.3.0.dev0 \
+      python setup.py --quiet egg_info >"$log" 2>&1; then
+    printf 'memoryos-shell: legacy checkout metadata bootstrap failed\n' >&2
+    tail -n 40 "$log" >&2
+    exit 125
+  fi
+fi
+
+if [[ -f pyproject.toml && -f setup.py ]] && python -c '
+import pathlib
+import sys
+import tomllib
+
+config = tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))
+target = config.get("tool", {}).get("setuptools_scm", {}).get("write_to")
+sys.exit(0 if isinstance(target, str) and target and not pathlib.Path(target).exists() else 1)
+'; then
+  if ! env SETUPTOOLS_SCM_PRETEND_VERSION=7.2.0.dev0 \
+      python setup.py --quiet egg_info >"$log" 2>&1; then
+    printf 'memoryos-shell: checkout metadata bootstrap failed\n' >&2
+    tail -n 40 "$log" >&2
+    exit 125
+  fi
+fi
+
+# pytest 5's assertion rewriter predates Python 3.12 AST location rules. Plain
+# assertions preserve test semantics while avoiding that unrelated compiler
+# incompatibility in this frozen legacy checkout.
+export PYTEST_ADDOPTS="${PYTEST_ADDOPTS:-} --assert=plain"
+
+exec /bin/bash --noprofile --norc "$@"

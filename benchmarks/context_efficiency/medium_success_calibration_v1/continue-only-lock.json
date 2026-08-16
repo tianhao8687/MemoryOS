@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-17T00:00:00+08:00",
+  "purpose": "Resume the original progressive-memory calibration session with an unassisted continue-only user message until frozen hidden acceptance passes.",
+  "original_run_id": "medium-success-calibration-v1-live-r1",
+  "task_id": "pytest-pr-6197",
+  "frozen_order": [
+    "msc_progressive"
+  ],
+  "continuation_run_prefix": "medium-success-calibration-v1-continue-only-r1",
+  "overall_attempt_safety_ceiling_per_condition_including_initial": 72,
+  "initial_prompt": "继续",
+  "failed_acceptance_prompt": "继续",
+  "docker_host_campaign_root": "/host_mnt/d/dsh-medium-success-calibration-v1/live-r1",
+  "conditions": {
+    "msc_progressive": {
+      "filesystem_root": "/trial-c",
+      "workspace_relative": "repositories/runs/medium-success-calibration-v1-live-r1-cold-00000/pytest-pr-6197/workspace",
+      "harness_home_relative": ".memoryos-harness/medium-success-calibration-v1-live-r1/homes/pytest-pr-6197",
+      "memory_relative_to_campaign": "outputs/msc_progressive/.state/memory/pytest-pr-6197/msc_progressive",
+      "session_id": "session-31d23a4b-334a-4e29-9229-cdd46edbba1d"
+    }
+  },
+  "interpretation": {
+    "same_session": true,
+    "same_workspace": true,
+    "new_user_message_exact_text": "继续",
+    "additional_task_guidance": false,
+    "provider_retries": 0,
+    "recovery_run_not_plugin_effect_estimate": true
+  }
+}

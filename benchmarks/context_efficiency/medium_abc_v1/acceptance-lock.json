@@ -1,0 +1,142 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-16T12:44:52Z",
+  "purpose": "A one-task A/B/C pilot measuring whether MemoryOS helps DeepSeek V4 Flash on a real medium-length coding repair, without claiming a general repair-success-rate improvement.",
+  "run_id": "medium-abc-live-v1",
+  "task": {
+    "task_id": "pylint-pr-6528",
+    "repository_id": "pylint-dev-pylint",
+    "base_commit": "273a8b25620467c1e5686aa8d2a1dbb8c02c78d0",
+    "solution_commit_not_exposed_to_agent": "6ad350fb0aee8ff532b860cf9426afb98760ff88",
+    "difficulty": "medium",
+    "is_cross_file": true,
+    "prompt_mentions_memoryos": false,
+    "memory_seed_ids": [
+      "pylint-recursive-ignore-boundary"
+    ]
+  },
+  "conditions": {
+    "A": "no_memory",
+    "B": "msc_full",
+    "C": "msc_progressive"
+  },
+  "cache_phases": [
+    "cold"
+  ],
+  "one_run_per_condition": true,
+  "automatic_repetitions": 0,
+  "order_seed": 20260816,
+  "frozen_execution_order": [
+    "msc_full",
+    "msc_progressive",
+    "no_memory"
+  ],
+  "budget_tokens": 1200,
+  "runtime_contract": {
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "model_revision": "deepseek-api-catalog-2026-08-15",
+    "harness_version": "0.1.0-rc.5",
+    "plugin_version": "0.1.6",
+    "agent_preset": "standard-offline",
+    "reasoning_effort": "high",
+    "max_output_tokens_per_response": 8192,
+    "provider_retry_limit": 0,
+    "run_timeout_seconds": 600,
+    "no_patch_attempt_limit_per_condition": 8,
+    "no_patch_input_token_limit_per_condition": 300000,
+    "patch_preserving_attempt_limit_per_condition": 11,
+    "patch_preserving_input_token_limit_per_condition": 450000,
+    "absolute_attempt_limit_per_condition": 12,
+    "absolute_input_token_limit_per_condition": 600000,
+    "progress_grace_attempts": 1,
+    "absolute_attempt_limit_all_conditions": 36,
+    "completed_response_limit_all_conditions_under_attempt_hook": 33,
+    "tool_network": "none",
+    "condition_workspaces": "three independent dedicated Linux mount points"
+  },
+  "preflight": {
+    "run_id": "medium-abc-preflight-v3",
+    "artifact_root": "D:/dsh-medium-abc-v1/preflight-v3",
+    "provider_endpoint": "http://127.0.0.1:9",
+    "real_provider_requests": 0,
+    "external_blockers": 0,
+    "attempts_per_condition": 1,
+    "starting_state_sha256": "23858bea56d90a7f0d777925d75830aa0e718cd8467e23243df1f7a979649aae",
+    "prompt_sha256": "6dbd5cdf3f1b3a19174b8ee6f6d9abf9107b63bd870417fda223fc81b1bb34d2",
+    "request_components_equal_except_tools": true,
+    "request_components": {
+      "system_sha256": "82577a1e733dbed39d59cc1a32165cf4e587c549226008fa7f5fb97efa52416e",
+      "messages_sha256": "609af744f899c23bcac553e4a95691007b15207c8b0cc823db7d6f65bd537929",
+      "generation_sha256": "a63eff94d05333df1855c70260288746174f48256544d0e2a88f8231ce56c5d1",
+      "tool_sha256": {
+        "no_memory": "eb542e96d869a7bccb02263a88ca95f7b7f8fa89f7c3dcff9772702a09fdb41e",
+        "msc_full": "e622d822522f354065eed5f7b22479beacacd12ed426a560510ddf3036ce10f0",
+        "msc_progressive": "cdfc28e6d65d6c513e2d16f85efacc0b408ec9bec5efbd3d63c661985e44328f"
+      },
+      "request_sha256": {
+        "no_memory": "998264553850ce456654894ce60407a5915b28e06080b8a65c856b888763bbcc",
+        "msc_full": "8d67e318c666cbc36f084843e3d0db28cf2df034819a431a9f8edf6192797798",
+        "msc_progressive": "0379454688efd723b5947e53fe97df669032e5c5c487120ad9cd81cdaba900b5"
+      },
+      "request_bytes": {
+        "no_memory": 32580,
+        "msc_full": 32775,
+        "msc_progressive": 33321
+      }
+    }
+  },
+  "evidence_lock": {
+    "manifest_file_sha256": "59a608e896cac10c569b16accd14e40e7ea39e6314b278d8fc6773a08d18127c",
+    "manifest_canonical_sha256": "64bc1abf5b4a74209566245ab7a920f25ae066a2451fff50ca6593e491aa22d4",
+    "hidden_patch_file_sha256": "39151265d6bd66e7cc065326e89482d5a8938a776684ec32a8e42931d50aeda6",
+    "live_runtime_file_sha256": "41ecfb1e0b19ddd934add4975773421bd04d36e77f9c464a2249f48b7deabd02",
+    "live_runtime_canonical_sha256": "30f6195cc5e789b6d08ecafec54799600d484d00067b04ee5e66a3393f4deabc",
+    "preflight_runtime_file_sha256": "6a04fb35dcc9c7edfc13a242de8ab3f4363f59fe057a46ca834f6318001e18ba",
+    "preflight_runtime_canonical_sha256": "47443118eb2a1e5010b11354fc4eabb22b8858d5084f475f6a1838ffb1dc2b71",
+    "controller_file_sha256": "9098f13a2f64370fe7f80c29f9ca629c43a40f6f89a3c03ddc4ce3d6c527da0b",
+    "runner_file_sha256": "e296248494541872292295f2ec5055f0bbff55058d656234934d3d63386151ff",
+    "condition_runtime_file_sha256": "82d606f0d65b0c457db12e925b237f2df80560c40344dd94e725c389df18e33f",
+    "plugin_core_file_sha256": "ddd63d1c9841c2a26d7ca39a5d9d7619931efefe76d27dcb07036cc192fffd62",
+    "plugin_usage_file_sha256": "941a089c9f08b9b3a26e286091d3ec46e261deec30722c0e4216dd96f3366451",
+    "plugin_package_file_sha256": "7119f49544af240d693e5b1a59048ec5c399ed0779a264da9f8d814aebd6c30e",
+    "plugin_tree_sha256": "5e8a87ea6b6ef15df2c83fa162dec2eb14204a9c7005a79ba3c789fba81466cb",
+    "plugin_file_count": 16,
+    "execution_image": "memoryos-deepseek-lab@sha256:32359ca8e79047f42582daf6153af39a4a7c2e60e0a88fa6529d5a0bb6beff2d"
+  },
+  "validity_gates": {
+    "same_prompt_starting_state_runtime_and_hidden_test": true,
+    "only_memory_tool_exposure_and_returned_memory_may_differ": true,
+    "baseline_memory_tool_calls": 0,
+    "treatment_memory_context_calls_min": 1,
+    "progressive_explain_calls_min_if_index_requires_evidence": 1,
+    "provider_usage_source": "provider_exact",
+    "stale_memory_uses": 0,
+    "cross_project_leaks": 0,
+    "constraint_loss": 0,
+    "blocked_actions": 0
+  },
+  "primary_metric": "hidden_test_success",
+  "secondary_metrics": [
+    "provider_attempts",
+    "provider_requests",
+    "cache_miss_input_tokens",
+    "cache_hit_input_tokens",
+    "output_tokens",
+    "cost_usd",
+    "run_latency_seconds",
+    "memory_tool_calls",
+    "memory_explain_calls",
+    "repeated_file_opens",
+    "repeated_searches",
+    "changed_files_and_patch_size"
+  ],
+  "decision_rule": {
+    "strong_pilot_benefit": "A treatment passes the hidden test while A fails, with no safety regression.",
+    "equal_success_efficiency_signal": "At equal hidden-test outcome, a treatment has at least two fewer provider attempts or at least 15 percent lower provider input/cost/latency, without a material regression in the other efficiency metrics or safety.",
+    "harm_signal": "A treatment regresses hidden-test success or safety, or at equal success adds at least 15 percent provider input/cost with no compensating attempt or latency reduction.",
+    "inconclusive": "All three fail, a treatment never calls memory, validity gates fail, or differences remain below the material thresholds.",
+    "generalization_limit": "One randomized task is a pilot signal only; it cannot establish a general repair-success rate.",
+    "no_automatic_expansion": "Do not rerun or add tasks without reporting this pilot to the user first."
+  }
+}

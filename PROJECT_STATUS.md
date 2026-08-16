@@ -32,8 +32,9 @@
 - 最终 A52 clean-main 基线：commit `9f2e2e7909c547b4a6b19d3e7a1ef40031d5ebe6`，dirty=false，package smoke PASS
 - V2.1 历史验收入口：`.\.venv\Scripts\python.exe scripts\verify_v21.py`
 - V2.1 历史验收范围：V1 A01–A14、V2 A15–A32 回归，V2.1 A33–A52
-- V2.3 MSC（2026-08-15）：已实现 legacy/msc_shadow/msc 三模式、完整 payload Token 预算、Context Atom/确定性去重、Pinned/Contested 原子安全下限、按需 Explain、显式 Delta/Full Rebase、可丢弃 Snapshot、all/core/governance/debug 固定 MCP Profile 与独立 Context Efficiency Study。Study 分开 Provider input/output/cached、成本、延迟、delivery/evidence/history/delta/full-equivalent、Schema 和安全/行为/系统指标，并哈希绑定 0.5/0.65/0.8/0.9 阈值矩阵。V2.2 Golden 基线和 V2.3 dry run 均可重建。Dry run 为 deterministic fixture，无 Provider Usage，`effect_claim=none`；预注册 2pp 非劣界限在 10% 不一致假设下约需 1,546 个独立配对任务，因此未切换默认。
+- V2.3 MSC（2026-08-15）：已实现 legacy/msc_shadow/msc 三模式、完整 payload Token 预算、Context Atom/确定性去重、Pinned/Contested 原子安全下限、按需 Explain、显式 Delta/Full Rebase、可丢弃 Snapshot、all/core/context/governance/debug 固定 MCP Profile 与独立 Context Efficiency Study。Study 分开 Provider input/output/cached、成本、延迟、delivery/evidence/history/delta/full-equivalent、Schema 和安全/行为/系统指标，并哈希绑定 0.5/0.65/0.8/0.9 阈值矩阵。V2.2 Golden 基线和 V2.3 dry run 均可重建。Dry run 为 deterministic fixture，无 Provider Usage，`effect_claim=none`；预注册 2pp 非劣界限在 10% 不一致假设下约需 1,546 个独立配对任务，因此未切换默认。
 - V2.3 本地分支验证（2026-08-15）：V2.3 专项 36 passed；Ruff/format PASS，Mypy 检查 115 个源码文件 0 issues，后端全量 332 passed/0 failed（仅 2 条已知上游 warning）；前端 typecheck/ESLint PASS，Vitest 4 files/11 tests PASS，Vite 生产构建 1,745 modules PASS。这是源码回归证据，不代替 clean-main 打包 smoke 或 real-agent confirmatory evidence。
+- V2.3 本地 Qwen 8B Schema 优化 pilot（2026-08-15）：同一 Qwen3-VL-8B Q4_K_M、同一 6 任务/3 仓库、提示词、起点、runtime、workspace 工具与隐藏测试的三臂 cold 对比中，`no_memory / msc_full / msc_context_only` 的功能成功分别为 2/6、5/6、6/6，Provider input 为 69,016 / 258,786 / 89,869。`context` Profile 将 MemoryOS Schema 估算量从 2,719 降至 416 token；优化臂相对原 MSC full 减少 65.3% 实际 input，而相对无记忆增加 30.2%。153 次请求全部使用 Provider exact Usage，12/12 before/after 配对的 prompt/start/runtime 相同，protocol error、constraint loss、cross-project leak、contested split 均为 0。该结果是小样本工程 pilot，不满足约 1,546 任务的预注册 power 要求，不改变默认 legacy；原始证据在 `build/context-efficiency/qwen3-vl-token-optimization-v2/`。
 - V2.2 开发状态（2026-08-11）：仓库级三组真实 workload 框架已实现；固定 MarkupSafe 历史提交的 1-task/3-condition 公共 smoke 协议有效、隐藏测试全过、MemoryOS 产生真实 retrieval run。任务发布时间、跨项目来源仓库、agent commit 补丁、宿主 Git 控制面及 `real_coding_agent` 证据门禁均已机器校验；全仓后端回归 142 passed，确定性 fixture 仍明确 `effect_claim=none`
 - Retrieval calibration（2026-08-12）：首版 `memoryos-git-silver-v1` 已从 7 个固定公开仓库生成，包含 6 个查询仓库、5 种语言、300 queries、3,656 candidates、9,600 judgments；train/dev/test=200/50/50，manifest digest `52e670691d4c723680f7d2c67efcce31701001c88218bd3d915c82de5013eb3a`。标签明确为 Git path-overlap silver，不冒充人工 gold。
 - Human review pilot（2026-08-12）：`memoryos-human-review-v1-pilot` 已生成 61 个盲标案例、每位评审 1,922 个候选判断，双份候选顺序独立、test 封存、构建不读 qrels，并包含来源映射与过耦合审计；manifest digest `ecf532c8ebbe7b3f9866623eab0e9fb53cd979abe486fb29359cb9ca7f20729f`。当前状态严格为 `pilot_unlabeled`，双人独立标注、仲裁、外部仓库 holdout 和真实 Agent shadow evidence 尚未完成。
@@ -57,7 +58,7 @@ MemoryOS V2.1 发布快照中的 A47 因当时未提供真实 coding-agent endpo
 | Progressive disclosure | 兼容扩展 `memory_explain`，hash 失效、section 预算、多来源一次证据回溯 | Complete |
 | Delta | 显式游标、Scope/Policy/Tokenizer/TTL/integrity 校验、可解释 Full Rebase | Complete |
 | Migration/backup | `0005_context_efficiency`；Snapshot 是有界可丢弃缓存，不进长期备份，Restore 后安全 rebase | Complete |
-| MCP profiles | deterministic `all/core/governance/debug`；四个 Schema Snapshot/hash | Complete |
+| MCP profiles | deterministic `all/core/context/governance/debug`；五个 Schema Snapshot/hash；`context` 仅暴露只读编译上下文 | Complete |
 | Evaluation | 独立五条件 Study、完整分账、paired bootstrap、阈值矩阵、power、safety/transparency/worst-group gates | Dry run complete; confirmatory pending |
 | Activation | 默认 `legacy`，显式 `msc_shadow`/`msc` 可用，无自动激活 | Evidence gate retained |
 

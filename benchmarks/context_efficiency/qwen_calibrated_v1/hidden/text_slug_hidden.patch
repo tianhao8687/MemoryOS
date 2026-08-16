@@ -1,0 +1,10 @@
+diff --git a/benchmark_hidden_text_slug.py b/benchmark_hidden_text_slug.py
+new file mode 100644
+--- /dev/null
++++ b/benchmark_hidden_text_slug.py
+@@ -0,0 +1,5 @@
++from src.text_tools import slugify
++
++
++assert slugify(" Hello World ") == "hello-world"
++assert slugify("A B C") == "a-b-c"

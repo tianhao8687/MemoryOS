@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+# RC5's Loader first tries Node's internal ESM resolver and only then its
+# native-addon fallback. Node 25 no longer exposes the required resolver to
+# that fallback, so scope --expose-internals to the trusted Harness process.
+exec node --expose-internals /usr/local/bin/dsh "$@"

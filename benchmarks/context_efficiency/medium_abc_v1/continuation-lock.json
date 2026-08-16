@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "original_run_id": "medium-abc-live-v1",
+  "continuation_run_prefix": "medium-abc-cont-v1",
+  "docker_host_campaign_root": "/host_mnt/d/dsh-medium-abc-v1/live-r1",
+  "task_id": "pylint-pr-6528",
+  "frozen_order": [
+    "msc_full",
+    "msc_progressive",
+    "no_memory"
+  ],
+  "initial_prompt": "Continue working on the existing task from where you left off. Investigate further as needed, implement the repair, run relevant tests, and keep working until you believe the task is fully correct. Preserve the original requirements and leave the final changes in the working tree. Do not use web search or downloads.",
+  "failed_acceptance_prompt": "Continue working on the existing task. The current working tree did not pass an external acceptance check. Investigate further as needed, repair the implementation, run relevant tests, and keep working until you believe the original task is fully correct. Do not use web search or downloads.",
+  "overall_attempt_safety_ceiling_per_condition_including_initial": 360,
+  "recovery_latency_seconds": {
+    "1:msc_full": 180.388271,
+    "1:msc_progressive": 272.857444,
+    "2:msc_full": 263.859815,
+    "1:no_memory": 381.079804
+  },
+  "conditions": {
+    "msc_full": {
+      "session_id": "session-1da1afeb-76b9-4500-a37d-d5f01a4baecd",
+      "filesystem_root": "/trial-b",
+      "docker_host_root": "/host_mnt/d/dsh-medium-abc-v1/live-r1/roots/msc_full",
+      "workspace_relative": "repositories/runs/medium-abc-live-v1-cold-00000/pylint-pr-6528/workspace",
+      "harness_home_relative": ".memoryos-harness/medium-abc-live-v1/homes/pylint-pr-6528",
+      "memory_relative_to_campaign": "output/.state/memory/pylint-pr-6528/msc_full"
+    },
+    "msc_progressive": {
+      "session_id": "session-4ee6af43-2188-4e8d-9ee4-8af61bd34933",
+      "filesystem_root": "/trial-c",
+      "docker_host_root": "/host_mnt/d/dsh-medium-abc-v1/live-r1/roots/msc_progressive",
+      "workspace_relative": "repositories/runs/medium-abc-live-v1-cold-00001/pylint-pr-6528/workspace",
+      "harness_home_relative": ".memoryos-harness/medium-abc-live-v1/homes/pylint-pr-6528",
+      "memory_relative_to_campaign": "output/.state/memory/pylint-pr-6528/msc_progressive"
+    },
+    "no_memory": {
+      "session_id": "session-cf09631a-130f-424d-9cbe-99119d767d1f",
+      "filesystem_root": "/trial-a",
+      "docker_host_root": "/host_mnt/d/dsh-medium-abc-v1/live-r1/roots/no_memory",
+      "workspace_relative": "repositories/runs/medium-abc-live-v1-cold-00002/pylint-pr-6528/workspace",
+      "harness_home_relative": ".memoryos-harness/medium-abc-live-v1/homes/pylint-pr-6528",
+      "memory_relative_to_campaign": null
+    }
+  }
+}

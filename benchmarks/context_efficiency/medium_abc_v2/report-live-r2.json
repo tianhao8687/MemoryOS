@@ -1,0 +1,146 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-17T01:00:00+08:00",
+  "run_id": "medium-abc-v2-live-r2",
+  "status": "completed_with_all_arms_failed",
+  "optimization_scope": {
+    "target": "memoryos_plugin",
+    "agent_behavior_prompt_changed": false,
+    "fixed_edit_step_added": false,
+    "plugin_version": "0.1.8"
+  },
+  "controls": {
+    "task_id": "pytest-pr-10356",
+    "difficulty": "medium",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "high",
+    "agent_preset": "standard-offline",
+    "prompt_sha256": "31d3141dbd8a4f35a99698ea079d1e3598f8b6a10ed12ebacd6d0b904a38d017",
+    "parallel_arms": 3,
+    "provider_retry_limit": 0,
+    "hidden_scoring_outside_agent_roots": true
+  },
+  "arms": {
+    "A": {
+      "condition": "no_memory",
+      "provider_attempts": 12,
+      "completed_responses": 11,
+      "input_tokens": 158511,
+      "cached_input_tokens": 146560,
+      "uncached_input_tokens": 11951,
+      "output_tokens": 2439,
+      "reasoning_tokens": 1149,
+      "cost_usd": "0.00276642800000000033",
+      "provider_latency_seconds": 21.658,
+      "wall_seconds": 110.082039,
+      "memory_tool_calls": 0,
+      "exact_diagnosis_response": 10,
+      "patch_bytes": 0,
+      "hidden_test_success": false,
+      "failure_reason": "no_patch_request_limit"
+    },
+    "B": {
+      "condition": "msc_full",
+      "provider_attempts": 13,
+      "completed_responses": 12,
+      "input_tokens": 151184,
+      "cached_input_tokens": 137088,
+      "uncached_input_tokens": 14096,
+      "output_tokens": 1974,
+      "reasoning_tokens": 901,
+      "cost_usd": "0.002910006400000000075",
+      "provider_latency_seconds": 19.183,
+      "wall_seconds": 107.472024,
+      "memory_tool_calls": 1,
+      "exact_diagnosis_response": 7,
+      "patch_bytes": 0,
+      "hidden_test_success": false,
+      "failure_reason": "no_patch_request_limit"
+    },
+    "C": {
+      "condition": "msc_progressive",
+      "provider_attempts": 10,
+      "completed_responses": 10,
+      "input_tokens": 159436,
+      "cached_input_tokens": 138496,
+      "uncached_input_tokens": 20940,
+      "output_tokens": 7210,
+      "reasoning_tokens": 6093,
+      "cost_usd": "0.00533818880000000085",
+      "provider_latency_seconds": 54.516,
+      "wall_seconds": 139.172394,
+      "memory_tool_calls": 2,
+      "memory_explain_calls": 1,
+      "exact_diagnosis_response": 5,
+      "patch_bytes": 0,
+      "hidden_test_success": false,
+      "failure_reason": "relative_usage_guard"
+    }
+  },
+  "totals": {
+    "provider_attempts": 35,
+    "completed_responses": 33,
+    "input_tokens": 469131,
+    "output_tokens": 11623,
+    "cost_usd": "0.0110146232",
+    "provider_retries": 0
+  },
+  "plugin_compaction": {
+    "old_c_minus_b_first_request_bytes": 546,
+    "new_c_minus_b_first_request_bytes": 350,
+    "reduction_bytes": 196,
+    "reduction_percent": 35.9,
+    "first_three_request_bytes": {
+      "B": 102745,
+      "C": 102628,
+      "C_minus_B": -117
+    },
+    "first_three_input_tokens": {
+      "B": 24068,
+      "C": 24005,
+      "C_minus_B": -63
+    }
+  },
+  "relative_guard": {
+    "multiplier": "1.30",
+    "triggered_arm": "C",
+    "trigger_metric": "cost_usd",
+    "peer_maximum": "0.002910006400000000075",
+    "ceiling": "0.00378300832000000009750",
+    "observed_at_decision": "0.00497449120000000085",
+    "provider_attempts_at_decision": 10,
+    "completed_responses_at_decision": 9,
+    "input_tokens_at_decision": 130212,
+    "next_provider_attempt_blocked": true,
+    "in_flight_response_completed_after_decision": true
+  },
+  "verdict": {
+    "plugin_invocation_proven": true,
+    "plugin_compaction_effect_proven": true,
+    "diagnosis_acceleration_signal": true,
+    "repair_success_improvement_proven": false,
+    "total_token_reduction_proven": false,
+    "total_cost_reduction_proven": false,
+    "cross_task_generalization_proven": false,
+    "c_end_to_end_efficiency_passed": false,
+    "summary": "The plugin-side compact progressive interface reduced early model-visible overhead and supplied the correct contract earlier in this task, but all arms produced empty patches and C incurred excessive model reasoning output before the relative-cost guard stopped the next dispatch."
+  },
+  "excluded_prelaunch_incidents": [
+    {
+      "run_root": "D:/dsh-medium-abc-v2/live-r1",
+      "reason": "container Python entrypoint exec-format error",
+      "provider_attempts": 0
+    },
+    {
+      "run_root": "D:/dsh-medium-abc-v2/live-r1",
+      "reason": "continuation driver required MEMORYOS_RESUME_SESSION_ID",
+      "provider_attempts": 0
+    }
+  ],
+  "artifacts": {
+    "raw_outputs": "D:/dsh-medium-abc-v2/live-r2/outputs",
+    "relative_guard_report": "D:/dsh-medium-abc-v2/live-r2/relative-guard-report.json",
+    "acceptance_lock": "benchmarks/context_efficiency/medium_abc_v2/acceptance-lock.json",
+    "runtime": "benchmarks/context_efficiency/medium_abc_v2/runtime-live.json"
+  }
+}

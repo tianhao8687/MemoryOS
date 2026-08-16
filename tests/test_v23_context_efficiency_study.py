@@ -139,7 +139,9 @@ def test_context_efficiency_study_does_not_mutate_existing_three_arm_enum() -> N
         "flat_memory",
         "memoryos",
     )
-    assert len(ContextEfficiencyCondition) == 5
+    assert len(ContextEfficiencyCondition) == 7
+    assert ContextEfficiencyCondition.NO_MEMORY.value == "no_memory"
+    assert ContextEfficiencyCondition.MSC_CONTEXT_ONLY.value == "msc_context_only"
 
 
 def test_config_hash_and_power_are_frozen_before_confirmatory_execution() -> None:
@@ -310,7 +312,13 @@ async def test_checked_in_dry_run_is_reproducible_and_covers_every_tool_profile(
     checked_in = json.loads(artifact.read_text(encoding="utf-8"))
 
     assert rebuilt == checked_in
-    assert set(rebuilt["schema_snapshots"]) == {"all", "core", "governance", "debug"}
+    assert set(rebuilt["schema_snapshots"]) == {
+        "all",
+        "core",
+        "context",
+        "governance",
+        "debug",
+    }
     assert {record["condition"]: record["tool_profile"] for record in rebuilt["records"]} == {
         "legacy_full": "all",
         "msc_full": "all",

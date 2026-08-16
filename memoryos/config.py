@@ -115,8 +115,8 @@ class MemoryOSSettings(BaseSettings):
     @classmethod
     def require_known_tool_profile(cls, value: str) -> str:
         normalized = value.strip().lower()
-        if normalized not in {"all", "core", "governance", "debug"}:
-            raise ValueError("MCP tool profile must be all, core, governance, or debug")
+        if normalized not in {"all", "core", "context", "governance", "debug"}:
+            raise ValueError("MCP tool profile must be all, core, context, governance, or debug")
         return normalized
 
     @model_validator(mode="after")

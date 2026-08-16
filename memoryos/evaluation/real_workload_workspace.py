@@ -57,6 +57,7 @@ class RepositoryWorkspaceManager:
         executable: Path | None = None,
         command_timeout_seconds: int = 180,
         refresh_existing_cache: bool = True,
+        include_condition_in_workspace_path: bool = True,
     ) -> None:
         self.root = root.resolve()
         self.cache_root = self.root / "cache"
@@ -66,6 +67,7 @@ class RepositoryWorkspaceManager:
         self.executable = (executable or _find_git()).resolve()
         self.command_timeout_seconds = command_timeout_seconds
         self.refresh_existing_cache = refresh_existing_cache
+        self.include_condition_in_workspace_path = include_condition_in_workspace_path
 
     def prepare_repository(self, repository: RepositorySpec) -> PreparedRepository:
         mirror = self.cache_root / f"{repository.id}.git"
@@ -131,7 +133,10 @@ class RepositoryWorkspaceManager:
         safe_run_id = _safe_component(run_id, label="run_id")
         if task.repository_id != prepared.repository_id:
             raise WorkspaceError("task and prepared repository ids do not match")
-        workspace = self.runs_root / safe_run_id / task.id / condition.value / "workspace"
+        workspace_parent = self.runs_root / safe_run_id / task.id
+        if self.include_condition_in_workspace_path:
+            workspace_parent /= condition.value
+        workspace = workspace_parent / "workspace"
         if workspace.exists():
             raise WorkspaceError(f"refusing to reuse an existing benchmark workspace: {workspace}")
         workspace.parent.mkdir(parents=True, exist_ok=True)

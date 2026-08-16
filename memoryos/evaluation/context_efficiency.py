@@ -40,6 +40,17 @@ class ContextEfficiencyCondition(StrEnum):
     MSC_PROGRESSIVE = "msc_progressive"
     MSC_DELTA = "msc_delta"
     MSC_DELTA_CORE = "msc_delta_core"
+    NO_MEMORY = "no_memory"
+    MSC_CONTEXT_ONLY = "msc_context_only"
+
+
+MEMORYOS_CONTEXT_CONDITIONS = (
+    ContextEfficiencyCondition.LEGACY_FULL,
+    ContextEfficiencyCondition.MSC_FULL,
+    ContextEfficiencyCondition.MSC_PROGRESSIVE,
+    ContextEfficiencyCondition.MSC_DELTA,
+    ContextEfficiencyCondition.MSC_DELTA_CORE,
+)
 
 
 class ContextEfficiencyMode(StrEnum):
@@ -219,7 +230,7 @@ class ContextEfficiencyRecord(BaseModel):
     patch_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     study_config_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     policy_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    tool_profile: Literal["all", "core", "governance", "debug"]
+    tool_profile: Literal["none", "all", "core", "context", "governance", "debug"]
     tool_schema_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     dataset_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     tokenizer_id: str
@@ -501,7 +512,17 @@ class ContextEfficiencyStudyBuilder:
                 errors.append(f"task {task_id} did not use the frozen study config")
             for condition, record in task_records.items():
                 expected_profile = (
-                    "core" if condition is ContextEfficiencyCondition.MSC_DELTA_CORE else "all"
+                    "none"
+                    if condition is ContextEfficiencyCondition.NO_MEMORY
+                    else (
+                        "context"
+                        if condition is ContextEfficiencyCondition.MSC_CONTEXT_ONLY
+                        else (
+                            "core"
+                            if condition is ContextEfficiencyCondition.MSC_DELTA_CORE
+                            else "all"
+                        )
+                    )
                 )
                 if record.tool_profile != expected_profile:
                     errors.append(
@@ -1291,6 +1312,7 @@ __all__ = [
     "ACCOUNTING_BOOTSTRAP_CONDITION_STRIDE",
     "ACCOUNTING_BOOTSTRAP_SEED_OFFSET",
     "DELTA_THRESHOLD_GRID",
+    "MEMORYOS_CONTEXT_CONDITIONS",
     "PROVIDER_BOOTSTRAP_SEED_OFFSET",
     "REQUIRED_ADVERSARIAL_TAGS",
     "ContextEfficiencyCondition",

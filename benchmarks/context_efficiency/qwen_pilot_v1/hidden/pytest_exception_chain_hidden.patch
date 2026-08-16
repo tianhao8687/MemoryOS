@@ -1,0 +1,178 @@
+diff --git a/benchmark_hidden_test.py b/benchmark_hidden_test.py
+new file mode 100644
+index 0000000..576aef7
+--- /dev/null
++++ b/benchmark_hidden_test.py
+@@ -0,0 +1,172 @@
++from __future__ import annotations
++
++import copy
++import io
++import runpy
++import sys
++from pathlib import Path
++from types import ModuleType, SimpleNamespace
++
++
++class TerminalRepr:
++    def toterminal(self, _writer: object) -> None:
++        return None
++
++
++class ReprEntry:
++    def __init__(
++        self,
++        lines: list[str],
++        reprfuncargs: object = None,
++        reprlocals: object = None,
++        filelocrepr: object = None,
++        style: str = "long",
++    ) -> None:
++        self.lines = lines
++        self.reprfuncargs = reprfuncargs
++        self.reprlocals = reprlocals
++        self.reprfileloc = filelocrepr
++        self.style = style
++
++
++class ReprEntryNative:
++    def __init__(self, lines: list[str]) -> None:
++        self.lines = lines
++
++
++class ReprFileLocation:
++    def __init__(self, path: str, lineno: int, message: str) -> None:
++        self.path = path
++        self.lineno = lineno
++        self.message = message
++
++
++class ReprFuncArgs:
++    def __init__(self, **values: object) -> None:
++        self.__dict__.update(values)
++
++
++class ReprLocals:
++    def __init__(self, lines: list[str]) -> None:
++        self.lines = lines
++
++
++class ReprTraceback:
++    def __init__(self, reprentries: list[object], **values: object) -> None:
++        self.reprentries = reprentries
++        self.__dict__.update(values)
++
++
++class ReprExceptionInfo(TerminalRepr):
++    def __init__(self, reprtraceback: ReprTraceback, reprcrash: ReprFileLocation) -> None:
++        self.reprtraceback = reprtraceback
++        self.reprcrash = reprcrash
++        self.sections: list[tuple[str, str, str]] = []
++
++    def addsection(self, name: str, content: str, sep: str = "-") -> None:
++        self.sections.append((name, content, sep))
++
++
++class ExceptionChainRepr(ReprExceptionInfo):
++    def __init__(
++        self,
++        chain: list[tuple[ReprTraceback, ReprFileLocation, str | None]],
++    ) -> None:
++        self.chain = chain
++        super().__init__(chain[-1][0], chain[-1][1])
++
++
++class ExceptionInfo:
++    pass
++
++
++class LocalPath(str):
++    pass
++
++
++class TerminalWriter:
++    def __init__(self, **_: object) -> None:
++        self.stringio = io.StringIO()
++        self.hasmarkup = False
++
++
++def install_dependency_shims() -> None:
++    py = ModuleType("py")
++    py.path = SimpleNamespace(local=LocalPath)
++    py.io = SimpleNamespace(TextIO=io.StringIO, TerminalWriter=TerminalWriter)
++    sys.modules["py"] = py
++
++    pytest_package = ModuleType("_pytest")
++    pytest_package.__path__ = []
++    code_package = ModuleType("_pytest._code")
++    code_package.__path__ = []
++    code = ModuleType("_pytest._code.code")
++    for value in (
++        TerminalRepr,
++        ExceptionChainRepr,
++        ExceptionInfo,
++        ReprEntry,
++        ReprEntryNative,
++        ReprExceptionInfo,
++        ReprFileLocation,
++        ReprFuncArgs,
++        ReprLocals,
++        ReprTraceback,
++    ):
++        setattr(code, value.__name__, value)
++    outcomes = ModuleType("_pytest.outcomes")
++    outcomes.skip = SimpleNamespace(Exception=RuntimeError)
++    pathlib_module = ModuleType("_pytest.pathlib")
++    pathlib_module.Path = Path
++    sys.modules.update(
++        {
++            "_pytest": pytest_package,
++            "_pytest._code": code_package,
++            "_pytest._code.code": code,
++            "_pytest.outcomes": outcomes,
++            "_pytest.pathlib": pathlib_module,
++        }
++    )
++
++
++def traceback(label: str) -> ReprTraceback:
++    entry = ReprEntry(
++        lines=[label],
++        reprfuncargs=None,
++        reprlocals=None,
++        filelocrepr=None,
++        style="long",
++    )
++    return ReprTraceback([entry], extraline=None, style="long")
++
++
++install_dependency_shims()
++namespace = runpy.run_path("src/_pytest/reports.py", run_name="benchmark_reports")
++test_report = namespace["TestReport"]
++inner = (traceback("inner"), ReprFileLocation("inner.py", 3, "ValueError"), "direct cause")
++outer = (traceback("outer"), ReprFileLocation("outer.py", 7, "RuntimeError"), None)
++longrepr = ExceptionChainRepr([inner, outer])
++longrepr.sections = [("details", "preserved", "=")]
++report = test_report(
++    nodeid="test_sample.py::test_chain",
++    location=("test_sample.py", 1, "test_chain"),
++    keywords={},
++    outcome="failed",
++    longrepr=longrepr,
++    when="call",
++)
++
++payload = report._to_json()
++serialized = payload.get("longrepr")
++if not isinstance(serialized, dict) or len(serialized.get("chain") or []) != 2:
++    raise AssertionError("serialized report dropped one or more chained exceptions")
++
++loaded = test_report._from_json(copy.deepcopy(payload))
++if not isinstance(loaded.longrepr, ExceptionChainRepr):
++    raise AssertionError("deserialized report did not restore ExceptionChainRepr")
++if len(loaded.longrepr.chain) != 2:
++    raise AssertionError("deserialized report changed the chain length")
++if [item[1].path for item in loaded.longrepr.chain] != ["inner.py", "outer.py"]:
++    raise AssertionError("deserialized report changed chained crash locations")
++if loaded.longrepr.sections != [("details", "preserved", "=")]:
++    raise AssertionError("deserialized report dropped report sections")

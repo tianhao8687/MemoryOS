@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "multiplier": "1.30",
+  "arms": [
+    {
+      "condition": "no_memory",
+      "usage_file": "D:/dsh-medium-abc-v2/live-r1/roots/no_memory/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/provider-usage.jsonl",
+      "attempt_file": "D:/dsh-medium-abc-v2/live-r1/roots/no_memory/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/provider-attempts.jsonl",
+      "terminal_file": "D:/dsh-medium-abc-v2/live-r1/roots/no_memory/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/run-stderr.log",
+      "guard_file": "D:/dsh-medium-abc-v2/live-r1/guard/no_memory.json"
+    },
+    {
+      "condition": "msc_full",
+      "usage_file": "D:/dsh-medium-abc-v2/live-r1/roots/msc_full/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/provider-usage.jsonl",
+      "attempt_file": "D:/dsh-medium-abc-v2/live-r1/roots/msc_full/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/provider-attempts.jsonl",
+      "terminal_file": "D:/dsh-medium-abc-v2/live-r1/roots/msc_full/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/run-stderr.log",
+      "guard_file": "D:/dsh-medium-abc-v2/live-r1/guard/msc_full.json"
+    },
+    {
+      "condition": "msc_progressive",
+      "usage_file": "D:/dsh-medium-abc-v2/live-r1/roots/msc_progressive/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/provider-usage.jsonl",
+      "attempt_file": "D:/dsh-medium-abc-v2/live-r1/roots/msc_progressive/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/provider-attempts.jsonl",
+      "terminal_file": "D:/dsh-medium-abc-v2/live-r1/roots/msc_progressive/.memoryos-harness/medium-abc-v2-live-r1/state/pytest-pr-10356__cold/run-stderr.log",
+      "guard_file": "D:/dsh-medium-abc-v2/live-r1/guard/msc_progressive.json"
+    }
+  ]
+}

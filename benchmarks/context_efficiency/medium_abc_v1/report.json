@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-16T13:05:24Z",
+  "run_id": "medium-abc-live-v1",
+  "task_id": "pylint-pr-6528",
+  "verdict": {
+    "primary": "inconclusive_for_task_effectiveness",
+    "memory_invocation_valid": true,
+    "repair_success_proven": false,
+    "diagnostic_acceleration_signal": true,
+    "progressive_efficiency_signal": true,
+    "full_mode_efficiency_signal": false,
+    "reason": "All three arms reached the same no-patch ceiling with empty patches. Memory returned the correct repair boundary and accelerated diagnosis, but the shared standard preset continued inspecting instead of editing before the controller stopped it."
+  },
+  "conditions": {
+    "A": "no_memory",
+    "B": "msc_full",
+    "C": "msc_progressive"
+  },
+  "validity": {
+    "external_blockers": 0,
+    "same_starting_state": true,
+    "starting_state_sha256": "23858bea56d90a7f0d777925d75830aa0e718cd8467e23243df1f7a979649aae",
+    "same_prompt": true,
+    "prompt_sha256": "6dbd5cdf3f1b3a19174b8ee6f6d9abf9107b63bd870417fda223fc81b1bb34d2",
+    "same_runtime": true,
+    "runtime_sha256": "30f6195cc5e789b6d08ecafec54799600d484d00067b04ee5e66a3393f4deabc",
+    "first_request_system_messages_generation_equal": true,
+    "only_expected_first_request_component_difference": "tools",
+    "provider_retries": 0,
+    "baseline_memory_calls": 0,
+    "msc_full_memory_calls": 1,
+    "msc_progressive_memory_calls": 2,
+    "msc_progressive_explain_calls": 1,
+    "safety_regressions": 0,
+    "hidden_patch_sha256": "39151265d6bd66e7cc065326e89482d5a8938a776684ec32a8e42931d50aeda6"
+  },
+  "results": {
+    "no_memory": {
+      "hidden_test_success": false,
+      "termination": "no_patch_ceiling",
+      "provider_attempts": 9,
+      "completed_provider_responses": 8,
+      "provider_input_tokens": 122123,
+      "cache_miss_input_tokens": 16651,
+      "cache_hit_input_tokens": 105472,
+      "provider_output_tokens": 1497,
+      "exact_completed_response_cost_usd": 0.0030456216,
+      "provider_latency_seconds": 13.934,
+      "run_latency_seconds": 121.962072,
+      "memory_tool_calls": 0,
+      "memory_explain_calls": 0,
+      "memory_context_text_tokens": 0,
+      "memory_delivery_payload_tokens": 0,
+      "repository_tool_calls": 13,
+      "diagnosis_response_step": 7,
+      "repository_calls_before_correct_diagnosis": 9,
+      "patch_bytes": 0
+    },
+    "msc_full": {
+      "hidden_test_success": false,
+      "termination": "no_patch_ceiling",
+      "provider_attempts": 9,
+      "completed_provider_responses": 8,
+      "provider_input_tokens": 99591,
+      "cache_miss_input_tokens": 16519,
+      "cache_hit_input_tokens": 83072,
+      "provider_output_tokens": 3959,
+      "exact_completed_response_cost_usd": 0.0036537816,
+      "provider_latency_seconds": 30.753,
+      "run_latency_seconds": 141.344284,
+      "memory_tool_calls": 1,
+      "memory_explain_calls": 0,
+      "memory_context_text_tokens": 198,
+      "memory_delivery_payload_tokens": 404,
+      "repository_tool_calls": 11,
+      "diagnosis_response_step": 6,
+      "repository_calls_before_correct_diagnosis": 6,
+      "patch_bytes": 0
+    },
+    "msc_progressive": {
+      "hidden_test_success": false,
+      "termination": "no_patch_ceiling",
+      "provider_attempts": 9,
+      "completed_provider_responses": 8,
+      "provider_input_tokens": 92133,
+      "cache_miss_input_tokens": 10981,
+      "cache_hit_input_tokens": 81152,
+      "provider_output_tokens": 3050,
+      "exact_completed_response_cost_usd": 0.0026185656,
+      "provider_latency_seconds": 24.538,
+      "run_latency_seconds": 132.548555,
+      "memory_tool_calls": 2,
+      "memory_explain_calls": 1,
+      "memory_context_text_tokens": 83,
+      "memory_delivery_payload_tokens": 288,
+      "repository_tool_calls": 11,
+      "diagnosis_response_step": 6,
+      "repository_calls_before_correct_diagnosis": 5,
+      "patch_bytes": 0
+    }
+  },
+  "comparisons_against_A_percent": {
+    "msc_full": {
+      "provider_input_tokens": -18.45,
+      "cache_miss_input_tokens": -0.79,
+      "cache_hit_input_tokens": -21.24,
+      "provider_output_tokens": 164.46,
+      "exact_completed_response_cost": 19.97,
+      "run_latency": 15.89,
+      "repository_tool_calls": -15.38,
+      "repository_calls_before_correct_diagnosis": -33.33
+    },
+    "msc_progressive": {
+      "provider_input_tokens": -24.56,
+      "cache_miss_input_tokens": -34.05,
+      "cache_hit_input_tokens": -23.06,
+      "provider_output_tokens": 103.74,
+      "exact_completed_response_cost": -14.02,
+      "run_latency": 8.68,
+      "repository_tool_calls": -15.38,
+      "repository_calls_before_correct_diagnosis": -44.44
+    }
+  },
+  "campaign_totals": {
+    "provider_attempts": 27,
+    "completed_provider_responses": 24,
+    "cancelled_final_attempts_without_usage": 3,
+    "provider_input_tokens": 313847,
+    "cache_miss_input_tokens": 44151,
+    "cache_hit_input_tokens": 269696,
+    "provider_output_tokens": 8506,
+    "exact_completed_response_cost_usd": 0.0093179688,
+    "provider_latency_seconds": 69.225,
+    "note": "Each arm's ninth pre-dispatch attempt was recorded before asynchronous budget polling killed the process. The provider may have received those three requests, but no usage response was returned, so they are excluded from exact token and cost totals."
+  },
+  "trajectory_findings": {
+    "memory_quality": "Both memory arms received the correct task-relevant boundary: share one ignore predicate, preserve basename-versus-full-path semantics, and prune ignored directories before yielding or descending.",
+    "msc_full": "Reached the correct diagnosis at response step 6 after six repository calls, then spent a large response reasoning about the upstream change and continued reading configuration and tests.",
+    "msc_progressive": "Used context plus explain, reached the correct diagnosis at response step 6 after five repository calls, then continued reading documentation and tests. Its cancelled ninth response was starting two more grep calls, not an edit.",
+    "no_memory": "Reached the same diagnosis at response step 7 after nine repository calls, then continued inspecting history and tests. Its cancelled ninth response was still restating the problem.",
+    "common_failure": "The generic standard-offline prompt had no edit deadline. All arms exhausted the eight-response no-patch phase while already understanding the defect, so the experiment measured diagnosis efficiency but not implementation quality."
+  },
+  "decision_against_lock": {
+    "classification": "inconclusive",
+    "why": "The frozen rule classifies an all-fail result as inconclusive even when secondary efficiency metrics improve.",
+    "descriptive_signal": "C is the only promising treatment: it reduced total input 24.56 percent, cache-miss input 34.05 percent, exact completed-response cost 14.02 percent, and pre-diagnosis repository calls 44.44 percent versus A. B reduced exploration but increased cost 19.97 percent and run latency 15.89 percent.",
+    "claim_not_supported": "MemoryOS improves medium-task repair completion or repair success rate."
+  },
+  "recommended_next_protocol": {
+    "priority": "Fix controller-preset alignment before buying more samples.",
+    "changes": [
+      "Use one task-agnostic coding preset that supports no_memory, msc_full, and msc_progressive equally.",
+      "Require an edit immediately after a concrete patch plan and no later than the sixth repository-inspection call; MemoryOS calls do not count as repository inspection.",
+      "Use a modestly wider no-patch ceiling only as a guardrail, not as a substitute for the edit deadline.",
+      "Move request-ceiling enforcement into the synchronous pre-dispatch path so the final cancelled attempt cannot reach the provider.",
+      "Repeat the same frozen A/B/C task once after offline request-shape validation; report it before adding tasks."
+    ],
+    "executed": false
+  },
+  "artifact_sha256": {
+    "acceptance_lock.json": "ba5950cd3d6ce76ee541102de514998273b45140102a0404daf64c8561bce943",
+    "run-manifest.json": "07a4e4a9bc7545464321dd43a17a65f9c5d10d54f913675723c1a400eff40ed6",
+    "records.jsonl": "72d550012e96bdc71db00325aa1222efac5104ba23c61ef64d728c1f185afba2",
+    "provider-usage.jsonl": "6a8349be160d5edc7f28b976b1827d90440688c0f966dd988c5c4f3c119fa704",
+    "tool-events.jsonl": "850e1831210bfb9ab4994724a22b36eb148f6e0cbb58f1503131c1b41db68e7f",
+    "summary.json": "83294bc6918708e5f083ad1e27b4a9de31e7cf8da3fc27c2214d364d971855c5"
+  }
+}

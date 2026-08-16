@@ -203,7 +203,7 @@ Tier 2 的 `ClaimVersion` history count 为 0，temporal contribution 来自 Cla
 - 确定性 Context Atom、Pinned Constraint/Contested Bundle 原子安全、exact dedup 和一次 Explain 证据回溯；
 - 显式 `previous_context_id` Delta，以及 Scope/TTL/Policy/Tokenizer/完整性失效时的安全 Full Rebase；
 - `0005_context_efficiency` 迁移和不进长期备份的可丢弃 Snapshot 缓存；
-- 启动时固定的 all/core/governance/debug MCP Profile 及四个规范 Schema Snapshot；
+- 启动时固定的 all/core/context/governance/debug MCP Profile 及五个规范 Schema Snapshot；`context` 仅暴露 `memory_context`；
 - 不修改旧三臂枚举的独立 Context Efficiency Study，包含 Provider input/output/cached、成本、延迟、完整记忆/Schema 分账、每成功任务成本、受限 ROI、0.5/0.65/0.8/0.9 Delta 阈值矩阵，以及非劣、安全、透明度、power 和最差组门禁。
 
 确定性证据位于 `docs/verification/v2.3/`。Context Efficiency dry run 不包含真实 Provider Usage，

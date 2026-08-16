@@ -131,8 +131,8 @@ CandidateExtractor、ClaimExtractor、EmbeddingProvider、RelationshipJudge、Re
 
 ## 部署
 
-HTTP 强制 loopback。MCP 是 stdio 子进程，工具集在启动时固定为 all/core/governance/debug 之一，
-`all` 保持 12 工具兼容默认。Windows onedir 包捆绑 migrations、Tree-sitter grammars、sqlite-vec、React dist、
+HTTP 强制 loopback。MCP 是 stdio 子进程，工具集在启动时固定为 all/core/context/governance/debug 之一，
+`all` 保持 12 工具兼容默认，`context` 只暴露 `memory_context` 以降低只读 Agent 的重复 Schema 开销。Windows onedir 包捆绑 migrations、Tree-sitter grammars、sqlite-vec、React dist、
 MemoryBench V2 和 CodingMemoryBench fixture regression report。V1 数据原地升级至
 `0005_context_efficiency`；写入状态转换始终在事务中完成。V2.3 二进制需在合并后干净 `main`
 上重建和复验，旧 V2.2 发行包不重标。

@@ -1,0 +1,19 @@
+- insert:
+    - id: memoryos-usage
+      name: dsh-memoryos/usage
+      config:
+        condition: !!js process.env.MEMORYOS_CONDITION || 'no_memory'
+        usageOutputFile: './build/provider-usage.jsonl'
+        runId: 'example-run'
+        taskId: 'example-task'
+        cachePhase: 'cold'
+        cacheNamespaceSha256: '0000000000000000000000000000000000000000000000000000000000000000'
+    - id: memoryos-tools
+      name: dsh-memoryos
+      disabled: !!js process.env.MEMORYOS_ENABLED !== '1'
+      config:
+        baseUrl: 'http://127.0.0.1:8000'
+        condition: 'msc_progressive'
+        repository: 'example-repository'
+        budgetTokens: 6000
+        authTokenEnv: 'MEMORYOS_AUTH_TOKEN'

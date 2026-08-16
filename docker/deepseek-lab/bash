@@ -1,0 +1,49 @@
+#!/usr/bin/env -S -u BASH_ENV -u ENV /bin/bash
+set -euo pipefail
+
+landlock=/opt/deepseek-harness/native/landlock-run/packages/linux-x64/bin/landlock-run
+network_off=/opt/memoryos/libexec/network-off
+task_shell=/opt/memoryos/libexec/task-shell
+workspace="$(pwd -P)"
+filesystem_root="${MEMORYOS_AGENT_FILESYSTEM_ROOT:-}"
+if [[ -z "$filesystem_root" ]]; then
+  printf 'memoryos-shell: dedicated filesystem root is unavailable\n' >&2
+  exit 125
+fi
+filesystem_root="$(realpath -e -- "$filesystem_root")"
+if [[ "$filesystem_root" == / || ( "$workspace" != "$filesystem_root" && "$workspace" != "$filesystem_root"/* ) ]]; then
+  printf 'memoryos-shell: current task is not inside a dedicated mountpoint\n' >&2
+  exit 125
+fi
+unset BASH_ENV ENV DEEPSEEK_API_KEY DEEPSEEK_BASE_URL DSH_HOME DSH_PERMISSION_MODE
+unset MEMORYOS_AUTH_TOKEN MEMORYOS_BASE_URL MEMORYOS_CONDITION MEMORYOS_ENABLED
+unset MEMORYOS_MODEL MEMORYOS_RUN_ID MEMORYOS_TASK_ID MEMORYOS_USAGE_OUTPUT_FILE
+unset MEMORYOS_AGENT_FILESYSTEM_ROOT MEMORYOS_TOOL_SHELL_NETWORK MEMORYOS_TOOL_SHELL_READ_SCOPE
+unset PYTHONHOME PYTHONPATH
+export HOME=/tmp/memoryos-shell-home
+export PATH=/opt/memoryos/task-venv/bin:$PATH
+if [[ -d "$workspace/src" ]]; then
+  export PYTHONPATH="$workspace/src"
+fi
+mkdir -p "$HOME"
+
+grants=(
+  --ro /bin
+  --ro /usr
+  --ro /lib
+  --ro /etc
+  --ro "$network_off"
+  --ro "$task_shell"
+  --ro /opt/memoryos/task-venv
+  --rw "$filesystem_root"
+  --rw /tmp
+  --rw /dev/null
+  --rw /dev/zero
+  --rw /dev/random
+  --rw /dev/urandom
+)
+if [[ -e /lib64 ]]; then
+  grants+=(--ro /lib64)
+fi
+
+exec "$landlock" "${grants[@]}" -- "$network_off" "$task_shell" "$@"

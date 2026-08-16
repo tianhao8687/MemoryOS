@@ -217,10 +217,11 @@ They are implementation commitments, not future proposals.
     source references and evidence counts, while opposite polarity, contested sides, different valid
     intervals, freshness states, or constraint/observation roles never merge. Semantic deduplication
     remains behind the existing Shadow and evidence gates.
-56. Fix the MCP tool set at process startup with deterministic all/core/governance/debug profiles.
-    Dynamic discovery or deferred loading belongs to the client; a tool call cannot mutate the
-    current connection's tools/list, and a smaller server schema is not itself proof of fewer
-    provider input tokens.
+56. Fix the MCP tool set at process startup with deterministic
+    all/core/context/governance/debug profiles. The context profile exposes only memory_context for
+    read-only Agents. Dynamic discovery or deferred loading belongs to the client; a tool call
+    cannot mutate the current connection's tools/list, and a smaller server schema is not itself
+    proof of fewer provider input tokens.
 57. Keep legacy as the default compiler until preregistered real coding-agent evidence simultaneously
     proves paired success noninferiority with adequate power, a significant reduction in actual
     provider input tokens, zero constraint/contested/cross-scope regressions, complete attribution,

@@ -10,6 +10,7 @@ from memoryos.context.token_meter import UnicodeHeuristicTokenCounter
 from memoryos.mcp_server.server import create_mcp_server
 from memoryos.mcp_server.tool_registry import (
     ALL_TOOLS,
+    CONTEXT_TOOLS,
     CORE_TOOLS,
     DEBUG_TOOLS,
     GOVERNANCE_TOOLS,
@@ -32,6 +33,7 @@ def _tool_payload(value: Any) -> dict[str, Any]:
     [
         (ToolProfile.ALL, ALL_TOOLS),
         (ToolProfile.CORE, CORE_TOOLS),
+        (ToolProfile.CONTEXT, CONTEXT_TOOLS),
         (ToolProfile.GOVERNANCE, GOVERNANCE_TOOLS),
         (ToolProfile.DEBUG, DEBUG_TOOLS),
     ],
@@ -72,6 +74,30 @@ async def test_core_keeps_write_confirmation_loop_without_governance_or_debug(
     assert "memory_consolidate" not in names
     assert "memory_debug_context" not in names
     assert len(names) < 10
+
+
+@pytest.mark.asyncio
+@pytest.mark.v23
+async def test_context_profile_exposes_only_compiled_context(tmp_path: Path) -> None:
+    server = create_mcp_server(settings_for(tmp_path / "context", mcp_tool_profile="context"))
+
+    tools = await server.list_tools()
+
+    assert tuple(tool.name for tool in tools) == CONTEXT_TOOLS
+
+    counter = UnicodeHeuristicTokenCounter()
+    context_snapshot = await server_schema_snapshot(
+        server,
+        profile=ToolProfile.CONTEXT,
+        counter=counter,
+    )
+    core_server = create_mcp_server(settings_for(tmp_path / "core-schema"), ToolProfile.CORE)
+    core_snapshot = await server_schema_snapshot(
+        core_server,
+        profile=ToolProfile.CORE,
+        counter=counter,
+    )
+    assert context_snapshot["estimated_schema_tokens"] < core_snapshot["estimated_schema_tokens"]
 
 
 @pytest.mark.asyncio
