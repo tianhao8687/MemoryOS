@@ -35,11 +35,12 @@ MemoryOS V2.3 是面向编码 Agent 的本地优先 Reality Intelligence 层。�
 
 ## DeepSeek Harness 实测快照
 
-当前 `dsh-memoryos 0.1.18` 已拆分为独立的 DeepSeek Harness（DSH）Bundle。它不是“零成本提示词”：启用后会增加工具 Schema 和取回内容，价值必须由与 `no_memory` 同题、同模型、同预算的对照来判断。
+当前 `dsh-memoryos 0.2.0` 已拆分为独立的 DeepSeek Harness（DSH）Bundle。它不是“零成本提示词”：启用后会增加工具 Schema 和取回内容，价值必须由与 `no_memory` 同题、同模型、同预算的对照来判断。用户现在可以直接对 Agent 说“关闭 OS”“开启 OS”或询问状态；开关会真实装卸记忆工具并跨重启保存。
 
 | 验证面 | 冻结结果 | 可以得出的结论 |
 |---|---:|---|
 | 插件全功能验收 | 14/14 隐藏验收通过；13/14 严格协议通过 | 安装、开关、Full、Progressive、Explain、Delta、计量、缓存与隔离链路可用 |
+| 自然语言持久开关 | 0.2.0 tarball 断网安装后契约与真实 Loader/HMR 27/27 通过 | 普通关闭只留控制工具；健康检查成功后恢复；严格 `no_memory` 保持零 Schema |
 | 中等编程任务 | 单题中 A/C 均通过且 C 少 16.20% 输入；另有 held-out 任务 A/B/C 均失败 | 有效率与定向信号，但尚无跨题成功率提升证据 |
 | 跨 Session 记忆 | 三案例严格门 2/3；12 个新会话的回忆/基线/错 scope 隔离均符合预期 | 写入、硬重启回忆和 scope 隔离成立；一个源写入门仍受跨语言词法评分影响 |
 | 记忆更新 | PASS：PostgreSQL 17 被 18 正确 supersede | 新 Current Truth 不会与旧版本同时作为当前事实返回 |

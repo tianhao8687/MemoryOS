@@ -2,7 +2,7 @@
 
 更新时间：2026-08-17
 
-当前插件：`dsh-memoryos 0.1.18`
+当前插件：`dsh-memoryos 0.2.0`
 
 兼容基线：DeepSeek Harness `0.1.0-rc.5 @ 47f943859bef60e4160492346772ded9b24f765a`
 
@@ -17,6 +17,7 @@ MemoryOS 的 DSH 集成已经证明插件机械链路、长期写入、硬重启
 | 测试 | 对照与门 | 冻结结果 | 证据 |
 |---|---|---|---|
 | 全功能 A/B 验收 | `no_memory` 加 6 个 MemoryOS 模式；隐藏产物验证 | 14/14 隐藏验证通过，13/14 严格协议通过；Delta cold 一次被 Agent 跳过二次调用 | [全功能报告](../benchmarks/context_efficiency/full_plugin_acceptance_v1/full-acceptance-report.md) |
+| 自然语言持久开关 | 0.2.0 tarball 安装到锁定 RC5；断网契约 + 真实 Loader/HMR | 27/27 通过；真实执行关闭后仅剩控制 Schema，健康检查后恢复；损坏状态安全关闭；严格 `no_memory` 零 Schema | [DSH Bundle](../integrations/deepseek-harness-memoryos) |
 | 中等 A/B/C v1 | A 无记忆、B Full、C Progressive，同任务持续到通过或停止 | A、C 均通过；C 相比 A 输入 -16.20%、费用 -21.85%、补丁 -48.38%；B 到 298 次尝试仍未通过 | [当前报告](../benchmarks/context_efficiency/medium_abc_v1/continuation-current-report.md) |
 | 中等 A/B/C v2 | 新题、并发三臂、130% 相对用量保护 | 三臂均未编辑；C 更早诊断但长推理使费用最高 | [v2 报告](../benchmarks/context_efficiency/medium_abc_v2/report-live-r2.md) |
 | 中等 A/B/C v3 | 新题、同提示/起点/预算、插件侧通用压缩 | 三臂均未编辑；B 比 A 费用 -23.0%，C 仍发生长推理 | [v3 报告](../benchmarks/context_efficiency/medium_abc_v3/report-live-r1.md) |
@@ -40,6 +41,8 @@ MemoryOS 的 DSH 集成已经证明插件机械链路、长期写入、硬重启
 | 中文查询在 SQLite FTS5 `unicode61` 中召回不稳定 | 中文连续文本缺少适合的词边界 | 加入有 scope、状态、时态、行数和术语上限的 CJK n-gram/LIKE 后备检索，并保留负例隔离测试 |
 | 1M 上下文问题无法证明“窗口外记忆” | 原消息可能仍在 Harness 当前 surface 中 | 增加仅评测启用的受控淘汰，记录被替换消息、sentinel hash 和保留面；最终回忆前验证 sentinel 已不在活动历史 |
 | Linux CI 与 Windows 循环终止原因不同 | 工作区搜索强制依赖 `ripgrep`，缺失时同一只读调用变成失败调用 | 增加受限 Python 后备搜索；保持 2 MiB、结果数、目录、符号链接和二进制边界 |
+| 零 Schema 的日常关闭无法靠聊天重新开启 | 模型没有任何可执行入口，“开启 OS”只能变成口头承诺 | 分开两种状态：普通关闭保留极小 `memoryos_control`；严格 A/B 的 `no_memory` 仍由 Loader 完全移除组件 |
+| MemoryOS 服务未启动时可能口头宣称已恢复 | 只恢复工具 Schema 不能证明后端可用 | 开启前要求 `/api/health` 返回 `ok=true`；缺 Token、服务不可达或状态写入失败都保持关闭 |
 
 ## 最新长期记忆结果与 Token 分账
 

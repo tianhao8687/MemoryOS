@@ -9,10 +9,11 @@ import pytest
 from sqlalchemy import select
 
 from memoryos.config import MemoryOSSettings, settings_for
-from memoryos.context.atoms import AtomBuilder, CompressionPolicy, exact_deduplicate
+from memoryos.context.atoms import AtomBuilder, CompressionPolicy, ContextAtom, exact_deduplicate
 from memoryos.context.compiler import TaskAwareContextCompiler
 from memoryos.context.token_meter import (
     FunctionTokenCounter,
+    TokenCounter,
     UnicodeHeuristicTokenCounter,
     canonical_json,
 )
@@ -853,9 +854,11 @@ def test_structured_constraints_with_different_exact_text_never_deduplicate() ->
 def test_deduplicated_fact_handle_rebuilds_all_current_evidence_in_one_explain_call(
     msc_runtime: tuple[Database, MemoryService],
     make_memory: Any,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _, service = msc_runtime
     content = "RefundService is the only refund entry point."
+    created_memory_ids: list[str] = []
     for index in range(2):
         memory = make_memory(
             title="Refund entry decision",
@@ -863,7 +866,7 @@ def test_deduplicated_fact_handle_rebuilds_all_current_evidence_in_one_explain_c
             key=f"refund.entry.source.{index}",
             source_ref=f"manual:refund-source-{index}",
         )
-        service.propose(
+        created = service.propose(
             memory.model_copy(
                 update={
                     "claim_candidates": [
@@ -885,6 +888,27 @@ def test_deduplicated_fact_handle_rebuilds_all_current_evidence_in_one_explain_c
             ),
             actor="test",
         )
+        created_memory_ids.append(str(created["id"]))
+
+    # Make the delivered primary the lexicographically larger random UUID. Rebuilding
+    # every component with equal scores used to pick the smaller UUID and change the hash.
+    expected_primary_memory_id = max(created_memory_ids)
+
+    def force_nonlexicographic_primary(
+        atoms: list[ContextAtom], counter: TokenCounter
+    ) -> tuple[list[ContextAtom], dict[str, str]]:
+        rewritten = [
+            atom.model_copy(
+                update={"utility": 2.0 if atom.memory_id == expected_primary_memory_id else 1.0}
+            )
+            for atom in atoms
+        ]
+        return exact_deduplicate(rewritten, counter)
+
+    monkeypatch.setattr(
+        "memoryos.context.compiler.exact_deduplicate",
+        force_nonlexicographic_primary,
+    )
 
     context = service.context(
         ContextRequest(
@@ -896,6 +920,7 @@ def test_deduplicated_fact_handle_rebuilds_all_current_evidence_in_one_explain_c
     handles = re.findall(r"\[([^ ]+) @ ([0-9a-f]{64})\]", context["text"])
     assert len(handles) == 1
     memory_id, atom_hash = handles[0]
+    assert memory_id == expected_primary_memory_id
 
     explanation = service.explain(memory_id, expected_atom_sha256=atom_hash)
 

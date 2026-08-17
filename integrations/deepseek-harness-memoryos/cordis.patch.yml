@@ -2,7 +2,7 @@
     - id: memoryos-usage
       name: dsh-memoryos/usage
       config:
-        condition: !!js process.env.MEMORYOS_CONDITION || 'no_memory'
+        condition: !!js process.env.MEMORYOS_CONDITION || 'msc_progressive'
         usageOutputFile: !!js process.env.MEMORYOS_USAGE_OUTPUT_FILE
         attemptOutputFile: !!js process.env.MEMORYOS_ATTEMPT_OUTPUT_FILE
         usageGuardFile: !!js process.env.MEMORYOS_USAGE_GUARD_FILE
@@ -18,8 +18,11 @@
         evaluationSentinel: !!js process.env.MEMORYOS_EVAL_SENTINEL
     - id: memoryos-tools
       name: dsh-memoryos
-      disabled: !!js process.env.MEMORYOS_ENABLED !== '1'
+      disabled: !!js process.env.MEMORYOS_CONDITION === 'no_memory'
       config:
+        enabled: !!js process.env.MEMORYOS_ENABLED !== '0'
+        controlEnabled: !!js process.env.MEMORYOS_CONTROL_ENABLED !== '0'
+        onboardingNotice: !!js process.env.MEMORYOS_ONBOARDING_NOTICE !== '0'
         baseUrl: !!js process.env.MEMORYOS_BASE_URL || 'http://127.0.0.1:8000'
         condition: !!js process.env.MEMORYOS_CONDITION || 'msc_progressive'
         budgetTokens: !!js Number(process.env.MEMORYOS_BUDGET_TOKENS || 6000)
@@ -30,6 +33,7 @@
         repository: !!js process.env.MEMORYOS_REPOSITORY
         task: !!js process.env.MEMORYOS_TASK
         authTokenEnv: MEMORYOS_AUTH_TOKEN
+        stateFile: !!js process.env.MEMORYOS_STATE_FILE
 
 - id: headless-runner
   disabled: !!js Boolean(process.env.MEMORYOS_RESUME_SESSION_ID)

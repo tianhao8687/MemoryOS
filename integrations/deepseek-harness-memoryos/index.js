@@ -2,11 +2,15 @@ import Schema from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { assertHarnessCompatibility } from './lib/core.js'
 import { registerMemoryOSPlugin } from './lib/plugin.js'
+import { createFileMemoryControlState, defaultControlStateFile } from './lib/state.js'
 
 export const name = 'memoryos-tools'
 export const inject = ['tools']
 
 export const Config = Schema.object({
+  enabled: Schema.boolean().default(true),
+  controlEnabled: Schema.boolean().default(true),
+  onboardingNotice: Schema.boolean().default(true),
   baseUrl: Schema.string().default('http://127.0.0.1:8000'),
   condition: Schema.union([
     'legacy_full',
@@ -32,11 +36,16 @@ export const Config = Schema.object({
   task: Schema.string(),
   authTokenEnv: Schema.string(),
   authTokenFile: Schema.string(),
+  stateFile: Schema.string(),
 })
 
 export function apply(ctx, config) {
   assertHarnessCompatibility(ctx)
-  return registerMemoryOSPlugin(ctx, config, { defineTool })
+  const stateFile = config.stateFile || defaultControlStateFile()
+  return registerMemoryOSPlugin(ctx, { ...config, stateFile }, {
+    defineTool,
+    stateStore: createFileMemoryControlState(stateFile),
+  })
 }
 
 export { HARNESS_COMPATIBILITY, mapHarnessUsage } from './lib/core.js'

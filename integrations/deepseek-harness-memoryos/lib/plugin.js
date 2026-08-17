@@ -6,15 +6,25 @@ import {
   isMemoryOSConflict,
   normalizeConfig,
 } from './core.js'
+import { createMemoryControlState, memoryControlState } from './state.js'
 
 const EXPLAIN_CONDITIONS = new Set(['msc_progressive', 'msc_delta', 'msc_delta_core'])
 const PROGRESSIVE_COMPACT = 'deepseek-progressive-compact'
+const FIRST_ACTIVATION_MESSAGE = 'MemoryOS 已开始工作，正在为当前项目提供跨会话记忆。你随时可以直接说“关闭 OS”；需要恢复时说“开启 OS”即可。'
 
 export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
   const config = normalizeConfig(rawConfig)
   const defineTool = dependencies.defineTool
   if (typeof defineTool !== 'function') throw new Error('DeepSeek Harness defineTool is unavailable')
   const client = createMemoryOSClient(config, dependencies)
+  const initialControlState = memoryControlState(config.enabled, false)
+  const stateStore = dependencies.stateStore ?? createMemoryControlState(initialControlState)
+  const loadedControlState = stateStore.read(initialControlState)
+  let enabled = false
+  let onboardingNoticeShown = loadedControlState.state.onboarding_notice_shown
+  let stateWarning = loadedControlState.warning
+  let memoryDisposers = []
+  const memoryTools = []
   const actionStates = new Map()
   const writeStates = new Map()
   const contextParameters = {
@@ -26,7 +36,7 @@ export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
       : {}),
   }
 
-  ctx.tools.register(defineTool({
+  memoryTools.push(defineTool({
     name: 'memory_context',
     description: contextDescription(config.responseFormat),
     parameters: contextParameters,
@@ -39,21 +49,24 @@ export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
     async execute(args, exec) {
       const sessionId = executionSessionId(exec)
       const value = await client.context(args, sessionId, exec.signal)
-      if (config.responseFormat === 'deepseek-compact') return renderDeepSeekContext(value)
-      if (config.responseFormat === PROGRESSIVE_COMPACT) {
+      let rendered
+      if (config.responseFormat === 'deepseek-compact') {
+        rendered = renderDeepSeekContext(value)
+      } else if (config.responseFormat === PROGRESSIVE_COMPACT) {
         const actionContract = await resolvedProgressiveContract(value, client, exec.signal)
         const state = actionStates.get(sessionId) ?? recoveryState()
         state.actionReady = actionContract !== undefined
         actionStates.set(sessionId, state)
-        if (actionContract !== undefined) return actionContract
-        return renderDeepSeekProgressiveContext(value)
+        rendered = actionContract ?? renderDeepSeekProgressiveContext(value)
+      } else {
+        rendered = canonicalJson({ ok: true, result: value })
       }
-      return canonicalJson({ ok: true, result: value })
+      return appendFirstActivationNotice(rendered)
     },
   }))
 
   if (config.toolProfile === 'cross-session-write') {
-    ctx.tools.register(defineTool({
+    memoryTools.push(defineTool({
       name: 'memory_propose',
       description: [
         'Propose source-backed project knowledge for future sessions only when the user has',
@@ -117,7 +130,7 @@ export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
       },
     }))
 
-    ctx.tools.register(defineTool({
+    memoryTools.push(defineTool({
       name: 'memory_confirm',
       description: [
         'Activate one accurate candidate returned by memory_propose. Never confirm a candidate that',
@@ -189,7 +202,7 @@ export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
   }
 
   if (EXPLAIN_CONDITIONS.has(config.condition)) {
-    ctx.tools.register(defineTool({
+    memoryTools.push(defineTool({
       name: 'memory_explain',
       description: config.responseFormat === PROGRESSIVE_COMPACT
         ? 'Expand one indexed record only when memory_context says expansion is needed. Do not call after it returns an action-ready contract.'
@@ -236,9 +249,179 @@ export function registerMemoryOSPlugin(ctx, rawConfig, dependencies) {
     }))
   }
 
-  registerOfflineRecovery(ctx, config, actionStates, dependencies)
+  function warn(message) {
+    const logger = dependencies.logger ?? ctx.logger
+    if (typeof logger?.warn === 'function') logger.warn(message)
+  }
 
-  return Object.freeze({ client, config, actionStates, writeStates })
+  function clearRuntimeState() {
+    actionStates.clear()
+    writeStates.clear()
+    client.states.clear()
+  }
+
+  function mountMemoryTools() {
+    if (enabled) return
+    const registered = []
+    try {
+      for (const tool of memoryTools) registered.push(ctx.tools.register(tool))
+      const recoveryDisposer = registerOfflineRecovery(
+        ctx,
+        config,
+        actionStates,
+        dependencies,
+      )
+      if (typeof recoveryDisposer === 'function') registered.push(recoveryDisposer)
+      memoryDisposers = registered
+      enabled = true
+    } catch (error) {
+      for (const dispose of registered.reverse()) {
+        try {
+          dispose()
+        } catch {
+          // Continue removing the rest of a partially registered tool set.
+        }
+      }
+      clearRuntimeState()
+      throw error
+    }
+  }
+
+  function unmountMemoryTools() {
+    const registered = memoryDisposers
+    memoryDisposers = []
+    enabled = false
+    for (const dispose of registered.reverse()) {
+      try {
+        dispose()
+      } catch (error) {
+        warn(`MemoryOS tool disposal failed: ${errorMessage(error)}`)
+      }
+    }
+    clearRuntimeState()
+  }
+
+  async function appendFirstActivationNotice(rendered) {
+    if (!config.onboardingNotice || onboardingNoticeShown) return rendered
+    onboardingNoticeShown = true
+    try {
+      await stateStore.write(memoryControlState(enabled, true))
+      stateWarning = undefined
+    } catch (error) {
+      stateWarning = `MemoryOS could not persist its first-use notice: ${errorMessage(error)}`
+      warn(stateWarning)
+    }
+    if (config.responseFormat === 'json') {
+      return canonicalJson({
+        ...JSON.parse(rendered),
+        first_activation: true,
+        user_message: FIRST_ACTIVATION_MESSAGE,
+        assistant_action: 'Tell the user the user_message once, then continue the task.',
+      })
+    }
+    return [
+      rendered,
+      '',
+      'MemoryOS first activation notice:',
+      `user_message=${FIRST_ACTIVATION_MESSAGE}`,
+      'assistant_action=Tell the user the user_message once, then continue the task.',
+    ].join('\n')
+  }
+
+  function statusResult() {
+    return [
+      `memoryos_state=${enabled ? 'enabled' : 'disabled'}`,
+      `memory_tools_visible=${enabled}`,
+      `mode=${config.condition}`,
+      `tool_profile=${config.toolProfile}`,
+      ...(stateWarning === undefined ? [] : [`warning=${stateWarning}`]),
+      `user_message=MemoryOS 当前已${enabled ? '开启' : '关闭'}。`,
+      'assistant_action=Answer the user briefly using user_message.',
+    ].join('\n')
+  }
+
+  const controlTool = defineTool({
+    name: 'memoryos_control',
+    description: [
+      'Control MemoryOS project memory when the user explicitly asks to enable, disable, or check it.',
+      'You MUST call this tool for “开启 OS”, “关闭 OS”, equivalent MemoryOS requests, or a direct',
+      'status question. In this established plugin context, OS means MemoryOS; never infer a state',
+      'change from unrelated operating-system discussion. Relay the returned user_message briefly.',
+    ].join(' '),
+    parameters: {
+      action: {
+        type: 'string',
+        required: true,
+        enum: ['enable', 'disable', 'status'],
+        description: 'Exact requested MemoryOS action',
+      },
+    },
+    output: {
+      schema: { type: 'string' },
+      render: (_args, value) => [{ type: 'text', text: value }],
+    },
+    timeoutMs: config.timeoutMs,
+    isConcurrencySafe: () => false,
+    async execute(args, exec) {
+      if (args.action === 'status') return statusResult()
+      if (args.action === 'disable') {
+        if (!enabled) return [
+          'memoryos_state=disabled',
+          'changed=false',
+          'user_message=MemoryOS 已经处于关闭状态。需要恢复时直接说“开启 OS”。',
+          'assistant_action=Tell the user the user_message briefly.',
+        ].join('\n')
+        await stateStore.write(memoryControlState(false, onboardingNoticeShown))
+        stateWarning = undefined
+        unmountMemoryTools()
+        return [
+          'memoryos_state=disabled',
+          'changed=true',
+          'memory_tools_visible=false',
+          'user_message=MemoryOS 已关闭。接下来不会继续读取或写入项目记忆。之前已经进入当前聊天的内容无法撤回；如需完全干净的上下文，请新建 Session。需要恢复时直接说“开启 OS”。',
+          'assistant_action=Tell the user the user_message briefly.',
+        ].join('\n')
+      }
+      if (args.action !== 'enable') throw new Error('unsupported memoryos_control action')
+      if (enabled) return [
+        'memoryos_state=enabled',
+        'changed=false',
+        'user_message=MemoryOS 已经处于开启状态。',
+        'assistant_action=Tell the user the user_message briefly.',
+      ].join('\n')
+      await client.health(exec.signal)
+      mountMemoryTools()
+      try {
+        await stateStore.write(memoryControlState(true, onboardingNoticeShown))
+        stateWarning = undefined
+      } catch (error) {
+        unmountMemoryTools()
+        throw error
+      }
+      return [
+        'memoryos_state=enabled',
+        'changed=true',
+        'memory_tools_visible=true',
+        'user_message=MemoryOS 已重新开启，将从下一轮开始提供项目长期记忆。',
+        'assistant_action=Tell the user the user_message briefly.',
+      ].join('\n')
+    },
+  })
+
+  if (config.controlEnabled) ctx.tools.register(controlTool)
+  if (loadedControlState.state.enabled) mountMemoryTools()
+
+  return Object.freeze({
+    client,
+    config,
+    actionStates,
+    writeStates,
+    controller: Object.freeze({
+      get enabled() { return enabled },
+      get onboardingNoticeShown() { return onboardingNoticeShown },
+      get stateWarning() { return stateWarning },
+    }),
+  })
 }
 
 function sessionWriteState(states, sessionId) {
@@ -540,7 +723,7 @@ function appendContractValue(values, rendered, raw) {
 function registerOfflineRecovery(ctx, config, actionStates, dependencies) {
   if (config.responseFormat !== PROGRESSIVE_COMPACT || typeof ctx.on !== 'function') return
   const workspaceIsClean = dependencies.workspaceIsClean ?? defaultWorkspaceIsClean
-  ctx.on('tools/post-execute', async (exec, result, next) => {
+  return ctx.on('tools/post-execute', async (exec, result, next) => {
     const downstream = await next()
     const sessionId = optionalExecutionSessionId(exec)
     if (sessionId === undefined) return downstream
@@ -640,6 +823,10 @@ function uniqueUnrendered(rawValues, rendered) {
 
 function nonEmptyText(value) {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined
+}
+
+function errorMessage(error) {
+  return error instanceof Error ? error.message : String(error)
 }
 
 function executionSessionId(exec) {
