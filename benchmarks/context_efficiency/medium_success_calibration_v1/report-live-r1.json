@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0",
+  "report_id": "medium-success-calibration-v1-live-r1",
+  "status": "failed",
+  "conclusion": {
+    "plugin_mechanically_worked": true,
+    "functional_success": false,
+    "plugin_effect_established": false,
+    "primary_failure_mode": "correct_localization_without_transition_to_edit",
+    "not_primary_causes": [
+      "MemoryOS invocation failure",
+      "provider retry storm",
+      "agent-side network failure",
+      "missing task dependency",
+      "unreproducible task environment"
+    ]
+  },
+  "design": {
+    "task_id": "pytest-pr-6197",
+    "condition": "msc_progressive",
+    "cache_phase": "cold",
+    "model": "deepseek-v4-flash",
+    "plugin_version": "0.1.10",
+    "harness_version": "0.1.0-rc.5",
+    "automatic_repetitions": 0,
+    "provider_retry_limit": 0,
+    "calibration_only": true,
+    "eligible_for_later_effect_claims": false
+  },
+  "result": {
+    "provider_attempts": 18,
+    "completed_provider_responses": 17,
+    "provider_input_tokens": 274147,
+    "cache_hit_tokens": 249728,
+    "cache_miss_tokens": 24419,
+    "cache_hit_rate": 0.9109273491958694,
+    "provider_output_tokens": 11524,
+    "reasoning_tokens": 9729,
+    "completed_response_cost_usd": "0.0073446184",
+    "agent_latency_seconds": 154.081719,
+    "patch_bytes": 0,
+    "tests_run_by_agent": 0,
+    "hidden_test_success": false,
+    "stop_reason": "no-patch ceiling; provider_attempts=18/18"
+  },
+  "budget": {
+    "no_patch_request_limit": 18,
+    "no_patch_input_token_limit": 400000,
+    "no_patch_output_token_limit": 32000,
+    "binding_limit": "provider_attempts",
+    "patch_preserving_budget_activated": false,
+    "hard_budget_reached": false
+  },
+  "memory_delivery": {
+    "model_memory_context_calls": 1,
+    "model_memory_explain_calls": 0,
+    "backend_context_calls": 1,
+    "backend_auto_explain_calls": 1,
+    "action_ready_contract_received": true,
+    "contract_status": "resolved",
+    "contract_readiness": "ready_to_implement",
+    "contract_external_lookup_required": false,
+    "model_visible_contract_characters": 1404,
+    "model_visible_contract_estimated_tokens": 351,
+    "recorded_memory_delivery_payload_tokens": 285,
+    "attribution_caveat": "The run record reports the pre-render index payload, not the final JavaScript-rendered action-ready text. Provider input totals remain exact."
+  },
+  "trajectory": {
+    "session_complete": true,
+    "session_torn_frame": false,
+    "assistant_messages": 17,
+    "tool_calls": 18,
+    "tool_counts": {
+      "memory_context": 1,
+      "bash": 15,
+      "read": 2,
+      "edit": 0,
+      "test": 0
+    },
+    "history_or_changelog_tool_calls": 9,
+    "successful_history_or_changelog_detours": 8,
+    "cause_identified_before_edit": true,
+    "target_code_read": true,
+    "smallest_change_stated_by_model": true,
+    "edit_performed": false,
+    "last_activity": "continued hook-order and marker-lifecycle investigation"
+  },
+  "reasoning_spike": {
+    "step_index": 15,
+    "output_tokens": 6722,
+    "reasoning_tokens": 6587,
+    "share_of_total_output": 0.583304,
+    "share_of_total_reasoning": 0.677048,
+    "trigger": "attempt to reconcile eager package-marker harvesting with the resolved lazy-discovery boundary",
+    "caused_by_memory_payload_size": false
+  },
+  "diagnosis": {
+    "task_code_difficulty": "medium and locally tractable",
+    "environment_validated": true,
+    "base_hidden_failed_in_preflight": true,
+    "reference_hidden_passed_in_preflight": true,
+    "reference_focused_public_tests_passed": 3,
+    "explanation": "The model accepted the memory, found Package.collect and PyobjMixin.obj, and articulated the eager-mount cause. It then treated historical package skip-marker behavior as a requirement to preserve, while the reference repair deliberately reverts the behavior that required eager import. The unresolved trade-off caused repository-history reconstruction and a long reasoning loop instead of an edit."
+  },
+  "bootstrap": {
+    "failed_controller_starts": 2,
+    "provider_attempts_during_failed_starts": 0,
+    "causes": [
+      "outer container initially imported the image-baked MemoryOS package instead of the read-only mounted source",
+      "Docker-in-Docker hidden-score host path was not initially mounted into the outer Linux namespace"
+    ],
+    "final_controller_mount_preflight_passed": true
+  },
+  "next_optimization": {
+    "increase_budget_first": false,
+    "fixed_edit_step": false,
+    "recommended_plugin_change": "Add a one-time, state-based resolved-contract drift guard: while the worktree is clean, intercept Git-history, changelog, blame, reflog, or upstream-reconstruction detours after an action-ready contract and remind the agent that the current checkout plus resolved boundary is authoritative. Reopen only on a concrete contradiction or focused-test failure.",
+    "recommended_controller_change": "Move absolute budget enforcement to a pre-dispatch guard so the ceiling does not cancel the final in-flight provider response without a usage record.",
+    "recommended_accounting_change": "Record the final model-visible rendered MemoryOS text separately from backend index and explain payloads.",
+    "next_provider_run_requires_explicit_authorization": true,
+    "later_effect_test": "Use a different held-out task for A/B/C after calibration succeeds."
+  },
+  "evidence": {
+    "acceptance_lock": "benchmarks/context_efficiency/medium_success_calibration_v1/acceptance-lock.json",
+    "runtime": "benchmarks/context_efficiency/medium_success_calibration_v1/runtime-live.json",
+    "raw_output_root": "D:/dsh-medium-success-calibration-v1/live-r1/outputs/msc_progressive",
+    "run_manifest_sha256": "376361c575e8179e3f702426f8c3d4982f9264e6021e32a48a9e549c5d14b60c",
+    "records_sha256": "4ec1df4b37eb1746911f7b873bec65b446bb12ecf3a2a9278b98ab3c3885e471",
+    "provider_usage_sha256": "4c49f53e640db27d6f6741629016ef6af6b14459100d54e35f19fcf1eb4cbbb4",
+    "tool_events_sha256": "a075d4aade8e4657485f34d31da95e8ed63fc001999a2ff3f8900efe59c18c36",
+    "summary_json_sha256": "ebdb585b27c51978723c907de94e0ad0bb0dcec71129a951894d4ceec9a309a5",
+    "session_sha256": "e726ece24695d0c0ee6f53b2bcd0868d8e940270bc7b3e1afe51553aa33bf418"
+  }
+}

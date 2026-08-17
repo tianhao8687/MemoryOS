@@ -1,0 +1,9 @@
+diff --git a/benchmark_hidden_text_initials.py b/benchmark_hidden_text_initials.py
+new file mode 100644
+--- /dev/null
++++ b/benchmark_hidden_text_initials.py
+@@ -0,0 +1,4 @@
++from src.text_tools import initials
++
++
++assert initials("grace brewster murray hopper") == "GBMH"

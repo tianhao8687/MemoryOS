@@ -13,6 +13,7 @@ from memoryos.context.budget import BudgetPlanner
 from memoryos.context.token_meter import UnicodeHeuristicTokenCounter
 from memoryos.domain.schemas import MemoryOperationTokenAttribution
 from memoryos.evaluation.context_efficiency import (
+    MEMORYOS_CONTEXT_CONDITIONS,
     ContextEfficiencyCondition,
     ContextEfficiencyConfig,
     ContextEfficiencyMode,
@@ -33,7 +34,7 @@ async def build_report(root: Path) -> dict[str, object]:
     counter = UnicodeHeuristicTokenCounter()
     config = ContextEfficiencyConfig(
         frozen_at=FIXED_STARTED_AT - timedelta(hours=1),
-        conditions=tuple(ContextEfficiencyCondition),
+        conditions=MEMORYOS_CONTEXT_CONDITIONS,
         bootstrap_rounds=1000,
     )
     with tempfile.TemporaryDirectory(

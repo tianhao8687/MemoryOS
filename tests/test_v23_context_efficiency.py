@@ -1056,6 +1056,7 @@ def test_constraint_atom_preserves_negation_threshold_unit_scope_and_exception()
     candidate = {
         "memory": {
             "id": "constraint-1",
+            "key": "request.timeout.production",
             "category": "constraint",
             "status": "active",
             "memory_type": "project",
@@ -1084,8 +1085,62 @@ def test_constraint_atom_preserves_negation_threshold_unit_scope_and_exception()
 
     assert atom.compression_policy is CompressionPolicy.PINNED
     assert text in atom.rendered_text
+    assert 'write_key="request.timeout.production"' in atom.rendered_text
     for fragment in ("不得", "30", "秒", "生产请求", "除外"):
         assert fragment in atom.rendered_text
+
+
+def test_decision_atom_keeps_confirmed_memory_when_structured_claim_loses_version() -> None:
+    counter = UnicodeHeuristicTokenCounter()
+    content = "生产数据库当前版本为 PostgreSQL 18; PostgreSQL 17 已被替换。"
+    candidate = {
+        "memory": {
+            "id": "database-version-18",
+            "key": "database.production-postgres-version",
+            "category": "decision",
+            "status": "active",
+            "memory_type": "project",
+            "title": "Production database version",
+            "content": content,
+            "valid_from": None,
+            "valid_to": None,
+            "created_at": "2026-01-01T00:00:00+00:00",
+            "updated_at": "2026-01-01T00:00:00+00:00",
+        },
+        "score": 1.0,
+        "truth_state": "resolved",
+        "claim_ids": ["database-claim"],
+        "trace": {"freshness": "fresh", "evidence_count": 1},
+    }
+    metadata = {
+        "source_refs": ["conversation"],
+        "evidence_pointers": [{"claim_id": "database-claim", "source_id": "source"}],
+        "claims": [
+            {
+                "id": "database-claim",
+                "subject_entity_id": "project.production_database",
+                "subject": "project.production_database",
+                "predicate": "uses",
+                "object_kind": "literal",
+                "object_entity_id": None,
+                "object_name": None,
+                "object_value": "postgresql",
+                "polarity": "positive",
+                "modality": "decision",
+                "qualifiers": {},
+                "status": "accepted",
+                "valid_from": None,
+                "valid_to": None,
+                "recorded_at": "2026-01-01T00:00:00+00:00",
+            }
+        ],
+    }
+
+    atom = AtomBuilder(counter).build(candidate, metadata)[0]
+
+    assert atom.fact_text == "project.production_database uses postgresql"
+    assert f"confirmed_memory={canonical_json(content)}" in atom.rendered_text
+    assert 'write_key="database.production-postgres-version"' in atom.rendered_text
 
 
 @pytest.mark.v23

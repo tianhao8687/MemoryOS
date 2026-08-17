@@ -1,0 +1,10 @@
+diff --git a/benchmark_hidden_arithmetic_multiply.py b/benchmark_hidden_arithmetic_multiply.py
+new file mode 100644
+--- /dev/null
++++ b/benchmark_hidden_arithmetic_multiply.py
+@@ -0,0 +1,5 @@
++from src.arithmetic import multiply
++
++
++assert multiply(0, 9) == 0
++assert multiply(-3, 4) == -12

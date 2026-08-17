@@ -1,0 +1,220 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-17T02:00:00+08:00",
+  "run_id": "medium-abc-v3-live-r1",
+  "status": "completed_with_all_arms_failed_and_guard_triggered",
+  "optimization_scope": {
+    "target": "memoryos_plugin",
+    "agent_behavior_prompt_changed": false,
+    "fixed_edit_step_added": false,
+    "task_specific_answer_added": false,
+    "plugin_version": "0.1.9"
+  },
+  "controls": {
+    "task_id": "pylint-pr-4661",
+    "difficulty": "medium",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "high",
+    "agent_preset": "standard-offline",
+    "prompt_sha256": "2a0f9dd9a436d41e3c47f291c0fb65422b06540925de71c147fff4817de4ccb8",
+    "starting_state_sha256": "286a1573c5c3cd95475c724768d0596120371a1d1d53385fac7f7ff000c63421",
+    "parallel_arms": 3,
+    "provider_retry_limit": 0,
+    "hidden_scoring_outside_agent_roots": true
+  },
+  "arms": {
+    "A": {
+      "condition": "no_memory",
+      "benchmark_status": "external_blocker",
+      "execution_valid": false,
+      "provider_attempts": 12,
+      "completed_responses": 11,
+      "input_tokens": 201572,
+      "cached_input_tokens": 194304,
+      "uncached_input_tokens": 7268,
+      "output_tokens": 15727,
+      "reasoning_tokens": 14003,
+      "cost_usd": "0.0059651312",
+      "provider_latency_seconds": 108.539,
+      "wall_seconds": 176.451214,
+      "memory_tool_calls": 0,
+      "tool_calls": {
+        "bash": 11,
+        "grep": 4,
+        "read": 4
+      },
+      "edit_calls": 0,
+      "first_ten_input_tokens": 176052,
+      "top_reasoning_steps": {
+        "4": 7626,
+        "11": 4092,
+        "7": 1841
+      },
+      "patch_bytes": 0,
+      "hidden_test_success": false,
+      "hidden_test_mode": "controller_offline_completion",
+      "failure_reason": "agent_declared_missing_dependencies_and_network_then_no_patch_ceiling"
+    },
+    "B": {
+      "condition": "msc_full",
+      "benchmark_status": "failed",
+      "execution_valid": true,
+      "provider_attempts": 14,
+      "completed_responses": 13,
+      "input_tokens": 223134,
+      "cached_input_tokens": 214400,
+      "uncached_input_tokens": 8734,
+      "output_tokens": 9895,
+      "reasoning_tokens": 8723,
+      "cost_usd": "0.0045936800",
+      "provider_latency_seconds": 74.239,
+      "wall_seconds": 191.092829,
+      "memory_tool_calls": 1,
+      "memory_delivery_payload_tokens": 409,
+      "memory_context_text_tokens": 203,
+      "tool_calls": {
+        "memory_context": 1,
+        "bash": 9,
+        "grep": 1,
+        "read": 5
+      },
+      "edit_calls": 0,
+      "first_ten_input_tokens": 149515,
+      "top_reasoning_steps": {
+        "6": 5130,
+        "7": 2299,
+        "11": 576
+      },
+      "patch_bytes": 0,
+      "hidden_test_success": false,
+      "failure_reason": "no_patch_request_limit"
+    },
+    "C": {
+      "condition": "msc_progressive",
+      "benchmark_status": "failed",
+      "execution_valid": true,
+      "provider_attempts": 10,
+      "completed_responses": 10,
+      "input_tokens": 176861,
+      "cached_input_tokens": 161920,
+      "uncached_input_tokens": 14941,
+      "output_tokens": 21484,
+      "reasoning_tokens": 20084,
+      "cost_usd": "0.0085606360",
+      "provider_latency_seconds": 151.429,
+      "wall_seconds": 251.118612,
+      "memory_tool_calls": 2,
+      "memory_explain_calls": 1,
+      "memory_delivery_payload_tokens": 287,
+      "memory_context_text_tokens": 81,
+      "tool_calls": {
+        "memory_context": 1,
+        "memory_explain": 1,
+        "bash": 7,
+        "grep": 3,
+        "read": 6
+      },
+      "edit_calls": 0,
+      "first_ten_input_tokens": 176861,
+      "top_reasoning_steps": {
+        "6": 7973,
+        "10": 6927,
+        "7": 4912
+      },
+      "patch_bytes": 0,
+      "hidden_test_success": false,
+      "failure_reason": "relative_usage_guard"
+    }
+  },
+  "formal_totals": {
+    "provider_attempts": 36,
+    "completed_responses": 34,
+    "input_tokens": 601567,
+    "output_tokens": 47106,
+    "reasoning_tokens": 42810,
+    "cost_usd": "0.0191194472",
+    "provider_retries": 0
+  },
+  "plugin_direct_effects": {
+    "c_payload_tokens_saved_vs_b": 122,
+    "c_payload_reduction_percent_vs_b": 29.8,
+    "first_request_tool_schema_bytes": {
+      "A": 27063,
+      "B": 27258,
+      "C": 27631
+    },
+    "first_ten_input_tokens": {
+      "A": 176052,
+      "C": 176861,
+      "C_minus_A": 809,
+      "C_percent_vs_A": 0.46
+    },
+    "b_vs_a": {
+      "reasoning_token_change_percent": -37.7,
+      "output_token_change_percent": -37.1,
+      "cost_change_percent": -23.0,
+      "input_token_change_percent": 10.7,
+      "functional_success_change": 0
+    }
+  },
+  "relative_guard": {
+    "multiplier": "1.30",
+    "triggered_arm": "C",
+    "trigger_metric": "cost_usd",
+    "peer_maximum": "0.00596513120000000075",
+    "ceiling": "0.0077546705600000009750",
+    "observed_at_decision": "0.00856063600000000049",
+    "provider_attempts_at_decision": 10,
+    "completed_responses_at_decision": 10,
+    "input_tokens_at_decision": 176861,
+    "next_provider_attempt_blocked": true,
+    "in_flight_response_completed_after_decision": false
+  },
+  "reasoning_spike_analysis": {
+    "cross_arm": true,
+    "c_top_three_reasoning_tokens": 19812,
+    "c_top_three_share_percent": 98.6,
+    "direct_cause": "the agent continued searching for an upstream implementation and runnable dependencies after the local contract and target code were already known",
+    "input_feedback_observed": true,
+    "plugin_payload_is_primary_cause": false
+  },
+  "excluded_invalid_start": {
+    "archive_root": "D:/dsh-medium-abc-v3/invalid-bootstrap-live-r1-clone-timeout",
+    "reason": "A and C repository clones hit the controller timeout while B entered the agent stage; B was stopped and the run excluded from comparison",
+    "provider_attempts": 8,
+    "completed_responses": 7,
+    "input_tokens": 87276,
+    "output_tokens": 7402,
+    "reasoning_tokens": 6546,
+    "cost_usd": "0.0033678848"
+  },
+  "all_operational_usage": {
+    "provider_attempts": 44,
+    "completed_responses": 41,
+    "input_tokens": 688843,
+    "output_tokens": 54508,
+    "reasoning_tokens": 49356,
+    "cost_usd": "0.0224873320",
+    "provider_retries": 0
+  },
+  "verdict": {
+    "plugin_invocation_proven": true,
+    "progressive_payload_reduction_proven": true,
+    "relative_guard_proven": true,
+    "full_memory_efficiency_signal": true,
+    "repair_success_improvement_proven": false,
+    "total_input_reduction_proven": false,
+    "cross_task_generalization_proven": false,
+    "c_end_to_end_efficiency_passed": false,
+    "resolved_memory_to_edit_transition_passed": false,
+    "summary": "MemoryOS delivered the correct task contract with small model-visible overhead, and full-memory B used less reasoning and cost than A, but all arms produced empty patches. Progressive C suffered three large reasoning bursts and was stopped by the relative-cost guard before another provider call."
+  },
+  "artifacts": {
+    "raw_outputs": "D:/dsh-medium-abc-v3/live-r1/outputs",
+    "raw_sessions": "D:/dsh-medium-abc-v3/live-r1/roots",
+    "relative_guard_report": "D:/dsh-medium-abc-v3/live-r1/relative-guard-report.json",
+    "offline_a_score": "D:/dsh-medium-abc-v3/live-r1/offline-score/no_memory",
+    "acceptance_lock": "benchmarks/context_efficiency/medium_abc_v3/acceptance-lock.json",
+    "runtime": "benchmarks/context_efficiency/medium_abc_v3/runtime-live.json"
+  }
+}

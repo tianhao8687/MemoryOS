@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-17T02:00:00+08:00",
+  "purpose": "Cross-domain DeepSeek V4 Flash A/B/C test of MemoryOS plugin 0.1.9 after progressive-contract and bounded-verification optimization.",
+  "run_id": "medium-abc-v3-live-r1",
+  "task": {
+    "task_id": "pylint-pr-4661",
+    "repository_id": "pylint-dev-pylint",
+    "base_commit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+    "difficulty": "medium",
+    "prompt_mentions_memoryos": false,
+    "memory_seed_ids": [
+      "pylint-persistent-stats-cache-contract"
+    ]
+  },
+  "conditions": {
+    "A": "no_memory",
+    "B": "msc_full",
+    "C": "msc_progressive"
+  },
+  "execution": {
+    "parallel_arms": 3,
+    "cache_phases": [
+      "cold"
+    ],
+    "automatic_repetitions": 0,
+    "budget_tokens": 1200,
+    "same_model_runtime_prompt_and_starting_commit": true,
+    "hidden_scoring_outside_agent_roots": true,
+    "source_overlay_read_only": true
+  },
+  "runtime": {
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "harness_version": "0.1.0-rc.5",
+    "plugin_version": "0.1.9",
+    "agent_preset": "standard-offline",
+    "reasoning_effort": "high",
+    "max_output_tokens": 8192,
+    "provider_retry_limit": 0,
+    "no_patch_request_limit": 12,
+    "patch_preserving_request_limit": 24,
+    "hard_request_limit": 36,
+    "hard_input_token_limit": 1800000
+  },
+  "relative_guard": {
+    "multiplier": "1.30",
+    "metrics": [
+      "input_tokens",
+      "provider_attempts",
+      "cost_usd"
+    ],
+    "activation": "both comparison arms have terminal provider usage",
+    "action": "stop before the next provider dispatch and preserve the patch for one hidden score",
+    "automatic_expansion": false
+  },
+  "evidence_lock": {
+    "manifest_file_sha256": "e2c24f8a4698adc50da57e2b504888af439396483544d95f9960f6cf0986cbe9",
+    "manifest_canonical_sha256": "c4a1f44055ce574cd39d5476f7ad400efb5e47ffa547d35e7f7c3789b309fe45",
+    "hidden_patch_sha256": "18a0ab1946aa72468c6c38f8450a5611019e8cc3dbb6000479e0dc939859574e",
+    "runtime_file_sha256": "8b2ca8abe54b0d79daa0dc8cbe14bd0003fd9a4cc95cdd0db481156833bfbc2e",
+    "runtime_canonical_sha256": "160ba49ef4baa94fc79a4a7451f536029d5b630b3f9dd8e7eed34cfa6af101af",
+    "runner_sha256": "890f376946c2d137aadd5fded52d8184bfd6e49c032c61d64b2f213b18f7a6c2",
+    "agent_adapter_sha256": "e7ded9454d866257f4dae433bd90f6e33956ff0b64aadc4b6235d6cacd27dc26",
+    "relative_guard_sha256": "add0c46f4e206752c0277e81886ab378616b1dbb14191e9fc7a889540e0d6098",
+    "plugin_usage_sha256": "ea425ee13348f3eea7395e8a63fe9a2c7f6b3c1f8ae4fad3b450a10b7c837317",
+    "plugin_renderer_sha256": "d4d858bb1c9daee791c01c0ca8fbbca6fb52ba2ba83aaf49b8e2f73c51da444a",
+    "plugin_package_sha256": "b264e745f099308d8df135098b788e688653ebc6c9d98aab74eaf1c96442ac39",
+    "execution_image": "memoryos-deepseek-lab@sha256:32359ca8e79047f42582daf6153af39a4a7c2e60e0a88fa6529d5a0bb6beff2d"
+  }
+}

@@ -1,0 +1,2 @@
+Development spike only. The branch was used to inspect exported spans and is
+not a production architecture record.

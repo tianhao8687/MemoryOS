@@ -1,0 +1,10 @@
+diff --git a/benchmark_hidden_arithmetic_add.py b/benchmark_hidden_arithmetic_add.py
+new file mode 100644
+--- /dev/null
++++ b/benchmark_hidden_arithmetic_add.py
+@@ -0,0 +1,5 @@
++from src.arithmetic import add
++
++
++assert add(0, 7) == 7
++assert add(-2, -5) == -7

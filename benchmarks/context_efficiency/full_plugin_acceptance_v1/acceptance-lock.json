@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-16T09:30:00Z",
+  "purpose": "Full MemoryOS plugin acceptance on a non-code operations decision task; frozen before live outcomes.",
+  "task_id": "operations-release-decision",
+  "prompt_mentions_memoryos": false,
+  "core_conditions": [
+    "no_memory",
+    "legacy_full",
+    "msc_full",
+    "msc_progressive",
+    "msc_delta",
+    "msc_delta_core"
+  ],
+  "compact_conditions": [
+    "no_memory",
+    "msc_context_only"
+  ],
+  "core_cache_phases": [
+    "cold",
+    "warm"
+  ],
+  "compact_cache_phases": [
+    "cold"
+  ],
+  "order_seed": 20260815,
+  "budget_tokens": 1200,
+  "request_limits": {
+    "no_patch": 7,
+    "patch_preserving": 9,
+    "absolute": 10,
+    "progress_grace": 1
+  },
+  "evidence_lock": {
+    "fixture_base_commit": "abe2e744bd62d4c55624a6d3b2b18d4671e7262e",
+    "manifest_file_sha256": "cc781f006d05e17d68b6f0331315c91a9b196d924bde4de1fcf2b13b02b5806f",
+    "core_runtime_file_sha256": "cd4c97a181cd1db6cb2ee6a6ef54f66efba80690cbb5216127641dba4eb7c1a2",
+    "compact_runtime_file_sha256": "706c2568c58e4e6180882c52f403abf28e1a349c528bf662e974a4df55779430",
+    "plugin_tree_sha256": "b9224919124939c95ca1db59564341b679833a8cb31212320dbc2e3be87f97dd",
+    "plugin_file_count": 14,
+    "runner_file_sha256": "e296248494541872292295f2ec5055f0bbff55058d656234934d3d63386151ff",
+    "harness_adapter_file_sha256": "a56dcc1cfcacb4e6ebd7914733036dda104739068487483e3860c5e2021125d5",
+    "condition_runtime_file_sha256": "4185ab39c7c09b65025d89174f2bff7f86f01aa11ab65c74f518b493a4be5281",
+    "report_file_sha256": "c51a313184862366c5a06f69d8accda8d0a9897703c453fc556c51f637741031"
+  },
+  "validity_gates": {
+    "baseline_memory_calls": 0,
+    "all_memory_arms_context_calls_min": 1,
+    "progressive_explain_calls_min": 1,
+    "delta_context_calls_min": 2,
+    "delta_hits_min": 1,
+    "stale_memory_uses": 0,
+    "cross_project_leaks": 0,
+    "blocked_actions": 0,
+    "identical_prompt_start_state_runtime": true,
+    "provider_usage_source": "provider_exact"
+  },
+  "interpretation": "One acceptance task validates feature execution and paired overhead; it is not a repair-success generalization study."
+}

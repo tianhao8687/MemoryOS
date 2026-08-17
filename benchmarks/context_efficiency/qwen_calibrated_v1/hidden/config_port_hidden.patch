@@ -1,0 +1,11 @@
+diff --git a/benchmark_hidden_config_port.py b/benchmark_hidden_config_port.py
+new file mode 100644
+--- /dev/null
++++ b/benchmark_hidden_config_port.py
+@@ -0,0 +1,6 @@
++from src.config_tools import clamp_port
++
++
++assert clamp_port(-999) == 1
++assert clamp_port(1) == 1
++assert clamp_port(65536) == 65535

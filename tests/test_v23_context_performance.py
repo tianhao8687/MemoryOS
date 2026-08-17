@@ -31,6 +31,8 @@ def _atom(
         memory_id=memory_id,
         memory_ids=(memory_id,),
         claim_ids=(f"claim-{index:03d}",),
+        memory_key=f"fixture.fact.{index}",
+        memory_content=f"fact {index}",
         canonical_key=canonical_key or _digest(f"canonical-{index}"),
         bundle_key=bundle_key or _digest(f"bundle-{index}"),
         atom_sha256=_digest(f"atom-{index}"),

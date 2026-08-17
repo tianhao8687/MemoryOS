@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-16T11:52:58Z",
+  "purpose": "One completed provider response per A/B condition and cache phase, solely to confirm provider-exact usage is attached to the stable first-request payload.",
+  "run_id": "full-plugin-cache-prefix-v4",
+  "plugin_version": "0.1.6",
+  "supersedes_lock_sha256": "536fcee90948d7b1e60702bc07ef0fe01d59730c08f38f5e0230a305b5f77d08",
+  "prior_probe": {
+    "run_id": "full-plugin-cache-prefix-v3",
+    "provider_attempts": 4,
+    "provider_requests": 0,
+    "valid_for_assembled_request_equality": true,
+    "valid_for_provider_exact_confirmation": false,
+    "reason": "A hard limit of one terminates at the pre-dispatch attempt hook, before a provider response can complete."
+  },
+  "change_scope": {
+    "task_changed": false,
+    "memory_changed": false,
+    "scorer_changed": false,
+    "plugin_changed": false,
+    "controller_changed": false,
+    "provider_or_model_changed": false,
+    "runtime_only": "Raise the per-run attempt ceiling from one to two; retries remain disabled. The first request may complete and the second pre-dispatch attempt triggers termination."
+  },
+  "conditions": [
+    "no_memory",
+    "msc_context_only"
+  ],
+  "cache_phases": [
+    "cold",
+    "warm"
+  ],
+  "order_seed": 20260815,
+  "budget_tokens": 1200,
+  "request_limits": {
+    "provider_retry_limit": 0,
+    "per_run_attempt_ceiling": 2,
+    "total_attempt_ceiling": 8,
+    "expected_completed_provider_requests_per_run": 1,
+    "total_completed_provider_requests_max": 4
+  },
+  "preflight_evidence": {
+    "offline_loader_probe_passed": true,
+    "zero-request_live_assembly_probe_passed": true,
+    "cold_warm_component_hashes_equal": {
+      "system": true,
+      "messages": true,
+      "tools": true,
+      "generation": true
+    },
+    "no_memory_first_request_sha256": "c7c1d7fc6416a746b179a814be96bc9e2236188abe9e5a5fd401162bf1210a98",
+    "msc_context_only_first_request_sha256": "b0c2d9b42a020c5984a8a7a0c295d9049891d38d280007c13a9f76255f385c7a"
+  },
+  "evidence_lock": {
+    "manifest_file_sha256": "cc781f006d05e17d68b6f0331315c91a9b196d924bde4de1fcf2b13b02b5806f",
+    "runtime_file_sha256": "1538e367503c9faa066c3f93e9fa03d350f2b2b0a8355db08b689a1269d4c927",
+    "controller_file_sha256": "9098f13a2f64370fe7f80c29f9ca629c43a40f6f89a3c03ddc4ce3d6c527da0b",
+    "plugin_core_file_sha256": "ddd63d1c9841c2a26d7ca39a5d9d7619931efefe76d27dcb07036cc192fffd62",
+    "plugin_usage_file_sha256": "6586769d2823a72b12173b46b73a8439054eca9bae35008706b788ff5493fb78",
+    "plugin_package_file_sha256": "7119f49544af240d693e5b1a59048ec5c399ed0779a264da9f8d814aebd6c30e",
+    "plugin_tree_sha256": "194ad35badbd24612c77392b96493338ce519f5bfd8396f14bb1c215e449a9a5",
+    "fixture_commit": "abe2e744bd62d4c55624a6d3b2b18d4671e7262e"
+  },
+  "validity_gates": {
+    "exactly_two_attempts_per_run": true,
+    "exactly_one_provider_usage_record_per_run": true,
+    "exactly_four_provider_usage_records_total": true,
+    "cold_warm_first_usage_request_sha256_equal_per_condition": true,
+    "cold_warm_first_usage_request_bytes_equal_per_condition": true,
+    "cold_warm_first_request_component_hashes_equal_per_condition": true,
+    "usage_request_sha256_matches_first_attempt_per_run": true,
+    "baseline_memory_calls": 0,
+    "provider_usage_source": "provider_exact"
+  },
+  "interpretation": "The four completed responses are a measurement-validity supplement, not effectiveness samples. The primary full acceptance campaign remains the source for task success and plugin-feature behavior."
+}

@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "adapter": "deepseek_harness",
+  "provider": "deepseek",
+  "harness_provider": "deepseek-official",
+  "executable": "dsh",
+  "profile": "headless",
+  "agent_preset": "minimal",
+  "reasoning_effort": "max",
+  "permission_mode": "danger-full-access",
+  "effective_permission_mode": "dedicated-condition-mount-write",
+  "sandbox_authority": "outer-landlock-plus-shell-seccomp",
+  "tool_shell_network": "none",
+  "tool_shell_read_scope": "dedicated-condition-mount-system-only",
+  "tool_shell_launcher": "/opt/memoryos/bin/bash",
+  "agent_read_scope": "dedicated-condition-mount-runtime-only",
+  "agent_filesystem_root_policy": "must-be-dedicated-mountpoint",
+  "agent_filesystem_launcher": "/opt/deepseek-harness/native/landlock-run/packages/linux-x64/bin/landlock-run",
+  "pnpm_version": "11.7.0",
+  "plugin_path": "integrations/deepseek-harness-memoryos",
+  "harness_version": "0.1.0-rc.5",
+  "harness_commit": "47f943859bef60e4160492346772ded9b24f765a",
+  "execution_environment": "linux-docker-wsl2",
+  "execution_image": "memoryos-deepseek-lab@sha256:c1502759c2741b39d5eb01768eb06879abacefb623a1158b5777eb305346cc9d",
+  "api_key_environment": "DEEPSEEK_API_KEY",
+  "base_url": "https://api.deepseek.com",
+  "model": "deepseek-v4-flash",
+  "model_revision": "deepseek-api-catalog-2026-08-15",
+  "quantization": "provider-hosted",
+  "context_length": 1000000,
+  "install_timeout_seconds": 300,
+  "run_timeout_seconds": 1800,
+  "memory_timeout_seconds": 30,
+  "pricing": {
+    "schema_version": "1.0",
+    "snapshot_id": "deepseek-public-pricing-2026-08-15",
+    "effective_at": "2026-08-15T00:00:00Z",
+    "source_url": "https://api-docs.deepseek.com/quick_start/pricing/",
+    "prices": [
+      {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "cache_miss_input_usd_per_million": "0.14",
+        "cache_hit_input_usd_per_million": "0.0028",
+        "output_usd_per_million": "0.28"
+      }
+    ]
+  }
+}

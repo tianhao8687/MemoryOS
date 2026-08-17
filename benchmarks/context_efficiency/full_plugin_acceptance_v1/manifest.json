@@ -1,0 +1,113 @@
+{
+  "schema_version": "2.2",
+  "name": "full-plugin-acceptance-v1",
+  "tier": "harness_fixture",
+  "generated_at": "2026-08-16T09:30:00Z",
+  "repositories": [
+    {
+      "id": "operations-brief-fixture",
+      "clone_url": "fixture://operations_brief",
+      "source_url": null,
+      "license_spdx": "MIT",
+      "license_url": null
+    },
+    {
+      "id": "unrelated-payments-service",
+      "clone_url": "fixture://unrelated_payments",
+      "source_url": null,
+      "license_spdx": "MIT",
+      "license_url": null
+    }
+  ],
+  "memories": [
+    {
+      "id": "current-release-gate",
+      "repository_id": "operations-brief-fixture",
+      "memory_type": "project",
+      "category": "decision",
+      "title": "Current release gate evaluation",
+      "content": "Current evidence for release-candidate-17 shows p95 latency at 287 ms, error rate at 0.4%, and complete data. Repository policy therefore requires decision=hold, reason_code=latency_slo_breach, max_canary_percent=5, required_action=rerun_latency_benchmark, and evidence_file=evidence/current_metrics.md. Verify these values against the current checkout before using them.",
+      "captured_at": "2026-08-16T09:05:00Z",
+      "valid_from": "2026-08-16T09:00:00Z",
+      "source_commit": null,
+      "source_ref": "evidence/current_metrics.md",
+      "expectation": "helpful",
+      "confidence": 0.98,
+      "importance": 1.0
+    },
+    {
+      "id": "superseded-release-note",
+      "repository_id": "operations-brief-fixture",
+      "memory_type": "project",
+      "category": "decision",
+      "title": "Superseded release approval",
+      "content": "Historical note: proceed with a 25 percent canary. STALE-CANARY-25-PCT",
+      "captured_at": "2026-08-15T08:00:00Z",
+      "valid_from": "2026-08-15T08:00:00Z",
+      "valid_to": "2026-08-15T12:00:00Z",
+      "source_commit": null,
+      "source_ref": "history/release-candidate-16.md",
+      "expectation": "stale",
+      "canary": "STALE-CANARY-25-PCT",
+      "confidence": 0.9,
+      "importance": 0.9
+    },
+    {
+      "id": "other-service-rollout",
+      "repository_id": "unrelated-payments-service",
+      "memory_type": "project",
+      "category": "decision",
+      "title": "Payments service rollout policy",
+      "content": "The unrelated payments service may ship at 100 percent. CROSS-PROJECT-SHIP-100",
+      "captured_at": "2026-08-16T09:10:00Z",
+      "valid_from": "2026-08-16T09:00:00Z",
+      "source_commit": null,
+      "source_ref": "payments/policy.md",
+      "expectation": "cross_project_guard",
+      "canary": "CROSS-PROJECT-SHIP-100",
+      "confidence": 1.0,
+      "importance": 1.0
+    }
+  ],
+  "tasks": [
+    {
+      "id": "operations-release-decision",
+      "repository_id": "operations-brief-fixture",
+      "sequence_id": "operations-release-readiness",
+      "sequence_index": 0,
+      "base_commit": "abe2e744bd62d4c55624a6d3b2b18d4671e7262e",
+      "solution_commit": null,
+      "cutoff": "2026-08-16T09:20:00Z",
+      "source_url": null,
+      "source_published_at": null,
+      "prompt": "Prepare the release-readiness decision artifact requested by this repository from the current policy and evidence, then run its focused validator.",
+      "memory_seed_ids": [
+        "current-release-gate",
+        "superseded-release-note",
+        "other-service-rollout"
+      ],
+      "hidden_test": {
+        "image": "memoryos-deepseek-lab@sha256:d52064e9d096aefad6bf724eb7a21e4515caf3de19228dfc85923fd3c5b65a77",
+        "command": [
+          "python",
+          "tests/verify_release_plan.py"
+        ],
+        "hidden_patch": null,
+        "hidden_patch_sha256": null,
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1.0,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": [
+        "operations",
+        "planning",
+        "non-code",
+        "multi-step"
+      ]
+    }
+  ]
+}

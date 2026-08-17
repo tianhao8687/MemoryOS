@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-16T15:32:21.9935976Z",
+  "status": "stopped_by_user",
+  "task_id": "pylint-pr-6528",
+  "model": "deepseek-v4-flash",
+  "hidden_patch_sha256": "39151265d6bd66e7cc065326e89482d5a8938a776684ec32a8e42931d50aeda6",
+  "conditions": {
+    "no_memory": {
+      "hidden_test_success": true,
+      "continuation_rounds_to_success": 2,
+      "provider_attempts": 87,
+      "completed_responses": 84,
+      "input_tokens": 5620993,
+      "cache_hit_tokens": 5559680,
+      "cache_miss_tokens": 61313,
+      "output_tokens": 58593,
+      "cost_usd": "0.04055696400000000157",
+      "provider_latency_seconds": 464.569,
+      "wall_latency_seconds": 710.449622,
+      "memory_tool_calls": 0,
+      "patch_bytes": 9724,
+      "changed_file_count": 9,
+      "patch_scored": true
+    },
+    "msc_full": {
+      "hidden_test_success": false,
+      "censored_by_user_stop": true,
+      "completed_scored_rounds": 19,
+      "interrupted_round": 20,
+      "provider_attempts": 298,
+      "completed_responses": 292,
+      "input_tokens": 54003040,
+      "cache_hit_tokens": 53871104,
+      "cache_miss_tokens": 131936,
+      "output_tokens": 298839,
+      "reasoning_tokens": 220578,
+      "cost_usd": "0.25298505120000000684",
+      "provider_latency_seconds": 2499.932,
+      "memory_tool_calls": 2,
+      "last_scored_round": 19,
+      "last_scored_patch_bytes": 11298,
+      "last_scored_hidden_exit_code": 1,
+      "interrupted_round_attempts": 9,
+      "interrupted_round_completed_responses": 8,
+      "current_patch_bytes": 12501,
+      "current_patch_sha256": "8485a077388210d9f06724c797bb08d7a2958a5dea157d429711f36f9f20933a",
+      "current_changed_file_count": 8,
+      "current_patch_scored": false
+    },
+    "msc_progressive": {
+      "hidden_test_success": true,
+      "continuation_rounds_to_success": 2,
+      "provider_attempts": 96,
+      "completed_responses": 93,
+      "input_tokens": 4710153,
+      "cache_hit_tokens": 4658048,
+      "cache_miss_tokens": 52105,
+      "output_tokens": 40558,
+      "cost_usd": "0.03169347440000000174",
+      "provider_latency_seconds": 333.862,
+      "wall_latency_seconds": 610.486665,
+      "memory_tool_calls": 2,
+      "patch_bytes": 5020,
+      "changed_file_count": 2,
+      "patch_scored": true,
+      "session_hidden_probe_count": 0
+    }
+  },
+  "comparison_c_vs_a_percent": {
+    "provider_attempts": 10.34,
+    "completed_responses": 10.71,
+    "input_tokens": -16.20,
+    "output_tokens": -30.78,
+    "cost_usd": -21.85,
+    "wall_latency_seconds": -14.07,
+    "patch_bytes": -48.38
+  },
+  "valid_totals": {
+    "provider_attempts": 481,
+    "completed_responses": 469,
+    "input_tokens": 64334186,
+    "cache_hit_tokens": 64088832,
+    "cache_miss_tokens": 245354,
+    "output_tokens": 397990,
+    "cost_usd": "0.32523548960000001015"
+  },
+  "excluded_contaminated_c": {
+    "reason": "agent-readable hidden scoring workspace",
+    "provider_attempts": 83,
+    "completed_responses": 82,
+    "input_tokens": 5023806,
+    "cache_hit_tokens": 4979456,
+    "cache_miss_tokens": 44350,
+    "output_tokens": 54191,
+    "cost_usd": "0.03532495680000000203",
+    "quarantine_root": "D:\\dsh-medium-abc-v1\\live-r1\\quarantine\\hidden-leak-20260816"
+  },
+  "physical_totals_including_excluded": {
+    "provider_attempts": 564,
+    "completed_responses": 551,
+    "input_tokens": 69357992,
+    "output_tokens": 452181,
+    "cost_usd": "0.36056044640000001218"
+  },
+  "validity": {
+    "active_campaign_containers": 0,
+    "provider_retry_limit": 0,
+    "saved_responses_replayed": false,
+    "a_hidden_probe_count": 0,
+    "b_hidden_probe_count": 0,
+    "clean_c_hidden_probe_count": 0,
+    "contaminated_c_excluded": true
+  },
+  "verdict": {
+    "repair_success_rate_improvement_proven": false,
+    "progressive_mode_efficiency_signal": true,
+    "full_mode_overcoupling_signal": true,
+    "generalization": "single-task evidence only"
+  }
+}

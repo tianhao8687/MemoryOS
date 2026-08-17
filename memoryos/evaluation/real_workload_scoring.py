@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -100,9 +101,11 @@ class HiddenTestRunner:
         self,
         workspace_manager: RepositoryWorkspaceManager,
         engine: ScoringEngine | None = None,
+        bind_source_resolver: Callable[[Path], Path] | None = None,
     ) -> None:
         self.workspace_manager = workspace_manager
         self.engine = engine or DockerEngine()
+        self.bind_source_resolver = bind_source_resolver or (lambda path: path)
 
     def run(
         self,
@@ -144,6 +147,7 @@ class HiddenTestRunner:
             container_user or default_container_user(),
             recursive=True,
         )
+        docker_workspace = self.bind_source_resolver(workspace.path)
         arguments = [
             "--rm",
             "--name",
@@ -172,7 +176,7 @@ class HiddenTestRunner:
             "--env",
             "PYTHONDONTWRITEBYTECODE=1",
             "--mount",
-            bind_mount(workspace.path, "/workspace", read_only=False),
+            bind_mount(docker_workspace, "/workspace", read_only=False),
             spec.image,
             *spec.command,
         ]

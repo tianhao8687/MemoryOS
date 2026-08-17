@@ -1,0 +1,29 @@
+#!/bin/bash
+set -euo pipefail
+
+# Source checkouts managed by setuptools-scm omit their generated version file.
+# Generate only that checkout metadata, inside the networkless task sandbox,
+# before the first model-issued command. The declared write target and egg-info
+# directory are ignored build artifacts; target implementation code stays in place.
+if [[ -f pyproject.toml && -f setup.py ]] && python -c '
+import pathlib
+import sys
+import tomllib
+
+config = tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))
+target = config.get("tool", {}).get("setuptools_scm", {}).get("write_to")
+sys.exit(0 if isinstance(target, str) and target and not pathlib.Path(target).exists() else 1)
+'; then
+  log=/tmp/memoryos-task-bootstrap.log
+  # The benchmark mirror intentionally contains no release tags, so freeze the
+  # checkout's development version instead of letting setuptools-scm invent a
+  # misleading 0.1 fallback. This is packaging metadata, not target behavior.
+  if ! env SETUPTOOLS_SCM_PRETEND_VERSION=7.2.0.dev0 \
+      python setup.py --quiet egg_info >"$log" 2>&1; then
+    printf 'memoryos-shell: checkout metadata bootstrap failed\n' >&2
+    tail -n 40 "$log" >&2
+    exit 125
+  fi
+fi
+
+exec /bin/bash --noprofile --norc "$@"

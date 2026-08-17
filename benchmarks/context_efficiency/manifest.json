@@ -1,0 +1,75 @@
+{
+  "schema_version": "2.2",
+  "name": "context-efficiency-fixture",
+  "tier": "harness_fixture",
+  "generated_at": "2026-08-15T00:00:00Z",
+  "repositories": [
+    {
+      "id": "calculator-fixture",
+      "clone_url": "fixture://calculator",
+      "source_url": null,
+      "license_spdx": "MIT",
+      "license_url": null
+    }
+  ],
+  "memories": [
+    {
+      "id": "calculator-add-contract",
+      "repository_id": "calculator-fixture",
+      "memory_type": "project",
+      "category": "constraint",
+      "title": "Addition returns an arithmetic sum",
+      "content": "The add function must return the arithmetic sum of left and right, including negative integers. Preserve the public function name and its two positional arguments. Keep the implementation deterministic and free of I/O, network access, global state, or type-dependent branches. The result must satisfy additive identity for zero, commutativity for integers, and sign handling for negative operands. Do not replace arithmetic with string concatenation, subtraction, multiplication, bitwise operators, a lookup table, or a test-specific constant. The visible and hidden checks import src.calculator.add directly, so the fix belongs in src/calculator.py. Run the frozen calculator test after applying the smallest relevant patch. Do not edit the tests, add dependencies, generate caches, or modify repository control files. This contract is project evidence for the benchmark and remains subordinate to the isolated workspace and frozen tests.",
+      "captured_at": "2026-08-14T00:00:00Z",
+      "valid_from": "2026-08-14T00:00:00Z",
+      "source_commit": null,
+      "source_ref": "fixture:calculator-contract",
+      "expectation": "helpful",
+      "confidence": 1.0,
+      "importance": 1.0
+    }
+  ],
+  "tasks": [
+    {
+      "id": "calculator-fix-add",
+      "repository_id": "calculator-fixture",
+      "sequence_id": "calculator-sequence",
+      "sequence_index": 0,
+      "base_commit": "bf6099ded5e55e190287b14d8ab018b2fcbd071c",
+      "solution_commit": null,
+      "cutoff": "2026-08-15T00:00:00Z",
+      "source_url": null,
+      "source_published_at": null,
+      "prompt": "Fix add so it returns the arithmetic sum of left and right, then run the visible calculator test.",
+      "memory_seed_ids": [
+        "calculator-add-contract"
+      ],
+      "hidden_test": {
+        "image": "memoryos-deepseek-lab@sha256:d52064e9d096aefad6bf724eb7a21e4515caf3de19228dfc85923fd3c5b65a77",
+        "command": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/test_calculator.py"
+        ],
+        "hidden_patch": null,
+        "hidden_patch_sha256": null,
+        "expected_exit_code": 0,
+        "timeout_seconds": 30,
+        "memory_mb": 256,
+        "cpus": 1.0,
+        "pids_limit": 64,
+        "network": "none",
+        "read_only_root": true
+      },
+      "tags": [
+        "python",
+        "multi-step",
+        "fixture"
+      ]
+    }
+  ]
+}

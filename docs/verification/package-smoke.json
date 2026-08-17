@@ -4,20 +4,59 @@
   "clean_path_copy": true,
   "first_health": {
     "ok": true,
-    "version": "2.1.0",
+    "version": "2.3.0",
     "database": "ok"
   },
   "second_health": {
     "ok": true,
-    "version": "2.1.0",
+    "version": "2.3.0",
     "database": "ok"
   },
   "mcp_tools": 12,
-  "memory_id": "b72f3bdf-e941-4720-b050-9a11a89c9362",
+  "mcp_profiles": {
+    "all": [
+      "memory_context",
+      "memory_search",
+      "memory_propose",
+      "memory_confirm",
+      "memory_forget",
+      "memory_history",
+      "memory_explain",
+      "memory_current_truth",
+      "memory_feedback",
+      "memory_consolidate",
+      "memory_refresh",
+      "memory_debug_context"
+    ],
+    "core": [
+      "memory_context",
+      "memory_search",
+      "memory_propose",
+      "memory_confirm",
+      "memory_explain",
+      "memory_current_truth"
+    ],
+    "context": [
+      "memory_context"
+    ],
+    "governance": [
+      "memory_forget",
+      "memory_feedback",
+      "memory_consolidate",
+      "memory_refresh"
+    ],
+    "debug": [
+      "memory_history",
+      "memory_debug_context"
+    ]
+  },
+  "memory_id": "2ab5d210-7119-4a57-a48e-027253816712",
   "legacy_memory_id": "00000000-0000-0000-0000-000000000001",
   "v1_to_v2_migration": true,
   "v1_to_v21_migration": true,
-  "schema_version": "0003_reality_intelligence_hardening",
+  "v1_to_v22_migration": true,
+  "v1_to_v23_migration": true,
+  "schema_version": "0005_context_efficiency",
   "memorybench_bundled": true,
   "coding_memory_bench_bundled": true,
   "sqlite_vec_bundled": true,
@@ -25,6 +64,6 @@
   "restart_persistence": true,
   "ui_health": true,
   "cli_status": true,
-  "elapsed_seconds": 9.295,
+  "elapsed_seconds": 17.306,
   "server_output_lines": 34
 }

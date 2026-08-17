@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-16T11:48:46Z",
+  "purpose": "Four-request live confirmation that cold/warm Harness first requests have an identical provider-visible payload after the offline request-shape gate passed.",
+  "run_id": "full-plugin-cache-prefix-v3",
+  "plugin_version": "0.1.6",
+  "prior_attempts": [
+    {
+      "run_id": "full-plugin-cache-prefix-v1",
+      "provider_attempts": 0,
+      "valid": false,
+      "reason": "A local preset guard matched cwd text in a YAML comment before Harness startup."
+    },
+    {
+      "run_id": "full-plugin-cache-prefix-v2",
+      "provider_attempts": 24,
+      "valid": false,
+      "reason": "The evidence hash included model-invisible Harness message metadata and the headless global persona still exposed an absolute disposable workspace path."
+    }
+  ],
+  "change_scope": {
+    "task_changed": false,
+    "memory_changed": false,
+    "scorer_changed": false,
+    "provider_or_model_changed": false,
+    "plugin_change": "Hash the DeepSeek provider-visible wire projection and record per-component hashes without recording prompt text.",
+    "controller_change": "Override the headless global persona with a workspace-path-independent equivalent while retaining the isolated workspace instruction."
+  },
+  "conditions": [
+    "no_memory",
+    "msc_context_only"
+  ],
+  "cache_phases": [
+    "cold",
+    "warm"
+  ],
+  "order_seed": 20260815,
+  "budget_tokens": 1200,
+  "request_limits": {
+    "provider_retry_limit": 0,
+    "per_run_absolute": 1,
+    "total_live_provider_attempts_max": 4
+  },
+  "offline_preflight": {
+    "run_id": "full-plugin-cache-prefix-offline-v4-stable",
+    "provider_attempts": 2,
+    "external_provider_requests": 0,
+    "cold_warm_request_sha256_equal": true,
+    "cold_warm_request_bytes_equal": true,
+    "component_hashes_equal": {
+      "system": true,
+      "messages": true,
+      "tools": true,
+      "generation": true
+    },
+    "request_sha256": "3daa5ea50a95ff2933eff24a71119ba3735a15f36ee12dda29873c9c02341eb8",
+    "request_bytes": 33476
+  },
+  "evidence_lock": {
+    "manifest_file_sha256": "cc781f006d05e17d68b6f0331315c91a9b196d924bde4de1fcf2b13b02b5806f",
+    "runtime_file_sha256": "cb0349b90a1518587a5e0fb7e3b38ec5208e5f1f2ba5d63b1dcdf8d0e1925cce",
+    "controller_file_sha256": "9098f13a2f64370fe7f80c29f9ca629c43a40f6f89a3c03ddc4ce3d6c527da0b",
+    "plugin_core_file_sha256": "ddd63d1c9841c2a26d7ca39a5d9d7619931efefe76d27dcb07036cc192fffd62",
+    "plugin_usage_file_sha256": "6586769d2823a72b12173b46b73a8439054eca9bae35008706b788ff5493fb78",
+    "plugin_package_file_sha256": "7119f49544af240d693e5b1a59048ec5c399ed0779a264da9f8d814aebd6c30e",
+    "plugin_tree_sha256": "194ad35badbd24612c77392b96493338ce519f5bfd8396f14bb1c215e449a9a5",
+    "fixture_commit": "abe2e744bd62d4c55624a6d3b2b18d4671e7262e"
+  },
+  "validity_gates": {
+    "exactly_one_provider_attempt_per_run": true,
+    "exactly_four_provider_attempts_total": true,
+    "cold_warm_first_request_sha256_equal_per_condition": true,
+    "cold_warm_first_request_bytes_equal_per_condition": true,
+    "cold_warm_component_hashes_equal_per_condition": true,
+    "baseline_memory_calls": 0,
+    "treatment_context_tool_exposed": true,
+    "provider_usage_source": "provider_exact"
+  },
+  "interpretation": "This supplement closes only the request-prefix and cache-measurement validity gate. Effectiveness, non-code task completion, progressive disclosure, delta behavior, safety isolation, Loader/HMR, and accounting are taken from the already completed primary acceptance runs."
+}

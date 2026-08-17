@@ -4542,6 +4542,175 @@
         }
       ]
     },
+    "context": {
+      "counter_kind": "estimated",
+      "counter_version": "1.0.0",
+      "estimated_schema_tokens": 416,
+      "profile": "context",
+      "schema_sha256": "a84f3065f9d5e1030aa901d59055ba35d62a35bf183734415f81bf26d52a2cec",
+      "schema_version": "1.0",
+      "tokenizer_id": "unicode-heuristic-v1",
+      "tool_names": [
+        "memory_context"
+      ],
+      "tools": [
+        {
+          "description": "Build the most relevant project-memory context for a coding task.",
+          "inputSchema": {
+            "$defs": {
+              "BudgetProfile": {
+                "enum": [
+                  "auto",
+                  "tiny",
+                  "small",
+                  "medium",
+                  "large"
+                ],
+                "title": "BudgetProfile",
+                "type": "string"
+              },
+              "DetailLevel": {
+                "enum": [
+                  "index",
+                  "fact",
+                  "evidence",
+                  "history"
+                ],
+                "title": "DetailLevel",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "branch": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Branch"
+              },
+              "budget": {
+                "default": 6000,
+                "title": "Budget",
+                "type": "integer"
+              },
+              "budget_profile": {
+                "$ref": "#/$defs/BudgetProfile",
+                "default": "auto"
+              },
+              "budget_tokens": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Budget Tokens"
+              },
+              "detail_level": {
+                "$ref": "#/$defs/DetailLevel",
+                "default": "fact"
+              },
+              "hard_token_budget": {
+                "default": false,
+                "title": "Hard Token Budget",
+                "type": "boolean"
+              },
+              "include_historical": {
+                "default": false,
+                "title": "Include Historical",
+                "type": "boolean"
+              },
+              "previous_context_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Previous Context Id"
+              },
+              "repo": {
+                "title": "Repo",
+                "type": "string"
+              },
+              "response_mode": {
+                "default": "auto",
+                "enum": [
+                  "auto",
+                  "full",
+                  "delta"
+                ],
+                "title": "Response Mode",
+                "type": "string"
+              },
+              "task": {
+                "title": "Task",
+                "type": "string"
+              },
+              "task_scope": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Task Scope"
+              },
+              "tokenizer_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Tokenizer Id"
+              },
+              "workspace": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Workspace"
+              }
+            },
+            "required": [
+              "task",
+              "repo"
+            ],
+            "title": "memory_contextArguments",
+            "type": "object"
+          },
+          "name": "memory_context",
+          "outputSchema": {
+            "additionalProperties": true,
+            "title": "memory_contextDictOutput",
+            "type": "object"
+          }
+        }
+      ]
+    },
     "core": {
       "counter_kind": "estimated",
       "counter_version": "1.0.0",

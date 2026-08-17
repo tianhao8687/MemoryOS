@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "benchmark_id": "long-term-memory-followup-v1",
+  "language": "zh-CN",
+  "source_prompt_forbidden_terms": [
+    "记住",
+    "帮我记住",
+    "remember",
+    "MemoryOS",
+    "memory_context",
+    "memory_propose",
+    "memory_confirm",
+    "长期记忆",
+    "保存这个决定"
+  ],
+  "memory_update": {
+    "case_id": "memory-update-postgresql-version-001",
+    "repository_scope": "fixture://long-term-followup/database-version-001",
+    "fixture_id": "cross-session-database-service",
+    "session_a": {
+      "prompt": "这个仓库的生产数据库版本正式确定为 PostgreSQL 17。这是一项已经定下来的项目决策。只确认这项决定，不要修改文件、运行命令、测试或提交。"
+    },
+    "session_b": {
+      "prompt": "生产数据库版本的决定现在明确更新：PostgreSQL 17 已被替换，从现在起当前版本是 PostgreSQL 18，17 不再是当前方案。只确认这项更新，不要修改文件、运行命令、测试或提交。"
+    },
+    "session_c": {
+      "prompt": "只根据当前已经确定的项目决策回答现在的生产数据库版本。只输出一行“PostgreSQL <版本>”，不要说明历史，不要修改文件、运行命令、测试或提交。"
+    },
+    "expected": {
+      "old_current_truth": "PostgreSQL 17",
+      "new_current_truth": "PostgreSQL 18",
+      "required_conflict_strategy": "supersede",
+      "old_status_after_update": "superseded",
+      "new_status_after_update": "active"
+    }
+  },
+  "context_eviction": {
+    "case_id": "context-eviction-release-train-001",
+    "repository_scope": "fixture://long-term-followup/context-eviction-001",
+    "fixture_id": "cross-session-request-service",
+    "history_char_limit": 3500,
+    "configured_context_window_tokens": 8192,
+    "sentinel": "Glacier-47",
+    "session_a_prompt": "这个仓库当前发布列车的正式代号确定为 Glacier-47，后续发布说明统一使用这个代号。只确认这项已经确定的项目决策，不要修改文件、运行命令、测试或提交。",
+    "filler": {
+      "batch_count": 3,
+      "records_per_batch": 42,
+      "prompt_prefix": "下面是第 {batch} 批普通开发审阅记录。它们只是当前会话中的常规开发内容，不改变任何既有项目决策。不要运行命令、修改文件、调用外部工具、测试或提交；只回复“已读第 {batch} 批”。",
+      "record_template": "开发记录 {batch}-{index}：{component} 的本轮检查聚焦 {topic}；观察项为 {observation}；本批只登记现状，后续是否调整仍需单独评审。",
+      "components": [
+        "请求入口", "参数校验", "错误映射", "日志格式", "缓存边界", "重试队列",
+        "指标采集", "测试夹具", "配置加载", "类型声明", "序列化层", "健康检查"
+      ],
+      "topics": [
+        "命名一致性", "空值处理", "超时传播", "边界输入", "可观测性", "兼容性",
+        "局部复杂度", "错误消息", "测试隔离", "默认值", "清理顺序", "只读行为"
+      ],
+      "observations": [
+        "现有实现可以继续阅读", "尚未发现需要立即改动的证据", "需要在后续评审中复核",
+        "当前只记录调用关系", "相关测试保持原状", "本轮不形成长期约束"
+      ]
+    },
+    "final_prompt": "只回答这一项已经确定的项目决策：当前发布列车代号是什么？如果当前可见的项目上下文没有依据，只回答“不知道”。不要运行命令、修改文件、测试、提交或解释。",
+    "expected": {
+      "no_memory_answer": "不知道",
+      "memoryos_answer_must_contain": "Glacier-47",
+      "original_decision_must_be_evicted": true,
+      "retained_history_must_not_contain_sentinel": true
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "adapter": "openai_compatible",
+  "transport": "openai_compatible",
+  "provider": "llama.cpp",
+  "base_url": "http://127.0.0.1:8080/v1",
+  "api_key_environment": null,
+  "model": "Qwen/Qwen3-VL-8B-Instruct-GGUF",
+  "model_revision": "f982a07559d4a2f6c8744d840bf6fccab30eea96",
+  "quantization": "Q4_K_M; gguf-sha256=67d1659bfe71b89d50b45a4ad1a9e5b997e5bb16ce5da66a6a6167abd569e9e2",
+  "context_length": 32768,
+  "temperature": 0.0,
+  "seed": 20260815,
+  "send_seed": true,
+  "max_steps": 12,
+  "max_output_tokens_per_step": 1536,
+  "max_total_tokens": 100000,
+  "request_timeout_seconds": 180.0,
+  "run_timeout_seconds": 600.0,
+  "stream": true,
+  "reasoning_effort": null,
+  "thinking": null,
+  "tokenizer": {
+    "kind": "provider_only",
+    "model_path": null,
+    "revision": null,
+    "tokenizer_sha256": null,
+    "local_files_only": true
+  },
+  "allowed_tests": [
+    {
+      "id": "arithmetic-add",
+      "command": ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_arithmetic_add.py"],
+      "timeout_seconds": 120,
+      "environment": {}
+    },
+    {
+      "id": "arithmetic-multiply",
+      "command": ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_arithmetic_multiply.py"],
+      "timeout_seconds": 120,
+      "environment": {}
+    },
+    {
+      "id": "text-slug",
+      "command": ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_text_slug.py"],
+      "timeout_seconds": 120,
+      "environment": {}
+    },
+    {
+      "id": "text-initials",
+      "command": ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_text_initials.py"],
+      "timeout_seconds": 120,
+      "environment": {}
+    },
+    {
+      "id": "config-bool",
+      "command": ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_config_bool.py"],
+      "timeout_seconds": 120,
+      "environment": {}
+    },
+    {
+      "id": "config-port",
+      "command": ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_config_port.py"],
+      "timeout_seconds": 120,
+      "environment": {}
+    }
+  ],
+  "require_test": true,
+  "pricing": null,
+  "extra_body": {}
+}

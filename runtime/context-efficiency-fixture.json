@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "adapter": "openai_compatible",
+  "transport": "fixture",
+  "provider": "fixture",
+  "base_url": "fixture://openai",
+  "api_key_environment": null,
+  "model": "fixture-coding-model",
+  "model_revision": "fixture-v1",
+  "quantization": "deterministic",
+  "context_length": 32768,
+  "temperature": 0.0,
+  "seed": 20260815,
+  "send_seed": true,
+  "max_steps": 12,
+  "max_output_tokens_per_step": 1024,
+  "max_total_tokens": 100000,
+  "request_timeout_seconds": 30.0,
+  "run_timeout_seconds": 180.0,
+  "stream": true,
+  "reasoning_effort": null,
+  "thinking": null,
+  "tokenizer": {
+    "kind": "provider_only",
+    "model_path": null,
+    "revision": null,
+    "tokenizer_sha256": null,
+    "local_files_only": true
+  },
+  "allowed_tests": [
+    {
+      "id": "calculator-visible",
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_calculator.py"
+      ],
+      "timeout_seconds": 30,
+      "environment": {}
+    }
+  ],
+  "require_test": true,
+  "pricing": null,
+  "extra_body": {}
+}

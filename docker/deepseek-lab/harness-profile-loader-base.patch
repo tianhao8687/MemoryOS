@@ -1,0 +1,38 @@
+--- a/apps/cli/src/profile-boot.ts
++++ b/apps/cli/src/profile-boot.ts
+@@ -12,7 +12,7 @@
+ 
+ import { writeFileSync } from 'node:fs'
+ import { join, resolve } from 'node:path'
+-import { fileURLToPath } from 'node:url'
++import { fileURLToPath, pathToFileURL } from 'node:url'
+ import { FiberState, type Context } from '@deepseek-ai/cordis'
+ import type { PatchOptions } from '@deepseek-ai/cordis-plugin-include'
+ import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
+@@ -255,7 +255,7 @@ export async function runProfile(options: RunProfileOptions): Promise<RunProfile
+       args: options.args,
+       exit: code => void shutdown.shutdown(code),
+     })
+-  })
++  }, pathToFileURL(join(composed.profile.dir, 'entry.mjs')).href)
+   app.current = ctx
+   // A surface can dispose the whole tree while boot or this post-boot watcher
+   // setup is still in flight — a signal, or a fast one-shot's appExit. Loader
+--- a/apps/cli/lib/profile-boot-DG5t9aNs.js
++++ b/apps/cli/lib/profile-boot-DG5t9aNs.js
+@@ -1,5 +1,5 @@
+ import { writeFileSync } from "node:fs";
+-import { fileURLToPath } from "node:url";
++import { fileURLToPath, pathToFileURL } from "node:url";
+ import { PROFILE_PATCH_FILENAME, boot, composeEntries, healProfilesModuleFallback, installFailLoud, loadOptionalPatches, loadOverlayPatches, loadProfile, watchUserPatches } from "@deepseek-ai/dsh-app-boot";
+ import { join, resolve } from "node:path";
+ import { resolveDshHome } from "@deepseek-ai/dsh-home-paths";
+@@ -251,7 +251,7 @@ async function runProfile(options) {
+ 			args: options.args,
+ 			exit: (code) => void shutdown.shutdown(code)
+ 		});
+-	});
++	}, pathToFileURL(join(composed.profile.dir, "entry.mjs")).href);
+ 	app.current = ctx;
+ 	if (!signalShutdown.signal.aborted && ctx.fiber.state === 2 && ctx.get("loader") !== void 0) try {
+ 		if (ctx.get("hmr") === void 0) {

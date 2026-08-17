@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "locked_at": "2026-08-16T11:28:00Z",
+  "purpose": "Minimal live validation that cold/warm Harness requests use a stable model-visible prefix after removing volatile absolute cwd text.",
+  "prior_invalid_attempt": {
+    "run_id": "full-plugin-cache-prefix-v1",
+    "provider_attempts": 0,
+    "reason": "A local preset guard matched cwd text in a YAML comment before Harness startup."
+  },
+  "change_scope": {
+    "task_changed": false,
+    "memory_changed": false,
+    "scorer_changed": false,
+    "plugin_changed": false,
+    "provider_or_model_changed": false,
+    "controller_change": "Replace the model-visible absolute cwd with a stable isolated-workspace description and scope validation to the persona value."
+  },
+  "conditions": [
+    "no_memory",
+    "msc_context_only"
+  ],
+  "cache_phases": [
+    "cold",
+    "warm"
+  ],
+  "order_seed": 20260815,
+  "budget_tokens": 1200,
+  "request_limits": {
+    "no_patch": 7,
+    "patch_preserving": 9,
+    "absolute": 10,
+    "progress_grace": 1
+  },
+  "evidence_lock": {
+    "manifest_file_sha256": "cc781f006d05e17d68b6f0331315c91a9b196d924bde4de1fcf2b13b02b5806f",
+    "runtime_file_sha256": "706c2568c58e4e6180882c52f403abf28e1a349c528bf662e974a4df55779430",
+    "harness_adapter_file_sha256": "7afaffcd45559b3d01c60cd261c233af9f0f456cb3a9c62371aa495a988e8f69"
+  },
+  "validity_gates": {
+    "cold_warm_first_request_sha256_equal_per_condition": true,
+    "cold_warm_first_request_bytes_equal_per_condition": true,
+    "baseline_memory_calls": 0,
+    "treatment_context_calls_min_per_phase": 1,
+    "hidden_test_success_per_run": true,
+    "stale_memory_uses": 0,
+    "cross_project_leaks": 0,
+    "provider_usage_source": "provider_exact"
+  },
+  "interpretation": "This supplement validates cache-prefix controls and compact-plugin execution only; it is not an additional effectiveness sample."
+}

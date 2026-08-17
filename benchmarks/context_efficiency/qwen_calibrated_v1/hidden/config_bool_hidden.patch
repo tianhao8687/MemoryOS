@@ -1,0 +1,13 @@
+diff --git a/benchmark_hidden_config_bool.py b/benchmark_hidden_config_bool.py
+new file mode 100644
+--- /dev/null
++++ b/benchmark_hidden_config_bool.py
+@@ -0,0 +1,8 @@
++from src.config_tools import parse_bool
++
++
++assert parse_bool(" 1 ") is True
++assert parse_bool("On") is True
++assert parse_bool("false") is False
++assert parse_bool("no") is False
++assert parse_bool("") is False

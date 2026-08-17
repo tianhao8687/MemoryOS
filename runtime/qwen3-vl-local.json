@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "adapter": "openai_compatible",
+  "transport": "openai_compatible",
+  "provider": "llama.cpp",
+  "base_url": "http://127.0.0.1:8080/v1",
+  "api_key_environment": null,
+  "model": "Qwen/Qwen3-VL-8B-Instruct-GGUF",
+  "model_revision": "f982a07559d4a2f6c8744d840bf6fccab30eea96",
+  "quantization": "Q4_K_M; gguf-sha256=67d1659bfe71b89d50b45a4ad1a9e5b997e5bb16ce5da66a6a6167abd569e9e2",
+  "context_length": 32768,
+  "temperature": 0.0,
+  "seed": 20260815,
+  "send_seed": true,
+  "max_steps": 24,
+  "max_output_tokens_per_step": 4096,
+  "max_total_tokens": 250000,
+  "request_timeout_seconds": 180.0,
+  "run_timeout_seconds": 1800.0,
+  "stream": true,
+  "reasoning_effort": null,
+  "thinking": null,
+  "tokenizer": {
+    "kind": "provider_only",
+    "model_path": null,
+    "revision": null,
+    "tokenizer_sha256": null,
+    "local_files_only": true
+  },
+  "allowed_tests": [
+    {
+      "id": "python-tests",
+      "command": ["python", "-m", "pytest", "-q"],
+      "timeout_seconds": 900,
+      "environment": {}
+    }
+  ],
+  "require_test": true,
+  "pricing": null,
+  "extra_body": {}
+}
