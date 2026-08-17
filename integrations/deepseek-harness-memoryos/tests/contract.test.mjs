@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import test from 'node:test'
 import {
   assertHarnessCompatibility,
@@ -13,6 +16,11 @@ import {
   renderDeepSeekExplanation,
 } from '../lib/plugin.js'
 import { registerMemoryOSUsage } from '../lib/usage.js'
+import {
+  createFileMemoryControlState,
+  createMemoryControlState,
+  memoryControlState,
+} from '../lib/state.js'
 
 function response(payload, status = 200) {
   return {
@@ -228,7 +236,10 @@ test('fixture Harness calls MSC tools, carries delta state, and writes exact usa
     appendAttempt: (...args) => { attempts.push(args) },
   })
 
-  assert.deepEqual([...harness.registered.keys()], ['memory_context', 'memory_explain'])
+  assert.deepEqual(
+    [...harness.registered.keys()],
+    ['memoryos_control', 'memory_context', 'memory_explain'],
+  )
   const exec = {
     agent: { id: 'session-1', session: { id: 'session-1' } },
     signal: new AbortController().signal,
@@ -461,7 +472,7 @@ test('DeepSeek compact mode exposes one argument-free context call and text only
     environment: {},
   })
 
-  assert.deepEqual([...harness.registered.keys()], ['memory_context'])
+  assert.deepEqual([...harness.registered.keys()], ['memoryos_control', 'memory_context'])
   const tool = harness.registered.get('memory_context')
   assert.deepEqual(tool.parameters, {})
   assert.match(tool.description, /Call once/u)
@@ -479,6 +490,195 @@ test('DeepSeek compact mode exposes one argument-free context call and text only
     /limited to 1 call/u,
   )
   assert.equal(requests.length, 1)
+})
+
+test('first successful context announces activation once and failed context does not announce', async () => {
+  const store = createMemoryControlState(memoryControlState(true, false))
+  const fetchImpl = async () => response({
+    schema_version: '2.3',
+    mode: 'full',
+    context_id: 'activation-context',
+    text: 'The durable project decision is available.',
+  })
+  const harness = fixtureHarness(fetchImpl)
+  const plugin = registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'Continue the project',
+    repository: 'fixture://activation',
+  }, {
+    defineTool: value => value,
+    fetchImpl,
+    environment: {},
+    stateStore: store,
+  })
+  const exec = {
+    agent: { id: 'activation-session', session: { id: 'activation-session' } },
+    signal: new AbortController().signal,
+  }
+
+  const first = JSON.parse(await harness.registered.get('memory_context').execute({}, exec))
+  const second = JSON.parse(await harness.registered.get('memory_context').execute({}, exec))
+  assert.equal(first.first_activation, true)
+  assert.match(first.user_message, /MemoryOS 已开始工作/u)
+  assert.match(first.user_message, /关闭 OS/u)
+  assert.match(first.user_message, /开启 OS/u)
+  assert.equal(second.first_activation, undefined)
+  assert.equal(plugin.controller.onboardingNoticeShown, true)
+  assert.equal(store.read().state.onboarding_notice_shown, true)
+
+  const failedStore = createMemoryControlState(memoryControlState(true, false))
+  const failedHarness = fixtureHarness(async () => { throw new Error('connection refused') })
+  registerMemoryOSPlugin(failedHarness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'Continue the project',
+    repository: 'fixture://activation-failure',
+  }, {
+    defineTool: value => value,
+    fetchImpl: failedHarness.fetchImpl,
+    environment: {},
+    stateStore: failedStore,
+  })
+  await assert.rejects(
+    failedHarness.registered.get('memory_context').execute({}, exec),
+    /connection refused/u,
+  )
+  assert.equal(failedStore.read().state.onboarding_notice_shown, false)
+})
+
+test('memoryos_control disables and re-enables model-visible memory tools', async () => {
+  let healthCalls = 0
+  const fetchImpl = async url => {
+    if (url.endsWith('/api/health')) {
+      healthCalls += 1
+      return response({ ok: true, version: '2.3.0', database: 'ok' })
+    }
+    return response({ schema_version: '2.3', mode: 'full', text: 'context' })
+  }
+  const store = createMemoryControlState(memoryControlState(true, false))
+  const harness = fixtureHarness(fetchImpl)
+  const plugin = registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    condition: 'msc_context_only',
+    task: 'Continue the project',
+    repository: 'fixture://control',
+  }, {
+    defineTool: value => value,
+    fetchImpl,
+    environment: {},
+    stateStore: store,
+  })
+  const control = harness.registered.get('memoryos_control')
+  const exec = {
+    agent: { id: 'control-session', session: { id: 'control-session' } },
+    signal: new AbortController().signal,
+  }
+
+  assert.match(control.description, /开启 OS/u)
+  assert.match(control.description, /关闭 OS/u)
+  assert.deepEqual(control.parameters.action.enum, ['enable', 'disable', 'status'])
+  assert.deepEqual([...harness.registered.keys()], ['memoryos_control', 'memory_context'])
+
+  const disabled = await control.execute({ action: 'disable' }, exec)
+  assert.match(disabled, /MemoryOS 已关闭/u)
+  assert.match(disabled, /已经进入当前聊天的内容无法撤回/u)
+  assert.deepEqual([...harness.registered.keys()], ['memoryos_control'])
+  assert.equal(plugin.controller.enabled, false)
+  assert.equal(store.read().state.enabled, false)
+  assert.match(await control.execute({ action: 'status' }, exec), /当前已关闭/u)
+
+  const enabled = await control.execute({ action: 'enable' }, exec)
+  assert.match(enabled, /MemoryOS 已重新开启/u)
+  assert.deepEqual([...harness.registered.keys()], ['memoryos_control', 'memory_context'])
+  assert.equal(plugin.controller.enabled, true)
+  assert.equal(store.read().state.enabled, true)
+  assert.equal(healthCalls, 1)
+})
+
+test('memoryos_control fails closed when enable health check fails', async () => {
+  const store = createMemoryControlState(memoryControlState(false, false))
+  const fetchImpl = async () => response({
+    ok: false,
+    error: { code: 'SERVICE_UNAVAILABLE', message: 'MemoryOS is unavailable' },
+  }, 503)
+  const harness = fixtureHarness(fetchImpl)
+  const plugin = registerMemoryOSPlugin(harness, {
+    baseUrl: 'http://memoryos.invalid',
+    enabled: false,
+    condition: 'msc_context_only',
+    task: 'Continue the project',
+    repository: 'fixture://control-failure',
+  }, {
+    defineTool: value => value,
+    fetchImpl,
+    environment: {},
+    stateStore: store,
+  })
+  const control = harness.registered.get('memoryos_control')
+  await assert.rejects(
+    control.execute({ action: 'enable' }, { signal: new AbortController().signal }),
+    /SERVICE_UNAVAILABLE/u,
+  )
+  assert.deepEqual([...harness.registered.keys()], ['memoryos_control'])
+  assert.equal(plugin.controller.enabled, false)
+  assert.equal(store.read().state.enabled, false)
+})
+
+test('file control state survives restart and corrupt state disables memory', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'dsh-memoryos-control-'))
+  const statePath = join(root, 'profile', 'state.json')
+  const fetchImpl = async () => response({ ok: true, version: '2.3.0', database: 'ok' })
+  const config = {
+    baseUrl: 'http://memoryos.invalid',
+    enabled: true,
+    condition: 'msc_context_only',
+    task: 'Continue the project',
+    repository: 'fixture://persistent-control',
+    stateFile: statePath,
+  }
+  const exec = { signal: new AbortController().signal }
+  try {
+    const firstHarness = fixtureHarness(fetchImpl)
+    registerMemoryOSPlugin(firstHarness, config, {
+      defineTool: value => value,
+      fetchImpl,
+      environment: {},
+      stateStore: createFileMemoryControlState(statePath),
+    })
+    await firstHarness.registered.get('memoryos_control').execute({ action: 'disable' }, exec)
+    assert.equal(JSON.parse(await readFile(statePath, 'utf8')).enabled, false)
+
+    const restartedHarness = fixtureHarness(fetchImpl)
+    const restarted = registerMemoryOSPlugin(restartedHarness, config, {
+      defineTool: value => value,
+      fetchImpl,
+      environment: {},
+      stateStore: createFileMemoryControlState(statePath),
+    })
+    assert.deepEqual([...restartedHarness.registered.keys()], ['memoryos_control'])
+    assert.equal(restarted.controller.enabled, false)
+    await restartedHarness.registered.get('memoryos_control').execute({ action: 'enable' }, exec)
+    assert.equal(JSON.parse(await readFile(statePath, 'utf8')).enabled, true)
+
+    await writeFile(statePath, '{not valid json', 'utf8')
+    const corruptHarness = fixtureHarness(fetchImpl)
+    const corrupt = registerMemoryOSPlugin(corruptHarness, config, {
+      defineTool: value => value,
+      fetchImpl,
+      environment: {},
+      stateStore: createFileMemoryControlState(statePath),
+    })
+    assert.deepEqual([...corruptHarness.registered.keys()], ['memoryos_control'])
+    assert.equal(corrupt.controller.enabled, false)
+    assert.match(corrupt.controller.stateWarning, /state was invalid/u)
+    assert.match(
+      await corruptHarness.registered.get('memoryos_control').execute({ action: 'status' }, exec),
+      /warning=/u,
+    )
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
 })
 
 test('progressive compact auto-expands one resolved record into an action-ready contract', async () => {
@@ -834,7 +1034,7 @@ test('full-context conditions do not expose the progressive explain tool', () =>
     environment: {},
   })
 
-  assert.deepEqual([...harness.registered.keys()], ['memory_context'])
+  assert.deepEqual([...harness.registered.keys()], ['memoryos_control', 'memory_context'])
 })
 
 test('cross-session-write is explicit, repository-bound, and candidate-confirmed', async () => {
@@ -868,7 +1068,7 @@ test('cross-session-write is explicit, repository-bound, and candidate-confirmed
 
   assert.deepEqual(
     [...harness.registered.keys()],
-    ['memory_context', 'memory_propose', 'memory_confirm'],
+    ['memoryos_control', 'memory_context', 'memory_propose', 'memory_confirm'],
   )
   const exec = {
     agent: {

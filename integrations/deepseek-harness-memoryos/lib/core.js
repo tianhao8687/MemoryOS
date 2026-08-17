@@ -87,6 +87,13 @@ export function normalizeConfig(config) {
   const maxContextCalls = Number(config.maxContextCalls ?? 0)
   const responseFormat = String(config.responseFormat ?? 'json')
   const toolProfile = String(config.toolProfile ?? 'read-only')
+  const enabled = config.enabled === undefined ? true : Boolean(config.enabled)
+  const controlEnabled = config.controlEnabled === undefined
+    ? true
+    : Boolean(config.controlEnabled)
+  const onboardingNotice = config.onboardingNotice === undefined
+    ? true
+    : Boolean(config.onboardingNotice)
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 300_000) {
     throw new Error('timeoutMs must be an integer between 1 and 300000')
   }
@@ -117,11 +124,15 @@ export function normalizeConfig(config) {
     maxContextCalls,
     responseFormat,
     toolProfile,
+    enabled,
+    controlEnabled,
+    onboardingNotice,
     timeoutMs,
     repository: config.repository ? String(config.repository) : undefined,
     task: config.task ? String(config.task) : undefined,
     authTokenEnv: config.authTokenEnv ? String(config.authTokenEnv) : undefined,
     authTokenFile: config.authTokenFile ? String(config.authTokenFile) : undefined,
+    stateFile: config.stateFile ? String(config.stateFile) : undefined,
   })
 }
 
@@ -278,6 +289,12 @@ export function createMemoryOSClient(config, dependencies = {}) {
     }
   }
 
+  async function health(signal) {
+    const value = await request('/api/health', { method: 'GET' }, signal)
+    if (value?.ok !== true) throw new Error('MemoryOS health check did not return ok=true')
+    return sanitizeValue(value)
+  }
+
   async function explain(args, signal) {
     const query = new URLSearchParams()
     if (args.expected_atom_sha256) query.set('expected_atom_sha256', args.expected_atom_sha256)
@@ -344,7 +361,7 @@ export function createMemoryOSClient(config, dependencies = {}) {
     return sanitizeValue(raw?.memory ?? raw)
   }
 
-  return Object.freeze({ context, explain, propose, confirm, states })
+  return Object.freeze({ context, explain, propose, confirm, health, states })
 }
 
 function normalizeMemoryOSError(status, payload) {

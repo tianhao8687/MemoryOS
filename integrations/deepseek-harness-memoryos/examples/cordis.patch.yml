@@ -2,7 +2,7 @@
     - id: memoryos-usage
       name: dsh-memoryos/usage
       config:
-        condition: !!js process.env.MEMORYOS_CONDITION || 'no_memory'
+        condition: !!js process.env.MEMORYOS_CONDITION || 'msc_progressive'
         usageOutputFile: './build/provider-usage.jsonl'
         runId: 'example-run'
         taskId: 'example-task'
@@ -10,11 +10,15 @@
         cacheNamespaceSha256: '0000000000000000000000000000000000000000000000000000000000000000'
     - id: memoryos-tools
       name: dsh-memoryos
-      disabled: !!js process.env.MEMORYOS_ENABLED !== '1'
+      disabled: !!js process.env.MEMORYOS_CONDITION === 'no_memory'
       config:
+        enabled: !!js process.env.MEMORYOS_ENABLED !== '0'
+        controlEnabled: !!js process.env.MEMORYOS_CONTROL_ENABLED !== '0'
+        onboardingNotice: !!js process.env.MEMORYOS_ONBOARDING_NOTICE !== '0'
         baseUrl: 'http://127.0.0.1:8000'
         condition: 'msc_progressive'
         toolProfile: 'read-only'
         repository: 'example-repository'
         budgetTokens: 6000
         authTokenEnv: 'MEMORYOS_AUTH_TOKEN'
+        stateFile: !!js process.env.MEMORYOS_STATE_FILE

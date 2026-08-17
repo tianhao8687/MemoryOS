@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { access, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { createRequire } from 'node:module'
@@ -95,12 +96,35 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
   const previousCondition = process.env.MEMORYOS_CONDITION
   const previousToolProfile = process.env.MEMORYOS_TOOL_PROFILE
   const previousRepository = process.env.MEMORYOS_REPOSITORY
+  const previousBaseUrl = process.env.MEMORYOS_BASE_URL
+  const previousAuthToken = process.env.MEMORYOS_AUTH_TOKEN
+  const previousStateFile = process.env.MEMORYOS_STATE_FILE
   const previousResumeSessionId = process.env.MEMORYOS_RESUME_SESSION_ID
   let baseline
+  let strictBaseline
   let treatment
   let writer
   let resumed
+  let healthServer
   try {
+    healthServer = createServer((request, response) => {
+      if (request.url === '/api/health') {
+        response.writeHead(200, { 'content-type': 'application/json' })
+        response.end(JSON.stringify({ ok: true, version: '2.3.0', database: 'ok' }))
+        return
+      }
+      response.writeHead(404, { 'content-type': 'application/json' })
+      response.end(JSON.stringify({ ok: false, error: { code: 'NOT_FOUND' } }))
+    })
+    await new Promise((resolve, reject) => {
+      healthServer.once('error', reject)
+      healthServer.listen(0, '127.0.0.1', resolve)
+    })
+    const healthAddress = healthServer.address()
+    assert.ok(healthAddress && typeof healthAddress === 'object')
+    process.env.MEMORYOS_BASE_URL = `http://127.0.0.1:${healthAddress.port}`
+    process.env.MEMORYOS_AUTH_TOKEN = 'loader-test-local-token'
+    process.env.MEMORYOS_STATE_FILE = join(root, 'memoryos-control-state.json')
     delete process.env.MEMORYOS_RESUME_SESSION_ID
     process.env.MEMORYOS_ENABLED = '0'
     process.env.MEMORYOS_CONDITION = 'msc_progressive'
@@ -109,8 +133,9 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
     const baselineEntries = [...baseline.loader.entries()]
     const baselineTools = baselineEntries.find(entry => entry.options.id === 'memoryos-tools')
     const baselineUsage = baselineEntries.find(entry => entry.options.id === 'memoryos-usage')
-    assert.equal(baselineTools?.fiber, undefined)
+    assert.ok(baselineTools?.fiber)
     assert.ok(baselineUsage?.fiber)
+    assert.ok(baseline.tools.get('memoryos_control'))
     assert.equal(baseline.tools.get('memory_context'), undefined)
     assert.equal(baseline.tools.get('memory_explain'), undefined)
     const baselineRunner = baselineEntries.find(entry => entry.options.id === 'headless-runner')
@@ -119,6 +144,19 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
     assert.equal(baselineResume?.fiber, undefined)
     await baseline.fiber.dispose()
     baseline = undefined
+
+    process.env.MEMORYOS_ENABLED = '0'
+    process.env.MEMORYOS_CONDITION = 'no_memory'
+    strictBaseline = await boot()
+    const strictEntries = [...strictBaseline.loader.entries()]
+    const strictTools = strictEntries.find(entry => entry.options.id === 'memoryos-tools')
+    const strictUsage = strictEntries.find(entry => entry.options.id === 'memoryos-usage')
+    assert.equal(strictTools?.fiber, undefined)
+    assert.ok(strictUsage?.fiber)
+    assert.equal(strictBaseline.tools.get('memoryos_control'), undefined)
+    assert.equal(strictBaseline.tools.get('memory_context'), undefined)
+    await strictBaseline.fiber.dispose()
+    strictBaseline = undefined
 
     process.env.MEMORYOS_ENABLED = '1'
     process.env.MEMORYOS_CONDITION = 'msc_progressive'
@@ -131,19 +169,44 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
     assert.ok(usageEntry?.fiber)
     assert.deepEqual(
       treatment.tools.schemas().map(schema => schema.name).sort(),
-      ['memory_context', 'memory_explain'],
+      ['memory_context', 'memory_explain', 'memoryos_control'],
+    )
+
+    const disableResult = await treatment.tools.execute({
+      signal: new AbortController().signal,
+      callId: 'memoryos-loader-disable',
+      name: 'memoryos_control',
+      arguments: { action: 'disable' },
+    })
+    assert.equal(disableResult.isError, false, JSON.stringify(disableResult))
+    assert.deepEqual(
+      treatment.tools.schemas().map(schema => schema.name),
+      ['memoryos_control'],
+    )
+    const enableResult = await treatment.tools.execute({
+      signal: new AbortController().signal,
+      callId: 'memoryos-loader-enable',
+      name: 'memoryos_control',
+      arguments: { action: 'enable' },
+    })
+    assert.equal(enableResult.isError, false, JSON.stringify(enableResult))
+    assert.deepEqual(
+      treatment.tools.schemas().map(schema => schema.name).sort(),
+      ['memory_context', 'memory_explain', 'memoryos_control'],
     )
 
     await toolsEntry.update({ disabled: true })
     await treatment.loader.await()
     assert.equal(treatment.tools.get('memory_context'), undefined)
     assert.equal(treatment.tools.get('memory_explain'), undefined)
+    assert.equal(treatment.tools.get('memoryos_control'), undefined)
     assert.ok(usageEntry.fiber, 'usage collector must remain mounted for the baseline')
 
     await toolsEntry.update({ disabled: false })
     await treatment.loader.await()
     assert.ok(treatment.tools.get('memory_context'))
     assert.ok(treatment.tools.get('memory_explain'))
+    assert.ok(treatment.tools.get('memoryos_control'))
 
     await treatment.fiber.dispose()
     treatment = undefined
@@ -155,7 +218,7 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
     const writerSchemas = writer.tools.schemas()
     assert.deepEqual(
       writerSchemas.map(schema => schema.name).sort(),
-      ['memory_confirm', 'memory_context', 'memory_propose'],
+      ['memory_confirm', 'memory_context', 'memory_propose', 'memoryos_control'],
     )
     const proposeSchema = writerSchemas.find(schema => schema.name === 'memory_propose')
     assert.ok(proposeSchema)
@@ -190,6 +253,7 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
     assert.ok(resumeRunner?.fiber)
   } finally {
     await baseline?.fiber.dispose()
+    await strictBaseline?.fiber.dispose()
     await treatment?.fiber.dispose()
     await writer?.fiber.dispose()
     await resumed?.fiber.dispose()
@@ -197,7 +261,15 @@ test('installed bundle toggles MemoryOS schemas and preserves usage through real
     restoreEnvironment('MEMORYOS_CONDITION', previousCondition)
     restoreEnvironment('MEMORYOS_TOOL_PROFILE', previousToolProfile)
     restoreEnvironment('MEMORYOS_REPOSITORY', previousRepository)
+    restoreEnvironment('MEMORYOS_BASE_URL', previousBaseUrl)
+    restoreEnvironment('MEMORYOS_AUTH_TOKEN', previousAuthToken)
+    restoreEnvironment('MEMORYOS_STATE_FILE', previousStateFile)
     restoreEnvironment('MEMORYOS_RESUME_SESSION_ID', previousResumeSessionId)
+    if (healthServer) {
+      await new Promise((resolve, reject) => {
+        healthServer.close(error => error ? reject(error) : resolve())
+      })
+    }
     await rm(root, { recursive: true, force: true })
   }
 })
