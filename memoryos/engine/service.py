@@ -1120,6 +1120,7 @@ class MemoryService:
                 )
             )
         component_ids: tuple[str, ...] | None = None
+        expected_primary_memory_id: str | None = None
         expected_detail = DetailLevel.FACT
         expected_include_historical = False
         for run in runs:
@@ -1131,8 +1132,14 @@ class MemoryService:
                 if not isinstance(value, dict):
                     continue
                 ids = tuple(str(item) for item in value.get("memory_ids", []))
-                if value.get("atom_sha256") == expected_atom_sha256 and memory_id in ids:
+                primary_memory_id = str(value.get("memory_id", ""))
+                if (
+                    value.get("atom_sha256") == expected_atom_sha256
+                    and memory_id in ids
+                    and primary_memory_id in ids
+                ):
                     component_ids = ids
+                    expected_primary_memory_id = primary_memory_id
                     expected_detail = DetailLevel(
                         str(value.get("detail_level", DetailLevel.FACT.value))
                     )
@@ -1141,7 +1148,7 @@ class MemoryService:
             if component_ids is not None:
                 break
 
-        if component_ids:
+        if component_ids and expected_primary_memory_id:
             candidates: list[dict[str, Any]] = []
             with self.database.session() as session:
                 rows = list(
@@ -1174,7 +1181,12 @@ class MemoryService:
                             candidates.append(
                                 {
                                     "memory": self._serialize_memory(row),
-                                    "score": 1.0,
+                                    # The primary memory's write key and content are hash inputs.
+                                    # Preserve the primary recorded with the delivered atom instead
+                                    # of letting equal synthetic scores break ties by random UUID.
+                                    "score": (
+                                        1.0 if component_id == expected_primary_memory_id else 0.0
+                                    ),
                                     "truth_state": self.retrieval_v2._truth_state(claims),
                                     "claim_ids": [claim.id for claim in claims],
                                     "trace": {
